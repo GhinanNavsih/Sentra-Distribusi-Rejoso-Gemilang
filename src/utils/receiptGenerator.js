@@ -49,7 +49,7 @@ export const generateReceipt = (receiptData) => {
         paymentMethod = 'Cash',
         isCreditSale = false,
         companyInfo = {
-            name: 'Warehouse 375',
+            name: 'Sentra Distribusi Rejoso Gemilang',
             subheader: 'Goods Distribution Center',
             address: 'PP Darul Ulum, Peterongan, Jombang',
             contact: '+62 857-3372-0226 (Bapak Izzul)'

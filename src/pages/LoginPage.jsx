@@ -34,7 +34,7 @@ export default function LoginPage() {
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 shadow-lg p-3">
                         <img src={logo} alt="Warehouse Logo" className="w-full h-full object-contain" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white tracking-wide">Warehouse 375</h2>
+                    <h2 className="text-2xl font-bold text-white tracking-wide">Sentra Distribusi Rejoso Gemilang</h2>
                     <p className="text-red-100 text-sm mt-1">Gudang & Point of Sales System</p>
                 </div>
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-8 text-center text-sm text-gray-400">
-                        &copy; 2026 Warehouse 375
+                        &copy; 2026 Sentra Distribusi Rejoso Gemilang
                     </div>
                 </div>
             </div>

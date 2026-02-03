@@ -37,8 +37,8 @@ function Layout() {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-3">
-                <img src={logo} alt="Warehouse 375 Logo" className="h-10 w-auto" />
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">Warehouse 375</h1>
+                <img src={logo} alt="Sentra Distribusi Rejoso Gemilang Logo" className="h-10 w-auto" />
+                <h1 className="text-xl font-bold text-gray-900 tracking-tight">Sentra Distribusi Rejoso Gemilang</h1>
               </div>
               <nav className="hidden md:flex gap-2">
                 <NavLink to="/inventory">Inventory</NavLink>
