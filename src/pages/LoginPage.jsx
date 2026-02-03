@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/Warehouse 375 Logo (2).png';
+import logo from '../assets/logo_full.png';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');

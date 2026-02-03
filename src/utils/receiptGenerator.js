@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import logoImage from '../assets/Warehouse 375 Logo (compress).png';
+import logoImage from '../assets/logo_compressed.png';
 
 // Number to Indonesian words converter
 const numberToWords = (num) => {

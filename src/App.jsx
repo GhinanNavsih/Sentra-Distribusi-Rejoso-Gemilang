@@ -4,7 +4,7 @@ import InventoryPage from './pages/InventoryPage';
 import PosPage from './pages/PosPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import LoginPage from './pages/LoginPage';
-import logo from './assets/Warehouse 375 Logo (2).png';
+import logo from './assets/logo_full.png';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
