@@ -6,7 +6,7 @@ export default function RepackModal({ onClose, onSuccess }) {
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
 
-    const [step, setStep] = useState(1);
+
     const [fromSku, setFromSku] = useState('');
     const [toSku, setToSku] = useState('');
     const [qtyToOpen, setQtyToOpen] = useState(1);
@@ -42,7 +42,7 @@ export default function RepackModal({ onClose, onSuccess }) {
         if (source && source.bulk_unit_conversion) {
             setConversionRate(source.bulk_unit_conversion);
         }
-    }, [fromSku]);
+    }, [fromSku, products]);
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 import { FaShoppingCart, FaTruck, FaChevronDown, FaChevronUp, FaCalendar, FaPrint, FaFileAlt } from 'react-icons/fa';

@@ -9,7 +9,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
-    const useNavigateHook = useNavigate();
+    const navigate = useNavigate();
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -18,7 +18,7 @@ export default function LoginPage() {
             setError('');
             setLoading(true);
             await login(email, password);
-            useNavigateHook('/');
+            navigate('/');
         } catch (err) {
             console.error(err);
             setError('Failed to log in. Please check your credentials.');

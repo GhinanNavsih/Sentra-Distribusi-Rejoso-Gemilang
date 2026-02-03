@@ -1,5 +1,5 @@
 import { db } from "../firebase.config";
-import { collection, doc, getDoc, setDoc, runTransaction, writeBatch, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, runTransaction, deleteDoc } from "firebase/firestore";
 
 const COLLECTION_NAME = "inventory";
 
@@ -66,7 +66,6 @@ export const inventoryService = {
         // FromSku Base Unit = Sack. So we deduct 1.
         // 2. Add 'qtyToOpen * conversionRate' to ToSku.
 
-        const deduction = -1 * qtyToOpen;
         const addition = qtyToOpen * conversionRate;
 
         // Execute as transaction

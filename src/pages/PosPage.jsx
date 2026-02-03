@@ -93,7 +93,8 @@ export default function PosPage() {
         setProcessing(true);
         try {
             const orderPayload = {
-                items: cart.map(({ product_obj, ...rest }) => rest), // Remove object ref
+                // eslint-disable-next-line no-unused-vars
+                items: cart.map(({ product_obj: _product_obj, ...rest }) => rest), // Remove object ref
                 grand_total: cartTotal
             };
 
@@ -120,7 +121,8 @@ export default function PosPage() {
             setCompletedOrderData({
                 orderId,
                 orderDate,
-                items: cart.map(({ product_obj, ...rest }) => rest),
+                // eslint-disable-next-line no-unused-vars
+                items: cart.map(({ product_obj: _product_obj, ...rest }) => rest),
                 grandTotal: cartTotal
             });
 
