@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Default rule: Deny everything NOT explicitly allowed
+    match /{document=**} {
+      allow read, write: if false; 
+    }
+
+    // Allow authenticated users to read and write to all collections
+    // This is suitable for a single-tenant internal tool where all staff are trusted.
+    // Ideally, you'd want role-based access control (RBAC) here.
+    
+    match /inventory/{productId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    match /orders/{orderId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      // Prevent editing/deleting history for integrity, if desired
+      allow update, delete: if false; 
+    }
+    
+    match /purchases/{purchaseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    match /counters/{counterId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}
