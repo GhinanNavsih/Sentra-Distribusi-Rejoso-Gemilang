@@ -50,7 +50,7 @@ export const generateReceipt = (receiptData) => {
         isCreditSale = false,
         companyInfo = {
             name: 'Sentra Distribusi Rejoso Gemilang',
-            subheader: 'Goods Distribution Center',
+            subheader: 'Unit Usaha Koperasi',
             address: 'PP Darul Ulum, Peterongan, Jombang',
             contact: '+62 857-3372-0226 (Bapak Izzul)'
         }
@@ -79,7 +79,7 @@ export const generateReceipt = (receiptData) => {
     const textStartX = margin + logoWidth + 3;
 
     // Company Name - Dark Blue
-    doc.setFontSize(22);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 32, 96); // Dark blue RGB
     doc.text(companyInfo.name, textStartX, yPos + 8);
