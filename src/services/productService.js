@@ -56,18 +56,18 @@ export const productService = {
      * Logic: "If qty < 10, price is X. If qty >= 10, price is Y."
      * Assumes price_tiers is [{ min_qty: number, price: number }]
      */
-    calculatePrice: (product, qty) => {
-        if (!product.price_tiers || !Array.isArray(product.price_tiers) || product.price_tiers.length === 0) {
-            return 0;
-        }
+    calculatePrice: (product, customerType = 'regular') => {
+        // Default to 0 if product is invalid
+        if (!product) return 0;
 
-        // Sort by min_qty descending (largest requirement first)
-        // e.g. Tiers: 1->15000, 10->14000
-        // Qty 5: Check 10 (Fail), Check 1 (Pass) -> Price 15000
-        // Qty 15: Check 10 (Pass) -> Price 14000
-        const sortedTiers = [...product.price_tiers].sort((a, b) => b.min_qty - a.min_qty);
-        const activeTier = sortedTiers.find(t => qty >= t.min_qty);
+        // Normalize customer type
+        const type = customerType.toLowerCase();
 
-        return activeTier ? activeTier.price : sortedTiers[sortedTiers.length - 1].price;
+        // Return specific price based on type
+        if (type === 'star') return Number(product.price_star || 0);
+        if (type === 'premium') return Number(product.price_premium || 0);
+
+        // Default to Regular price
+        return Number(product.price_regular || 0);
     }
 };

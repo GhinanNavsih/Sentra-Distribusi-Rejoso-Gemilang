@@ -8,7 +8,10 @@ export default function AddProductForm({ onClose, onSuccess }) {
         base_unit: 'kg',
         bulk_unit_name: 'Sack',
         bulk_unit_conversion: 50,
-        price_tiers: [{ min_qty: 1, price: 0 }]
+        bulk_unit_conversion: 50,
+        price_regular: 0,
+        price_premium: 0,
+        price_star: 0
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -18,24 +21,7 @@ export default function AddProductForm({ onClose, onSuccess }) {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleTierChange = (index, field, value) => {
-        const newTiers = [...formData.price_tiers];
-        newTiers[index][field] = Number(value);
-        setFormData(prev => ({ ...prev, price_tiers: newTiers }));
-    };
 
-    const addTier = () => {
-        setFormData(prev => ({
-            ...prev,
-            price_tiers: [...prev.price_tiers, { min_qty: 1, price: 0 }]
-        }));
-    };
-
-    const removeTier = (index) => {
-        if (formData.price_tiers.length === 1) return;
-        const newTiers = formData.price_tiers.filter((_, i) => i !== index);
-        setFormData(prev => ({ ...prev, price_tiers: newTiers }));
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -110,32 +96,46 @@ export default function AddProductForm({ onClose, onSuccess }) {
                 </div>
 
                 {/* Pricing Tiers */}
+                {/* Pricing Structure */}
                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                    <label className="block text-sm font-bold text-gray-900 mb-3">Pricing Tiers (Sell Out)</label>
-                    <div className="space-y-3">
-                        {formData.price_tiers.map((tier, idx) => (
-                            <div key={idx} className="flex items-end gap-3">
-                                <div>
-                                    <label className="block text-xs uppercase text-gray-500 mb-1">Min Qty</label>
-                                    <input type="number" value={tier.min_qty} onChange={(e) => handleTierChange(idx, 'min_qty', e.target.value)}
-                                        className="w-24 p-2 border border-gray-300 rounded text-sm" />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="block text-xs uppercase text-gray-500 mb-1">Unit Price</label>
-                                    <input type="number" value={tier.price} onChange={(e) => handleTierChange(idx, 'price', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded text-sm" placeholder="e.g. 15000" />
-                                </div>
-                                {formData.price_tiers.length > 1 && (
-                                    <button type="button" onClick={() => removeTier(idx)} className="p-2 text-red-600 hover:bg-red-50 rounded">
-                                        &times;
-                                    </button>
-                                )}
+                    <label className="block text-sm font-bold text-gray-900 mb-3">Customer Pricing Strategy (Sell Out)</label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Regular */}
+                        <div>
+                            <label className="block text-xs uppercase text-gray-500 mb-1 font-bold">Regular Price</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
+                                <input type="number" name="price_regular" required value={formData.price_regular} onChange={handleChange}
+                                    className="w-full pl-9 p-2 border border-blue-200 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none font-bold text-gray-900"
+                                    placeholder="0" />
                             </div>
-                        ))}
+                            <p className="text-[10px] text-gray-400 mt-1">General customers</p>
+                        </div>
+
+                        {/* Premium */}
+                        <div>
+                            <label className="block text-xs uppercase text-yellow-600 mb-1 font-bold">Premium Price</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
+                                <input type="number" name="price_premium" required value={formData.price_premium} onChange={handleChange}
+                                    className="w-full pl-9 p-2 border border-yellow-200 bg-yellow-50 rounded focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 outline-none font-bold text-yellow-900"
+                                    placeholder="0" />
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-1">Slightly discounted</p>
+                        </div>
+
+                        {/* Star */}
+                        <div>
+                            <label className="block text-xs uppercase text-purple-600 mb-1 font-bold">Star Price (VIP)</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
+                                <input type="number" name="price_star" required value={formData.price_star} onChange={handleChange}
+                                    className="w-full pl-9 p-2 border border-purple-200 bg-purple-50 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-bold text-purple-900"
+                                    placeholder="0" />
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-1">Cheapest / Bulk rate</p>
+                        </div>
                     </div>
-                    <button type="button" onClick={addTier} className="mt-4 text-sm text-primary font-medium hover:underline">
-                        + Add Another Price Tier
-                    </button>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">

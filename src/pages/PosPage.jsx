@@ -12,6 +12,7 @@ export default function PosPage() {
     const [processing, setProcessing] = useState(false);
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [completedOrderData, setCompletedOrderData] = useState(null);
+    const [customerType, setCustomerType] = useState('regular'); // 'regular', 'premium', 'star'
 
     // Load Catalog
     useEffect(() => {
@@ -28,6 +29,18 @@ export default function PosPage() {
         load();
     }, []);
 
+    // Recalculate prices when customer type changes
+    useEffect(() => {
+        setCart(prev => prev.map(item => {
+            const newPrice = productService.calculatePrice(item.product_obj, customerType);
+            return {
+                ...item,
+                unit_price: newPrice,
+                total: newPrice * item.qty
+            };
+        }));
+    }, [customerType]);
+
     // Filter products
     const filteredProducts = useMemo(() => {
         if (!searchQuery) return products; // Return all if no query
@@ -43,7 +56,7 @@ export default function PosPage() {
                 return updateCartItemQty(prev, product.id, existing.qty + 1);
             }
             const initialQty = 1;
-            const price = productService.calculatePrice(product, initialQty);
+            const price = productService.calculatePrice(product, customerType);
             return [...prev, {
                 product_id: product.id,
                 product_name: product.name,
@@ -64,7 +77,7 @@ export default function PosPage() {
             if (item.product_id === productId) {
                 const safeQty = Math.max(1, newQty);
                 // Recalculate Tiered Price
-                const newPrice = productService.calculatePrice(item.product_obj, safeQty);
+                const newPrice = productService.calculatePrice(item.product_obj, customerType);
                 return {
                     ...item,
                     qty: safeQty,
@@ -184,7 +197,24 @@ export default function PosPage() {
             {/* Right: Cart */}
             <div className="w-1/3 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col">
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <h2 className="text-lg font-bold text-gray-900">Current Order</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-2">Current Order</h2>
+                    {/* Customer Type Selector */}
+                    <div className="flex gap-2 p-1 bg-white border border-gray-200 rounded-md">
+                        {['Regular', 'Premium', 'Star'].map(type => (
+                            <button
+                                key={type}
+                                onClick={() => setCustomerType(type.toLowerCase())}
+                                className={`flex-1 py-1 text-sm font-medium rounded ${customerType === type.toLowerCase()
+                                    ? type === 'Star' ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                                        : type === 'Premium' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                                            : 'bg-blue-100 text-blue-700 border border-blue-200'
+                                    : 'text-gray-500 hover:bg-gray-50'
+                                    }`}
+                            >
+                                {type}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
