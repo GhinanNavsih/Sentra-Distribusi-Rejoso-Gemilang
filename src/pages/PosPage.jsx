@@ -12,7 +12,7 @@ export default function PosPage() {
     const [processing, setProcessing] = useState(false);
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [completedOrderData, setCompletedOrderData] = useState(null);
-    const [customerType, setCustomerType] = useState('regular'); // 'regular', 'premium', 'star'
+    const [selectedCustomerType, setSelectedCustomerType] = useState('regular'); // Single selection - what gets saved
 
     // Load Catalog
     useEffect(() => {
@@ -32,14 +32,14 @@ export default function PosPage() {
     // Recalculate prices when customer type changes
     useEffect(() => {
         setCart(prev => prev.map(item => {
-            const newPrice = productService.calculatePrice(item.product_obj, customerType);
+            const newPrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
             return {
                 ...item,
                 unit_price: newPrice,
                 total: newPrice * item.qty
             };
         }));
-    }, [customerType]);
+    }, [selectedCustomerType]);
 
     // Filter products
     const filteredProducts = useMemo(() => {
@@ -56,7 +56,7 @@ export default function PosPage() {
                 return updateCartItemQty(prev, product.id, existing.qty + 1);
             }
             const initialQty = 1;
-            const price = productService.calculatePrice(product, customerType);
+            const price = productService.calculatePrice(product, selectedCustomerType);
             return [...prev, {
                 product_id: product.id,
                 product_name: product.name,
@@ -77,7 +77,7 @@ export default function PosPage() {
             if (item.product_id === productId) {
                 const safeQty = Math.max(1, newQty);
                 // Recalculate Tiered Price
-                const newPrice = productService.calculatePrice(item.product_obj, customerType);
+                const newPrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
                 return {
                     ...item,
                     qty: safeQty,
@@ -134,9 +134,19 @@ export default function PosPage() {
             setCompletedOrderData({
                 orderId,
                 orderDate,
-                // eslint-disable-next-line no-unused-vars
-                items: cart.map(({ product_obj: _product_obj, ...rest }) => rest),
-                grandTotal: cartTotal
+                // Keep product_obj for receipt generation (but won't be saved to DB)
+                items: cart.map(item => ({
+                    product_id: item.product_id,
+                    product_name: item.product_name,
+                    sku: item.sku,
+                    base_unit: item.base_unit,
+                    qty: item.qty,
+                    unit_price: item.unit_price,
+                    total: item.total,
+                    product_obj: item.product_obj // Keep this for receipt price recalculation
+                })),
+                grandTotal: cartTotal,
+                selectedCustomerType: selectedCustomerType // This is what gets saved to database
             });
 
             setCart([]);
@@ -198,22 +208,37 @@ export default function PosPage() {
             <div className="w-1/3 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col">
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
                     <h2 className="text-lg font-bold text-gray-900 mb-2">Current Order</h2>
-                    {/* Customer Type Selector */}
-                    <div className="flex gap-2 p-1 bg-white border border-gray-200 rounded-md">
-                        {['Regular', 'Premium', 'Star'].map(type => (
-                            <button
-                                key={type}
-                                onClick={() => setCustomerType(type.toLowerCase())}
-                                className={`flex-1 py-1 text-sm font-medium rounded ${customerType === type.toLowerCase()
-                                    ? type === 'Star' ? 'bg-purple-100 text-purple-700 border border-purple-200'
-                                        : type === 'Premium' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                                            : 'bg-blue-100 text-blue-700 border border-blue-200'
-                                    : 'text-gray-500 hover:bg-gray-50'
-                                    }`}
-                            >
-                                {type}
-                            </button>
-                        ))}
+                    {/* Customer Type Selector - Single Select (for pricing & database) */}
+                    <div className="space-y-2">
+                        <p className="text-xs text-gray-500 font-medium">Select Pricing Tier (saved to database):</p>
+                        <div className="flex gap-2">
+                            {['regular', 'premium', 'star'].map(type => {
+                                const isSelected = selectedCustomerType === type;
+                                const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+                                return (
+                                    <button
+                                        key={type}
+                                        onClick={() => setSelectedCustomerType(type)}
+                                        className={`flex-1 py-2 px-3 text-sm font-medium rounded-md border-2 transition-all ${isSelected
+                                            ? type === 'star'
+                                                ? 'bg-purple-500 text-white border-purple-600 shadow-md'
+                                                : type === 'premium'
+                                                    ? 'bg-yellow-500 text-white border-yellow-600 shadow-md'
+                                                    : 'bg-blue-500 text-white border-blue-600 shadow-md'
+                                            : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-center gap-1">
+                                            {isSelected && <span>●</span>}
+                                            <span>{typeLabel}</span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className="text-xs text-gray-400 italic">
+                            Current price: {selectedCustomerType === 'star' ? 'Star (Lowest)' : selectedCustomerType === 'premium' ? 'Premium' : 'Regular (Highest)'}
+                        </p>
                     </div>
                 </div>
 
