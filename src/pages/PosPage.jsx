@@ -101,7 +101,7 @@ export default function PosPage() {
 
     const handleSubmitOrder = async () => {
         if (cart.length === 0) return;
-        if (!confirm(`Confirm order for Total: Rp ${cartTotal.toLocaleString('id-ID')}?`)) return;
+        if (!confirm(`Konfirmasi pesanan dengan Total: Rp ${cartTotal.toLocaleString('id-ID')}?`)) return;
 
         setProcessing(true);
         try {
@@ -152,7 +152,7 @@ export default function PosPage() {
             setCart([]);
             setShowReceiptModal(true);
         } catch (err) {
-            alert("Order Failed: " + err.message);
+            alert("Pesanan Gagal: " + err.message);
         } finally {
             setProcessing(false);
         }
@@ -166,7 +166,7 @@ export default function PosPage() {
                     <input
                         autoFocus
                         type="text"
-                        placeholder="Search Product by Name or SKU... (Start typing)"
+                        placeholder="Cari Produk berdasarkan Nama atau SKU... (Mulai ketik)"
                         className="w-full p-4 pl-12 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary focus:border-primary text-lg"
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
@@ -176,9 +176,9 @@ export default function PosPage() {
 
                 <div className="flex-1 overflow-y-auto bg-white rounded-lg border border-gray-200 shadow-sm p-4">
                     {loading ? (
-                        <div className="text-gray-400 text-center mt-10">Loading catalog...</div>
+                        <div className="text-gray-400 text-center mt-10">Memuat katalog...</div>
                     ) : filteredProducts.length === 0 ? (
-                        <div className="text-gray-500 text-center mt-10">No products found matching "{searchQuery}"</div>
+                        <div className="text-gray-500 text-center mt-10">Tidak ada produk yang cocok dengan "{searchQuery}"</div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {filteredProducts.map(p => (
@@ -191,10 +191,10 @@ export default function PosPage() {
                                     <div className="text-xs text-gray-500 mb-2">SKU: {p.sku}</div>
                                     <div className="flex justify-between items-end">
                                         <div className="text-sm font-bold text-gray-700">
-                                            Stock: {p.stock} {p.base_unit}
+                                            Stok: {p.stock} {p.base_unit}
                                         </div>
                                         <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
-                                            + Add
+                                            + Tambah
                                         </div>
                                     </div>
                                 </button>
@@ -207,10 +207,10 @@ export default function PosPage() {
             {/* Right: Cart */}
             <div className="w-1/3 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col">
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <h2 className="text-lg font-bold text-gray-900 mb-2">Current Order</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-2">Pesanan Saat Ini</h2>
                     {/* Customer Type Selector - Single Select (for pricing & database) */}
                     <div className="space-y-2">
-                        <p className="text-xs text-gray-500 font-medium">Select Pricing Tier (saved to database):</p>
+                        <p className="text-xs text-gray-500 font-medium">Pilih Tingkat Harga (disimpan ke database):</p>
                         <div className="flex gap-2">
                             {['regular', 'premium', 'star'].map(type => {
                                 const isSelected = selectedCustomerType === type;
@@ -237,14 +237,14 @@ export default function PosPage() {
                             })}
                         </div>
                         <p className="text-xs text-gray-400 italic">
-                            Current price: {selectedCustomerType === 'star' ? 'Star (Lowest)' : selectedCustomerType === 'premium' ? 'Premium' : 'Regular (Highest)'}
+                            Harga saat ini: {selectedCustomerType === 'star' ? 'Bintang (Termurah)' : selectedCustomerType === 'premium' ? 'Premium' : 'Reguler (Tertinggi)'}
                         </p>
                     </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {cart.length === 0 ? (
-                        <div className="text-center text-gray-400 py-10 italic">Cart is empty</div>
+                        <div className="text-center text-gray-400 py-10 italic">Keranjang kosong</div>
                     ) : (
                         cart.map(item => (
                             <div key={item.product_id} className="flex gap-3 items-start border-b border-gray-100 pb-3">
@@ -281,7 +281,7 @@ export default function PosPage() {
 
                 <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
                     <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-500 font-medium">Grand Total</span>
+                        <span className="text-gray-500 font-medium">Total Keseluruhan</span>
                         <span className="text-2xl font-bold text-gray-900">Rp {cartTotal.toLocaleString('id-ID')}</span>
                     </div>
                     <button
@@ -289,7 +289,7 @@ export default function PosPage() {
                         onClick={handleSubmitOrder}
                         className="w-full py-3 bg-primary hover:bg-red-700 text-white rounded-lg font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-lg"
                     >
-                        {processing ? 'Processing...' : 'Complete Order'}
+                        {processing ? 'Memproses...' : 'Selesaikan Pesanan'}
                     </button>
                 </div>
             </div>

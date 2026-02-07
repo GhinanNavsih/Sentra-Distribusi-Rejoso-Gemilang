@@ -90,7 +90,7 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
     };
 
     const handleDelete = async () => {
-        const confirmMessage = `Are you sure you want to DELETE "${product.name}" (${product.sku})?\n\nThis will permanently remove:\n- Product record\n- Inventory data\n- All associated information\n\nThis action CANNOT be undone!`;
+        const confirmMessage = `Apakah Anda yakin ingin MENGHAPUS "${product.name}" (${product.sku})?\n\nTindakan ini akan menghapus secara permanen:\n- Data produk\n- Data stok\n- Semua informasi terkait\n\nTindakan ini TIDAK DAPAT dibatalkan!`;
 
         if (!confirm(confirmMessage)) return;
 
@@ -103,10 +103,10 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                 inventoryService.deleteStock(product.sku)
             ]);
 
-            alert(`Product "${product.name}" has been deleted successfully.`);
+            alert(`Produk "${product.name}" berhasil dihapus.`);
             if (onSuccess) onSuccess();
         } catch (err) {
-            setError(`Failed to delete product: ${err.message}`);
+            setError(`Gagal menghapus produk: ${err.message}`);
             setLoading(false);
         }
     };
@@ -114,7 +114,7 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 max-w-2xl mx-auto">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Edit Product: {product?.sku}</h2>
+                <h2 className="text-xl font-bold text-gray-900">Edit Produk: {product?.sku}</h2>
                 {onClose && (
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
                         &times;
@@ -128,46 +128,46 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Basic Info */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nama Produk</label>
                         <input required type="text" name="name" value={formData.name} onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="e.g. White Sugar" />
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="Contoh: Gula Pasir" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">SKU (ID)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">SKU (Kode Produk)</label>
                         <input required type="text" name="sku" value={formData.sku} onChange={handleChange}
                             className="w-full p-2 border border-blue-200 bg-blue-50 rounded text-gray-900 focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
-                        <p className="text-[10px] text-gray-500 mt-1">Changing SKU will effectively rename the product.</p>
+                        <p className="text-[10px] text-gray-500 mt-1">Mengubah SKU akan mengubah kode produk secara permanen.</p>
                     </div>
 
                     {/* Stock Level - Moved here for visibility */}
                     <div className="md:col-span-2 bg-blue-50 p-4 rounded border border-blue-200">
-                        <label className="block text-sm font-bold text-gray-900 mb-1">Current Stock Level</label>
-                        <p className="text-xs text-gray-500 mb-2">Manually adjust the stock amount ({formData.base_unit}). Valid for stock corrections.</p>
+                        <label className="block text-sm font-bold text-gray-900 mb-1">Stok Saat Ini</label>
+                        <p className="text-xs text-gray-500 mb-2">Sesuaikan jumlah stok secara manual ({formData.base_unit}). Gunakan untuk koreksi stok.</p>
                         <input type="number" name="current_stock" value={formData.current_stock} onChange={handleChange}
                             className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-lg" />
                     </div>
 
                     {/* Units */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Base Unit</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Satuan Dasar</label>
                         <select name="base_unit" value={formData.base_unit} onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none">
                             <option value="kg">Kilogram (kg)</option>
                             <option value="g">Gram (g)</option>
                             <option value="ltr">Liter (ltr)</option>
-                            <option value="pcs">Pieces (pcs)</option>
-                            <option value="sack">Sack (sack)</option>
+                            <option value="pcs">Pcs (pcs)</option>
+                            <option value="sack">Sak (sack)</option>
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Bulk Unit Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nama Satuan Besar</label>
                         <input type="text" name="bulk_unit_name" value={formData.bulk_unit_name} onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="e.g. Sack" />
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="Contoh: Sak" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Bulk Conversion</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Konversi Satuan Besar</label>
                         <div className="flex items-center">
-                            <span className="mr-2 text-sm text-gray-500">1 {formData.bulk_unit_name || 'Bulk'} = </span>
+                            <span className="mr-2 text-sm text-gray-500">1 {formData.bulk_unit_name || 'Besar'} = </span>
                             <input type="number" name="bulk_unit_conversion" value={formData.bulk_unit_conversion} onChange={handleChange}
                                 className="w-24 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
                             <span className="ml-2 text-sm text-gray-500">{formData.base_unit}</span>
@@ -178,8 +178,8 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                 {/* Pricing Tiers */}
                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
                     <div className="mb-4">
-                        <label className="block text-sm font-bold text-gray-900 mb-1">Purchase Value (Cost Price)</label>
-                        <p className="text-xs text-gray-500 mb-2">The average cost to buy this item (per base unit).</p>
+                        <label className="block text-sm font-bold text-gray-900 mb-1">Harga Beli (Modal)</label>
+                        <p className="text-xs text-gray-500 mb-2">Rata-rata biaya pembelian item ini (per satuan dasar).</p>
                         <div className="relative">
                             <span className="absolute left-3 top-2 text-gray-500 text-sm">Rp</span>
                             <input type="number" name="cost_price" value={formData.cost_price || 0} onChange={handleChange}
@@ -188,42 +188,42 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                     </div>
 
 
-                    <label className="block text-sm font-bold text-gray-900 mb-3">Customer Pricing Strategy (Sell Out)</label>
+                    <label className="block text-sm font-bold text-gray-900 mb-3">Strategi Harga Jual</label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Regular */}
                         <div>
-                            <label className="block text-xs uppercase text-gray-500 mb-1 font-bold">Regular Price</label>
+                            <label className="block text-xs uppercase text-gray-500 mb-1 font-bold">Harga Reguler</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
                                 <input type="number" name="price_regular" required value={formData.price_regular} onChange={handleChange}
                                     className="w-full pl-9 p-2 border border-blue-200 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none font-bold text-gray-900"
                                     placeholder="0" />
                             </div>
-                            <p className="text-[10px] text-gray-400 mt-1">General customers</p>
+                            <p className="text-[10px] text-gray-400 mt-1">Pelanggan umum</p>
                         </div>
 
                         {/* Premium */}
                         <div>
-                            <label className="block text-xs uppercase text-yellow-600 mb-1 font-bold">Premium Price</label>
+                            <label className="block text-xs uppercase text-yellow-600 mb-1 font-bold">Harga Premium</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
                                 <input type="number" name="price_premium" required value={formData.price_premium} onChange={handleChange}
                                     className="w-full pl-9 p-2 border border-yellow-200 bg-yellow-50 rounded focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 outline-none font-bold text-yellow-900"
                                     placeholder="0" />
                             </div>
-                            <p className="text-[10px] text-gray-400 mt-1">Slightly discounted</p>
+                            <p className="text-[10px] text-gray-400 mt-1">Sedikit potongan harga</p>
                         </div>
 
                         {/* Star */}
                         <div>
-                            <label className="block text-xs uppercase text-purple-600 mb-1 font-bold">Star Price (VIP)</label>
+                            <label className="block text-xs uppercase text-purple-600 mb-1 font-bold">Harga Bintang (VIP)</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
                                 <input type="number" name="price_star" required value={formData.price_star} onChange={handleChange}
                                     className="w-full pl-9 p-2 border border-purple-200 bg-purple-50 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-bold text-purple-900"
                                     placeholder="0" />
                             </div>
-                            <p className="text-[10px] text-gray-400 mt-1">Cheapest / Bulk rate</p>
+                            <p className="text-[10px] text-gray-400 mt-1">Harga termurah / Grosir</p>
                         </div>
                     </div>
                 </div>
@@ -239,18 +239,18 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                        Delete Product
+                        Hapus Produk
                     </button>
 
                     {/* Right Side Buttons */}
                     <div className="flex gap-3">
                         {onClose && (
                             <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm font-medium">
-                                Cancel
+                                Batal
                             </button>
                         )}
                         <button disabled={loading} type="submit" className="px-6 py-2 bg-primary text-white rounded hover:bg-red-700 text-sm font-bold shadow-sm disabled:opacity-50">
-                            {loading ? 'Saving Changes...' : 'Update Product'}
+                            {loading ? 'Menyimpan...' : 'Perbarui Produk'}
                         </button>
                     </div>
                 </div>

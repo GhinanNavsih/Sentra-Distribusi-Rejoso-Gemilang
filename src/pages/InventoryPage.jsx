@@ -178,11 +178,11 @@ export default function InventoryPage() {
                             key={p}
                             onClick={() => setPeriod(p)}
                             className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${period === p
-                                    ? 'bg-gray-900 text-white shadow-md'
-                                    : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                                ? 'bg-gray-900 text-white shadow-md'
+                                : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
                                 }`}
                         >
-                            {p === 'day' ? 'Day' : p === 'week' ? 'Week' : p === 'month' ? 'Month' : 'Year'}
+                            {p === 'day' ? 'Hari' : p === 'week' ? 'Minggu' : p === 'month' ? 'Bulan' : 'Tahun'}
                         </button>
                     ))}
                 </div>
@@ -194,24 +194,24 @@ export default function InventoryPage() {
         <div className="p-6">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Inventory</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage products and track warehouse value</p>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Inventori</h1>
+                    <p className="text-sm text-gray-500 mt-1">Kelola produk dan nilai gudang</p>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={() => setShowBulkPurchaseModal(true)}
                         className="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition flex items-center gap-2 text-sm">
-                        <span>📥</span> Bulk Purchase
+                        <span>📥</span> Pembelian Grosir
                     </button>
                     <button
                         onClick={() => setShowRepackForm(true)}
                         className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-bold rounded-lg shadow-sm hover:bg-gray-50 transition text-sm">
-                        ⇄ Repack / Break Bulk
+                        ⇄ Kemasan Ulang / Pecah
                     </button>
                     <button
                         onClick={() => setShowAddForm(true)}
                         className="px-5 py-2.5 bg-primary text-white font-bold rounded-lg shadow-sm hover:bg-red-700 transition text-sm">
-                        + New Product
+                        + Produk Baru
                     </button>
                 </div>
             </div>
@@ -278,11 +278,11 @@ export default function InventoryPage() {
             />
 
             {loading ? (
-                <div className="text-center py-10 text-gray-500">Loading inventory...</div>
+                <div className="text-center py-10 text-gray-500">Memuat inventori...</div>
             ) : products.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-lg border border-dashed border-gray-300">
-                    <p className="text-gray-500 mb-2">No products found.</p>
-                    <p className="text-sm text-gray-400">Click "New Product" to get started.</p>
+                    <p className="text-gray-500 mb-2">Tidak ada produk ditemukan.</p>
+                    <p className="text-sm text-gray-400">Klik "Produk Baru" untuk memulai.</p>
                 </div>
             ) : (
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -297,30 +297,30 @@ export default function InventoryPage() {
                                 <th
                                     onClick={() => handleSort('name')}
                                     className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs cursor-pointer hover:bg-gray-100 transition select-none">
-                                    Product Name <SortIndicator columnKey="name" />
+                                    Nama Produk <SortIndicator columnKey="name" />
                                 </th>
                                 <th
                                     onClick={() => handleSort('base_unit')}
                                     className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs cursor-pointer hover:bg-gray-100 transition select-none">
-                                    Base Unit <SortIndicator columnKey="base_unit" />
+                                    Satuan Dasar <SortIndicator columnKey="base_unit" />
                                 </th>
                                 <th
                                     onClick={() => handleSort('stock')}
                                     className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs text-right cursor-pointer hover:bg-gray-100 transition select-none">
-                                    Stock Amount <SortIndicator columnKey="stock" />
+                                    Jumlah Stok <SortIndicator columnKey="stock" />
                                 </th>
                                 <th
                                     onClick={() => handleSort('cost_price')}
                                     className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs text-right cursor-pointer hover:bg-gray-100 transition select-none">
-                                    Purchase Value <SortIndicator columnKey="cost_price" />
+                                    Harga Beli <SortIndicator columnKey="cost_price" />
                                 </th>
                                 <th
                                     onClick={() => handleSort('total_value')}
                                     className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs text-right cursor-pointer hover:bg-gray-100 transition select-none">
-                                    Total Value <SortIndicator columnKey="total_value" />
+                                    Total Nilai <SortIndicator columnKey="total_value" />
                                 </th>
                                 <th className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs text-right">
-                                    Actions
+                                    Aksi
                                 </th>
                             </tr>
                         </thead>

@@ -150,7 +150,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                             <h2 className="text-2xl font-bold">✓ Order Berhasil!</h2>
                             <p className="text-red-100 text-sm mt-1">No. Nota: {orderData.orderId}</p>
                             <p className="text-red-100 text-xs mt-1 font-medium">
-                                Saved as: {savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)} tier
+                                Disimpan sebagai: tingkat {savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)}
                             </p>
                         </div>
                         <button
@@ -176,7 +176,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                             Rp {orderData.grandTotal.toLocaleString('id-ID')}
                         </div>
                         <div className="text-xs text-green-700 mt-1">
-                            ({savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)} pricing - saved to database)
+                            ({savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)} pricing - disimpan di database)
                         </div>
                     </div>
 
@@ -230,10 +230,10 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                         {/* Receipt Format Selection */}
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <h4 className="text-sm font-semibold text-blue-900 mb-2">
-                                Select Receipt Formats to Print:
+                                Pilih Format Nota untuk Cetak:
                             </h4>
                             <p className="text-xs text-blue-700 mb-3">
-                                (For display only - database saved with {savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)} pricing)
+                                (Hanya untuk tampilan - database disimpan dengan harga {savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)})
                             </p>
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -244,7 +244,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                     />
                                     <span className="text-sm text-gray-700">
-                                        Regular Pricing (Red Template)
+                                        Harga Reguler (Template Merah)
                                     </span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -255,7 +255,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                                         className="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
                                     />
                                     <span className="text-sm text-gray-700">
-                                        Premium Pricing (Blue Template)
+                                        Harga Premium (Template Biru)
                                     </span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -266,7 +266,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                                         className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                     />
                                     <span className="text-sm text-gray-700">
-                                        Star Pricing (Blue Template)
+                                        Harga Bintang (Template Biru)
                                     </span>
                                 </label>
                             </div>
