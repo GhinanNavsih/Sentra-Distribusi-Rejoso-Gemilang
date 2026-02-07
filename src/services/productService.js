@@ -11,7 +11,7 @@ export const productService = {
      */
     saveProduct: async (productData) => {
         const { sku } = productData;
-        if (!sku) throw new Error("SKU is required");
+        if (!sku) throw new Error("SKU diperlukan");
 
         // Ensure numbers
         if (productData.bulk_unit_conversion) productData.bulk_unit_conversion = Number(productData.bulk_unit_conversion);

@@ -206,10 +206,10 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                                 value={paymentMethod}
                                 onChange={(e) => setPaymentMethod(e.target.value)}
                                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary outline-none">
-                                <option value="Cash">Cash</option>
+                                <option value="Cash">Tunai</option>
                                 <option value="QRIS">QRIS</option>
                                 <option value="Transfer Bank">Transfer Bank</option>
-                                <option value="Debit Card">Debit Card</option>
+                                <option value="Debit Card">Kartu Debit</option>
                             </select>
                         </div>
 

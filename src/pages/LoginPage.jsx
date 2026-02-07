@@ -21,7 +21,7 @@ export default function LoginPage() {
             navigate('/');
         } catch (err) {
             console.error(err);
-            setError('Failed to log in. Please check your credentials.');
+            setError('Gagal masuk. Silakan periksa email dan kata sandi Anda.');
         } finally {
             setLoading(false);
         }
@@ -35,11 +35,11 @@ export default function LoginPage() {
                         <img src={logo} alt="Warehouse Logo" className="w-full h-full object-contain" />
                     </div>
                     <h2 className="text-2xl font-bold text-white tracking-wide">Sentra Distribusi Rejoso Gemilang</h2>
-                    <p className="text-red-100 text-sm mt-1">Gudang & Point of Sales System</p>
+                    <p className="text-red-100 text-sm mt-1">Sistem Gudang & Kasir (POS)</p>
                 </div>
 
                 <div className="p-8">
-                    <h3 className="text-xl font-bold text-gray-800 mb-6 text-center">Welcome Back!</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-6 text-center">Selamat Datang Kembali!</h3>
 
                     {error && (
                         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r">
@@ -58,19 +58,19 @@ export default function LoginPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Email</label>
                             <input
                                 type="email"
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none"
-                                placeholder="name@company.com"
+                                placeholder="nama@perusahaan.com"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
                             <input
                                 type="password"
                                 required
@@ -86,7 +86,7 @@ export default function LoginPage() {
                             disabled={loading}
                             className="w-full bg-primary hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Logging in...' : 'Sign In'}
+                            {loading ? 'Sedang masuk...' : 'Masuk'}
                         </button>
                     </form>
 

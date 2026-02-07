@@ -146,7 +146,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
             const validRows = rows.filter((r) => r.product && r.qty > 0);
 
             if (validRows.length === 0) {
-                alert("Please add at least one valid item.");
+                alert("Silakan tambahkan setidaknya satu item yang valid.");
                 setIsSubmitting(false);
                 return;
             }
@@ -210,7 +210,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
             onClose();
         } catch (error) {
             console.error("Error adding stock:", error);
-            alert("Failed to add stock.");
+            alert("Gagal menambah stok.");
         } finally {
             setIsSubmitting(false);
         }
@@ -225,8 +225,8 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                 {/* Header */}
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Receive Goods (Buy In)</h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Add stock to inventory</p>
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Terima Barang (Pembelian)</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Tambah stok ke inventori</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition">
                         <FaTimes className="text-gray-500" />
@@ -240,13 +240,13 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                         {/* Supplier Name */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                Supplier Name
+                                Nama Supplier
                             </label>
                             <input
                                 type="text"
                                 value={supplierName}
                                 onChange={(e) => setSupplierName(e.target.value)}
-                                placeholder="Enter supplier name (optional)"
+                                placeholder="Masukkan nama supplier (opsional)"
                                 className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
                             />
                         </div>
@@ -254,13 +254,13 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                         {/* Receipt Upload */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                Upload Receipt (Optional)
+                                Upload Nota (Opsional)
                             </label>
                             <div className="flex items-center gap-2">
                                 <label className="flex-1 cursor-pointer">
                                     <div className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center justify-between">
                                         <span className="text-sm text-gray-600 dark:text-gray-300 truncate">
-                                            {receiptFile ? receiptFile.name : "Choose file..."}
+                                            {receiptFile ? receiptFile.name : "Pilih file..."}
                                         </span>
                                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -277,14 +277,14 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                     <button
                                         onClick={() => setReceiptFile(null)}
                                         className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
-                                        title="Remove file"
+                                        title="Hapus file"
                                     >
                                         <FaTimes />
                                     </button>
                                 )}
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Accepted: JPG, JPEG, PNG, PDF
+                                Diterima: JPG, JPEG, PNG, PDF
                             </p>
                         </div>
                     </div>
@@ -292,10 +292,10 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="text-sm font-semibold text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                                <th className="py-3 px-2 w-1/3">Product</th>
-                                <th className="py-3 px-2 w-24">Unit</th>
+                                <th className="py-3 px-2 w-1/3">Produk</th>
+                                <th className="py-3 px-2 w-24">Satuan</th>
                                 <th className="py-3 px-2 w-24">Qty</th>
-                                <th className="py-3 px-2 w-48">Cost / Unit <span className="text-xs font-normal text-gray-400">(Rp)</span></th>
+                                <th className="py-3 px-2 w-48">Harga / Satuan <span className="text-xs font-normal text-gray-400">(Rp)</span></th>
                                 <th className="py-3 px-2 w-36">Subtotal</th>
                                 <th className="py-3 px-2 w-10"></th>
                             </tr>
@@ -310,7 +310,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                             type="text"
                                             autoComplete="off"
                                             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                                            placeholder="Search product..."
+                                            placeholder="Cari produk..."
                                             value={row.product ? row.product.name : (searchQuery[row.id] || "")}
                                             onChange={(e) => {
                                                 const val = e.target.value;
@@ -347,7 +347,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                                         </div>
                                                     ))}
                                                 {products.filter(p => p.name.toLowerCase().includes((searchQuery[row.id] || "").toLowerCase())).length === 0 && (
-                                                    <div className="px-4 py-2 text-sm text-gray-500">No products found</div>
+                                                    <div className="px-4 py-2 text-sm text-gray-500">Tidak ada produk ditemukan</div>
                                                 )}
                                             </div>
                                         )}
@@ -425,28 +425,28 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                         onClick={addRow}
                         className="mt-4 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium px-4 py-2 hover:bg-blue-50 rounded-lg transition"
                     >
-                        <FaPlus size={14} /> Add Item
+                        <FaPlus size={14} /> Tambah Item
                     </button>
                 </div>
 
                 {/* Footer */}
                 <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-end items-center gap-4">
                     <div className="text-right mr-4">
-                        <span className="text-gray-500 dark:text-gray-400 text-sm">Total Purchase</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Total Pembelian</span>
                         <div className="text-2xl font-bold text-gray-800 dark:text-white">{formatCurrency(grandTotal)}</div>
                     </div>
                     <button
                         onClick={onClose}
                         className="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                     >
-                        Cancel
+                        Batal
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
                         className="px-8 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                        {isSubmitting ? "Processing..." : "Confirm Receive"}
+                        {isSubmitting ? "Memproses..." : "Konfirmasi Penerimaan"}
                     </button>
                 </div>
             </div>

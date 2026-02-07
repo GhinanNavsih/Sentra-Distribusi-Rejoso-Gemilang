@@ -53,8 +53,8 @@ export const generateWarehouseExitPDF = async (data) => {
         id: data.orderId,
         createdAt: data.orderDate || new Date(),
         customerDetail: {
-            customerName: data.customerName || 'General Customer',
-            businessType: 'Regular Customer' // Default for this template
+            customerName: data.customerName || 'Pelanggan Umum',
+            businessType: 'Pelanggan Reguler' // Default for this template
         },
         items: data.items.map(item => ({
             itemName: item.product_name,

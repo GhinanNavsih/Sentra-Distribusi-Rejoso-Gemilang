@@ -41,9 +41,9 @@ function Layout() {
                 <h1 className="text-xl font-bold text-gray-900 tracking-tight">Sentra Distribusi Rejoso Gemilang</h1>
               </div>
               <nav className="hidden md:flex gap-2">
-                <NavLink to="/inventory">Inventory</NavLink>
-                <NavLink to="/pos">Point of Sale</NavLink>
-                <NavLink to="/transactions">Transactions</NavLink>
+                <NavLink to="/inventory">Inventori</NavLink>
+                <NavLink to="/pos">Kasir / POS</NavLink>
+                <NavLink to="/transactions">Transaksi</NavLink>
               </nav>
             </div>
             <div className="flex items-center gap-4">
@@ -53,7 +53,7 @@ function Layout() {
               <button
                 onClick={handleLogout}
                 className="text-gray-500 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
-                title="Sign Out"
+                title="Keluar"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

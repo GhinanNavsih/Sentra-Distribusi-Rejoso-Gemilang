@@ -54,12 +54,12 @@ export const orderService = {
                 // Validate stock availability
                 for (const { item, invDoc } of inventoryReads) {
                     if (!invDoc.exists()) {
-                        throw new Error(`Product ${item.product_name} not found in inventory.`);
+                        throw new Error(`Produk ${item.product_name} tidak ditemukan di inventori.`);
                     }
 
                     const currentStock = invDoc.data().current_stock_base || 0;
                     if (currentStock < item.qty) {
-                        throw new Error(`Insufficient stock for ${item.product_name}. Requested: ${item.qty}, Available: ${currentStock}`);
+                        throw new Error(`Stok tidak cukup untuk ${item.product_name}. Diminta: ${item.qty}, Tersedia: ${currentStock}`);
                     }
                 }
 

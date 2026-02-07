@@ -77,12 +77,12 @@ export const inventoryService = {
             const toDoc = await transaction.get(toRef);
 
             if (!fromDoc.exists()) {
-                throw new Error(`Source product ${fromSku} not found in inventory.`);
+                throw new Error(`Produk sumber ${fromSku} tidak ditemukan di inventori.`);
             }
 
             const currentFrom = fromDoc.data().current_stock_base || 0;
             if (currentFrom < qtyToOpen) {
-                throw new Error(`Insufficient stock for ${fromSku}. Current: ${currentFrom}`);
+                throw new Error(`Stok tidak cukup untuk ${fromSku}. Saat ini: ${currentFrom}`);
             }
 
             const newFrom = currentFrom - qtyToOpen;

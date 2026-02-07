@@ -214,7 +214,12 @@ export default function PosPage() {
                         <div className="flex gap-2">
                             {['regular', 'premium', 'star'].map(type => {
                                 const isSelected = selectedCustomerType === type;
-                                const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+                                const labels = {
+                                    regular: 'Reguler',
+                                    premium: 'Premium',
+                                    star: 'Bintang'
+                                };
+                                const typeLabel = labels[type];
                                 return (
                                     <button
                                         key={type}

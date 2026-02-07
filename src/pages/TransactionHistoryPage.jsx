@@ -18,7 +18,7 @@ const TransactionHistoryPage = () => {
 
     const handleSearch = async () => {
         if (!startDate || !endDate) {
-            alert('Please select both start and end dates');
+            alert('Silakan pilih tanggal mulai dan akhir');
             return;
         }
 
@@ -60,7 +60,7 @@ const TransactionHistoryPage = () => {
             setTransactions(allTransactions);
         } catch (error) {
             console.error('Error fetching transactions:', error);
-            alert('Failed to load transaction history');
+            alert('Gagal memuat riwayat transaksi');
         } finally {
             setLoading(false);
         }
@@ -113,8 +113,8 @@ const TransactionHistoryPage = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Transaction History</h1>
-                    <p className="text-sm text-gray-500 mt-1">Select a date range to view transactions</p>
+                    <h1 className="text-3xl font-bold text-gray-900">Riwayat Transaksi</h1>
+                    <p className="text-sm text-gray-500 mt-1">Pilih rentang tanggal untuk melihat transaksi</p>
                 </div>
 
                 {/* Filter Buttons */}
@@ -127,7 +127,7 @@ const TransactionHistoryPage = () => {
                                 : 'text-gray-600 hover:text-gray-900'
                                 }`}
                         >
-                            All
+                            Semua
                         </button>
                         <button
                             onClick={() => setFilter('sale')}
@@ -137,7 +137,7 @@ const TransactionHistoryPage = () => {
                                 }`}
                         >
                             <FaShoppingCart size={14} />
-                            Sales
+                            Penjualan
                         </button>
                         <button
                             onClick={() => setFilter('purchase')}
@@ -147,7 +147,7 @@ const TransactionHistoryPage = () => {
                                 }`}
                         >
                             <FaTruck size={14} />
-                            Purchases
+                            Pembelian
                         </button>
                     </div>
                 )}
@@ -157,7 +157,7 @@ const TransactionHistoryPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
                         <input
                             type="date"
                             value={startDate}
@@ -166,7 +166,7 @@ const TransactionHistoryPage = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
                         <input
                             type="date"
                             value={endDate}
@@ -179,7 +179,7 @@ const TransactionHistoryPage = () => {
                         disabled={loading}
                         className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                     >
-                        {loading ? 'Searching...' : 'Show History'}
+                        {loading ? 'Mencari...' : 'Tampilkan Riwayat'}
                     </button>
                 </div>
             </div>
@@ -188,18 +188,18 @@ const TransactionHistoryPage = () => {
             {!hasSearched ? (
                 <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-12 text-center">
                     <FaCalendar size={48} className="mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500">Please select a date range and click "Show History" to view records.</p>
+                    <p className="text-gray-500">Silakan pilih rentang tanggal dan klik "Tampilkan Riwayat" untuk melihat catatan.</p>
                 </div>
             ) : loading ? (
                 <div className="flex items-center justify-center h-64">
-                    <div className="text-gray-500">Loading transactions...</div>
+                    <div className="text-gray-500">Memuat transaksi...</div>
                 </div>
             ) : Object.keys(groupedTransactions).length === 0 ? (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
                     <div className="text-gray-400 mb-2">
                         <FaCalendar size={48} className="mx-auto" />
                     </div>
-                    <p className="text-gray-500">No transactions found for the selected period.</p>
+                    <p className="text-gray-500">Tidak ada transaksi ditemukan untuk periode yang dipilih.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -221,7 +221,7 @@ const TransactionHistoryPage = () => {
                                         <div className="text-left">
                                             <h3 className="font-bold text-gray-900">{dateKey}</h3>
                                             <p className="text-sm text-gray-500">
-                                                {salesCount} sale{salesCount !== 1 ? 's' : ''}, {purchasesCount} purchase{purchasesCount !== 1 ? 's' : ''}
+                                                {salesCount} penjualan, {purchasesCount} pembelian
                                             </p>
                                         </div>
                                     </div>
@@ -261,7 +261,7 @@ const TransactionHistoryPage = () => {
                                                                     ? 'bg-green-100 text-green-700'
                                                                     : 'bg-blue-100 text-blue-700'
                                                                     }`}>
-                                                                    {transaction.type === 'sale' ? 'Sale' : 'Purchase'}
+                                                                    {transaction.type === 'sale' ? 'Penjualan' : 'Pembelian'}
                                                                 </span>
                                                             </div>
                                                             <p className="text-sm text-gray-500 mb-2">{formatTime(transaction.date)}</p>
@@ -298,7 +298,7 @@ const TransactionHistoryPage = () => {
                                                                         })}
                                                                         className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition"
                                                                     >
-                                                                        <FaPrint /> Print Receipt
+                                                                        <FaPrint /> Cetak Nota
                                                                     </button>
                                                                 ) : (
                                                                     <div className="flex items-center gap-2">
@@ -308,7 +308,7 @@ const TransactionHistoryPage = () => {
                                                                             </div>
                                                                         ) : (
                                                                             <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 border border-gray-200 px-2 py-1 rounded">
-                                                                                No Receipt Attached
+                                                                                Tidak Ada Nota
                                                                             </div>
                                                                         )}
                                                                     </div>
