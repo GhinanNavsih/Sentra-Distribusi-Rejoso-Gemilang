@@ -1,20 +1,14 @@
 import { db } from "../firebase.config";
 import { collection, doc, serverTimestamp, runTransaction } from "firebase/firestore";
+import { getCollectionName } from "../utils/envMode";
 
-const COLLECTION_NAME = "orders";
-const INVENTORY_COLLECTION = "inventory";
-const COUNTER_COLLECTION = "counters";
-
-// Helper to get today's date string DD-MM-YY
+// Helper to get today's date string YYYY-MM-DD
 const getTodayDateString = () => {
     const d = new Date();
-    // Use user's local time or UTC? Usually local logic for business days.
-    // Given the requirement, simple local formatting is likely expected.
-    // 02-02-26
-    const day = String(d.getDate()).padStart(2, '0');
+    const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = String(d.getFullYear()).slice(-2); // Last 2 digits
-    return `${day}-${month}-${year}`;
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
 
 export const orderService = {
@@ -23,6 +17,9 @@ export const orderService = {
      * @param {Object} orderData - { items: [{ product_id, qty, unit_price, total, product_name }], grand_total }
      */
     createOrder: async (orderData) => {
+        const COLLECTION_NAME = getCollectionName("orders");
+        const INVENTORY_COLLECTION = getCollectionName("inventory");
+        const COUNTER_COLLECTION = getCollectionName("counters");
         // We need to run this as a transaction to ensure stock is available and deducted correctly
         // AND to safely increment the daily order ID counter
         try {
@@ -30,7 +27,7 @@ export const orderService = {
                 // --- PHASE 1: ALL READS FIRST ---
 
                 // Read 1: Generate ID
-                const dateStr = getTodayDateString(); // e.g., "02-02-26"
+                const dateStr = getTodayDateString(); // e.g., "2026-02-07"
                 const counterRef = doc(db, COUNTER_COLLECTION, `orders_${dateStr}`);
                 const counterDoc = await transaction.get(counterRef);
 
@@ -39,7 +36,7 @@ export const orderService = {
                     nextCount = counterDoc.data().count + 1;
                 }
 
-                // Format: 02-02-26-0001
+                // Format: 2026-02-07-0001
                 const countStr = String(nextCount).padStart(4, '0');
                 const newOrderId = `${dateStr}-${countStr}`;
 
@@ -94,9 +91,48 @@ export const orderService = {
     },
 
     /**
+     * Create an order record WITHOUT deducting inventory.
+     * Used for stock adjustments where inventory is set separately.
+     */
+    createOrderRecord: async (orderData) => {
+        const COLLECTION_NAME = getCollectionName("orders");
+        const COUNTER_COLLECTION = getCollectionName("counters");
+        try {
+            await runTransaction(db, async (transaction) => {
+                const dateStr = getTodayDateString();
+                const counterRef = doc(db, COUNTER_COLLECTION, `orders_${dateStr}`);
+                const counterDoc = await transaction.get(counterRef);
+
+                let nextCount = 1;
+                if (counterDoc.exists()) {
+                    nextCount = counterDoc.data().count + 1;
+                }
+
+                const countStr = String(nextCount).padStart(4, '0');
+                const newOrderId = `${dateStr}-${countStr}`;
+
+                transaction.set(counterRef, { count: nextCount }, { merge: true });
+
+                const orderRef = doc(db, COLLECTION_NAME, newOrderId);
+                transaction.set(orderRef, {
+                    ...orderData,
+                    id: newOrderId,
+                    status: 'completed',
+                    created_at: serverTimestamp()
+                });
+            });
+            return true;
+        } catch (e) {
+            console.error("Order Record Creation Failed", e);
+            throw e;
+        }
+    },
+
+    /**
      * Get all orders
      */
     getAllOrders: async () => {
+        const COLLECTION_NAME = getCollectionName("orders");
         try {
             const { getDocs, query, orderBy } = await import('firebase/firestore');
             const q = query(collection(db, COLLECTION_NAME), orderBy("created_at", "desc"));

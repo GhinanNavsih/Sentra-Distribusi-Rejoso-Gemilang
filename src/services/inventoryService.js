@@ -1,7 +1,6 @@
 import { db } from "../firebase.config";
 import { doc, getDoc, setDoc, runTransaction, deleteDoc } from "firebase/firestore";
-
-const COLLECTION_NAME = "inventory";
+import { getCollectionName } from "../utils/envMode";
 
 export const inventoryService = {
     /**
@@ -9,7 +8,8 @@ export const inventoryService = {
      * Uses SKU as Document ID for the inventory record for simple aggregation.
      */
     updateStock: async (sku, changeInBaseUnits) => {
-        const inventoryRef = doc(db, COLLECTION_NAME, sku);
+        const col = getCollectionName("inventory");
+        const inventoryRef = doc(db, col, sku);
 
         await runTransaction(db, async (transaction) => {
             const sfDoc = await transaction.get(inventoryRef);
@@ -26,7 +26,8 @@ export const inventoryService = {
      * Explicitly set stock level
      */
     setStock: async (sku, newQuantity) => {
-        const inventoryRef = doc(db, COLLECTION_NAME, sku);
+        const col = getCollectionName("inventory");
+        const inventoryRef = doc(db, col, sku);
         await setDoc(inventoryRef, {
             product_id: sku,
             current_stock_base: Number(newQuantity)
@@ -37,7 +38,8 @@ export const inventoryService = {
      * Delete stock record
      */
     deleteStock: async (sku) => {
-        const inventoryRef = doc(db, COLLECTION_NAME, sku);
+        const col = getCollectionName("inventory");
+        const inventoryRef = doc(db, col, sku);
         await deleteDoc(inventoryRef);
     },
 
@@ -45,7 +47,8 @@ export const inventoryService = {
      * Get stock level for a product
      */
     getStock: async (sku) => {
-        const docRef = doc(db, COLLECTION_NAME, sku);
+        const col = getCollectionName("inventory");
+        const docRef = doc(db, col, sku);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             return docSnap.data().current_stock_base;
@@ -62,16 +65,13 @@ export const inventoryService = {
      * @param {number} conversionRate - How many loose units in 1 bulk unit (e.g., 50)
      */
     repack: async (fromSku, toSku, qtyToOpen, conversionRate) => {
-        // 1. Deduct 'qtyToOpen' (which is 1 base unit of FromSku)
-        // FromSku Base Unit = Sack. So we deduct 1.
-        // 2. Add 'qtyToOpen * conversionRate' to ToSku.
-
+        const col = getCollectionName("inventory");
         const addition = qtyToOpen * conversionRate;
 
         // Execute as transaction
         await runTransaction(db, async (transaction) => {
-            const fromRef = doc(db, COLLECTION_NAME, fromSku);
-            const toRef = doc(db, COLLECTION_NAME, toSku);
+            const fromRef = doc(db, col, fromSku);
+            const toRef = doc(db, col, toSku);
 
             const fromDoc = await transaction.get(fromRef);
             const toDoc = await transaction.get(toRef);

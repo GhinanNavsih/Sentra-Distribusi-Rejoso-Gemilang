@@ -1,16 +1,14 @@
 import { db } from "../firebase.config";
 import { collection, doc, serverTimestamp, setDoc, getDocs, query, orderBy } from "firebase/firestore";
+import { getCollectionName } from "../utils/envMode";
 
-const COLLECTION_NAME = "purchases";
-const COUNTER_COLLECTION = "counters";
-
-// Helper to get today's date string DD-MM-YY
+// Helper to get today's date string YYYY-MM-DD
 const getTodayDateString = () => {
     const d = new Date();
-    const day = String(d.getDate()).padStart(2, '0');
+    const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = String(d.getFullYear()).slice(-2);
-    return `${day}-${month}-${year}`;
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
 
 export const purchaseService = {
@@ -19,6 +17,8 @@ export const purchaseService = {
      * @param {Object} purchaseData - { items, grand_total, supplier_name, receipt_file }
      */
     createPurchase: async (purchaseData) => {
+        const COLLECTION_NAME = getCollectionName("purchases");
+        const COUNTER_COLLECTION = getCollectionName("counters");
         try {
             // Generate unique purchase ID
             const dateStr = getTodayDateString();
@@ -33,7 +33,7 @@ export const purchaseService = {
                 nextCount = existingCounter.data().count + 1;
             }
 
-            // Format: PUR-02-02-26-0001
+            // Format: PUR-2026-02-07-0001
             const countStr = String(nextCount).padStart(4, '0');
             const newPurchaseId = `PUR-${dateStr}-${countStr}`;
 
@@ -59,6 +59,7 @@ export const purchaseService = {
      * Get all purchases
      */
     getAllPurchases: async () => {
+        const COLLECTION_NAME = getCollectionName("purchases");
         try {
             const q = query(collection(db, COLLECTION_NAME), orderBy("created_at", "desc"));
             const snapshot = await getDocs(q);

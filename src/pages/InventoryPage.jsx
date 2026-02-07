@@ -3,6 +3,7 @@ import { productService } from '../services/productService';
 import { inventoryService } from '../services/inventoryService';
 import AddProductForm from '../components/AddProductForm';
 import EditProductForm from '../components/EditProductForm';
+import SetStockModal from '../components/SetStockModal';
 import RepackModal from '../components/RepackModal';
 import BulkPurchaseModal from '../components/BulkPurchaseModal';
 import { orderService } from '../services/orderService';
@@ -22,10 +23,13 @@ export default function InventoryPage() {
     const [products, setProducts] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [selectedProductForEdit, setSelectedProductForEdit] = useState(null);
+    const [selectedProductForStock, setSelectedProductForStock] = useState(null);
     const [showRepackForm, setShowRepackForm] = useState(false);
     const [showBulkPurchaseModal, setShowBulkPurchaseModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
     // Insights State
     const [orders, setOrders] = useState([]);
@@ -131,6 +135,30 @@ export default function InventoryPage() {
     };
 
     const sortedProducts = getSortedProducts();
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => setOpenMenuId(null);
+        if (openMenuId) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [openMenuId]);
+
+    // Handle opening the three-dot menu — calculate position from the clicked button
+    const handleMenuToggle = (e, productId) => {
+        e.stopPropagation();
+        if (openMenuId === productId) {
+            setOpenMenuId(null);
+        } else {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setMenuPos({
+                top: rect.bottom + 4,
+                left: rect.right - 192,
+            });
+            setOpenMenuId(productId);
+        }
+    };
 
     // Insight Logic
     const calculateTotal = (data, period, dateKey = 'created_at') => {
@@ -263,6 +291,14 @@ export default function InventoryPage() {
                 </div>
             )}
 
+            {selectedProductForStock && (
+                <SetStockModal
+                    product={selectedProductForStock}
+                    onClose={() => setSelectedProductForStock(null)}
+                    onSuccess={() => { setSelectedProductForStock(null); fetchData(); }}
+                />
+            )}
+
             {showRepackForm && (
                 <RepackModal
                     onClose={() => setShowRepackForm(false)}
@@ -319,8 +355,7 @@ export default function InventoryPage() {
                                     className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs text-right cursor-pointer hover:bg-gray-100 transition select-none">
                                     Total Nilai <SortIndicator columnKey="total_value" />
                                 </th>
-                                <th className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs text-right">
-                                    Aksi
+                                <th className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs text-center w-16">
                                 </th>
                             </tr>
                         </thead>
@@ -339,17 +374,49 @@ export default function InventoryPage() {
                                     <td className="px-6 py-4 text-right font-medium text-gray-900">
                                         {product.cost_price ? formatCurrency((product.current_stock || 0) * product.cost_price) : '-'}
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-center">
                                         <button
-                                            onClick={() => setSelectedProductForEdit(product)}
-                                            className="text-gray-500 hover:text-gray-700 font-medium px-4 py-2 rounded border border-gray-200 hover:bg-gray-50 transition">
-                                            Edit
+                                            onClick={(e) => handleMenuToggle(e, product.id)}
+                                            className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-500 hover:text-gray-700"
+                                            title="Aksi"
+                                        >
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                            </svg>
                                         </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Dropdown menu rendered outside the table to avoid overflow clipping */}
+                    {openMenuId && (
+                        <div
+                            className="fixed w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                            style={{ top: menuPos.top, left: menuPos.left }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                onClick={() => { const p = products.find(p => p.id === openMenuId); setOpenMenuId(null); setSelectedProductForEdit(p); }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Edit Produk
+                            </button>
+                            <button
+                                onClick={() => { const p = products.find(p => p.id === openMenuId); setOpenMenuId(null); setSelectedProductForStock(p); }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                Tetapkan Stok
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

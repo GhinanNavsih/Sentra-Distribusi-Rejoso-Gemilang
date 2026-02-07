@@ -10,8 +10,6 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
         bulk_unit_name: 'Sack',
         bulk_unit_conversion: 50,
         cost_price: 0,
-        current_stock: 0,
-        current_stock: 0,
         price_regular: 0,
         price_premium: 0,
         price_star: 0
@@ -24,8 +22,6 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
             setFormData({
                 ...product,
                 cost_price: product.cost_price || 0,
-                current_stock: product.current_stock || 0,
-                // Ensure price tiers is always an array
                 price_regular: product.price_regular || 0,
                 price_premium: product.price_premium || 0,
                 price_star: product.price_star || 0
@@ -38,22 +34,17 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
         try {
-            // Ensure numbers
             const payload = {
-                // id: formData.id, // Only use SKU as ID
                 name: formData.name,
                 sku: formData.sku,
                 base_unit: formData.base_unit,
                 bulk_unit_name: formData.bulk_unit_name,
                 bulk_unit_conversion: Number(formData.bulk_unit_conversion),
-                cost_price: Number(formData.cost_price),
                 cost_price: Number(formData.cost_price),
                 price_regular: Number(formData.price_regular),
                 price_premium: Number(formData.price_premium),
@@ -62,11 +53,10 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
 
             // Check for Rename (SKU change)
             if (product.sku !== formData.sku) {
-                // Create NEW records first
-                await Promise.all([
-                    productService.saveProduct(payload),
-                    inventoryService.setStock(formData.sku, Number(formData.current_stock))
-                ]);
+                // Create NEW product record, then move stock to new SKU
+                await productService.saveProduct(payload);
+                const currentStock = product.current_stock || 0;
+                await inventoryService.setStock(formData.sku, currentStock);
 
                 // Delete OLD records
                 await Promise.all([
@@ -74,11 +64,8 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                     inventoryService.deleteStock(product.sku)
                 ]);
             } else {
-                // Normal Update
-                await Promise.all([
-                    productService.saveProduct(payload),
-                    inventoryService.setStock(formData.sku, Number(formData.current_stock))
-                ]);
+                // Normal Update — only product data, NOT stock
+                await productService.saveProduct(payload);
             }
 
             if (onSuccess) onSuccess();
@@ -137,14 +124,6 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                         <input required type="text" name="sku" value={formData.sku} onChange={handleChange}
                             className="w-full p-2 border border-blue-200 bg-blue-50 rounded text-gray-900 focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
                         <p className="text-[10px] text-gray-500 mt-1">Mengubah SKU akan mengubah kode produk secara permanen.</p>
-                    </div>
-
-                    {/* Stock Level - Moved here for visibility */}
-                    <div className="md:col-span-2 bg-blue-50 p-4 rounded border border-blue-200">
-                        <label className="block text-sm font-bold text-gray-900 mb-1">Stok Saat Ini</label>
-                        <p className="text-xs text-gray-500 mb-2">Sesuaikan jumlah stok secara manual ({formData.base_unit}). Gunakan untuk koreksi stok.</p>
-                        <input type="number" name="current_stock" value={formData.current_stock} onChange={handleChange}
-                            className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-lg" />
                     </div>
 
                     {/* Units */}

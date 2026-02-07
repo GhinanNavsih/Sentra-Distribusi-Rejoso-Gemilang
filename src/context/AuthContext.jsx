@@ -14,14 +14,22 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     function login(email, password) {
+        if (!auth) {
+            return Promise.reject(new Error('Firebase is not configured. Add your Firebase credentials to .env (see .env.example).'));
+        }
         return signInWithEmailAndPassword(auth, email, password);
     }
 
     function logout() {
+        if (!auth) return Promise.resolve();
         return signOut(auth);
     }
 
     useEffect(() => {
+        if (!auth) {
+            setLoading(false);
+            return;
+        }
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
             setLoading(false);

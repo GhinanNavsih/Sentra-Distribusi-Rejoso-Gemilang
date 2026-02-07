@@ -8,7 +8,6 @@ export default function AddProductForm({ onClose, onSuccess }) {
         base_unit: 'kg',
         bulk_unit_name: 'Sack',
         bulk_unit_conversion: 50,
-        bulk_unit_conversion: 50,
         price_regular: 0,
         price_premium: 0,
         price_star: 0

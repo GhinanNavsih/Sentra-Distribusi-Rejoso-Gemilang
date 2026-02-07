@@ -1,7 +1,6 @@
 import { db } from "../firebase.config";
 import { collection, doc, setDoc, getDoc, getDocs, deleteDoc } from "firebase/firestore";
-
-const COLLECTION_NAME = "products";
+import { getCollectionName } from "../utils/envMode";
 
 export const productService = {
     /**
@@ -10,13 +9,14 @@ export const productService = {
      * @param {Object} productData - { sku, name, base_unit, bulk_unit_name, bulk_unit_conversion, price_tiers }
      */
     saveProduct: async (productData) => {
+        const col = getCollectionName("products");
         const { sku } = productData;
         if (!sku) throw new Error("SKU diperlukan");
 
         // Ensure numbers
         if (productData.bulk_unit_conversion) productData.bulk_unit_conversion = Number(productData.bulk_unit_conversion);
 
-        const productRef = doc(db, COLLECTION_NAME, sku);
+        const productRef = doc(db, col, sku);
         // Merge true allows updating existing product without wiping other fields
         await setDoc(productRef, productData, { merge: true });
         return sku;
@@ -26,8 +26,9 @@ export const productService = {
      * Delete a product by SKU
      */
     deleteProduct: async (sku) => {
+        const col = getCollectionName("products");
         if (!sku) return;
-        const productRef = doc(db, COLLECTION_NAME, sku);
+        const productRef = doc(db, col, sku);
         await deleteDoc(productRef);
     },
 
@@ -35,7 +36,8 @@ export const productService = {
      * Fetch all products
      */
     getAllProducts: async () => {
-        const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+        const col = getCollectionName("products");
+        const snapshot = await getDocs(collection(db, col));
         return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     },
 
@@ -43,7 +45,8 @@ export const productService = {
      * Get single product by SKU
      */
     getProductBySku: async (sku) => {
-        const docRef = doc(db, COLLECTION_NAME, sku);
+        const col = getCollectionName("products");
+        const docRef = doc(db, col, sku);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             return { id: docSnap.id, ...docSnap.data() };

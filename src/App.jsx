@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage';
 import logo from './assets/logo_full.png';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import EnvToggle from './components/EnvToggle';
+import { isStaging } from './utils/envMode';
 
 function NavLink({ to, children }) {
   const location = useLocation();
@@ -30,9 +32,16 @@ function Layout() {
     }
   };
 
+  const stagingActive = isStaging();
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      {stagingActive && (
+        <div className="bg-amber-500 text-white text-center text-xs font-bold py-1 tracking-wide">
+          STAGING MODE — Data ditulis ke koleksi *_test. Tidak mempengaruhi data produksi.
+        </div>
+      )}
+      <header className={`bg-white border-b sticky top-0 z-10 ${stagingActive ? 'border-amber-300' : 'border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-8">
@@ -47,6 +56,7 @@ function Layout() {
               </nav>
             </div>
             <div className="flex items-center gap-4">
+              <EnvToggle />
               <div className="text-xs text-gray-500 font-medium hidden sm:block">
                 {currentUser?.email}
               </div>
