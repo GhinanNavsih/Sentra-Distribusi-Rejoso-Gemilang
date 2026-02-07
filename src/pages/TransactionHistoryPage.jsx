@@ -301,14 +301,24 @@ const TransactionHistoryPage = () => {
                                                                         <FaPrint /> Cetak Nota
                                                                     </button>
                                                                 ) : (
-                                                                    <div className="flex items-center gap-2">
-                                                                        {transaction.receipt_file ? (
-                                                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100">
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <button
+                                                                            onClick={() => printReceipt({
+                                                                                orderId: transaction.id,
+                                                                                orderDate: transaction.date.toLocaleDateString('id-ID'),
+                                                                                items: transaction.items,
+                                                                                grandTotal: transaction.total,
+                                                                                customerName: transaction.supplier_name,
+                                                                                paymentMethod: 'Cash',
+                                                                                isPurchase: true
+                                                                            })}
+                                                                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition w-fit"
+                                                                        >
+                                                                            <FaPrint /> Cetak Bukti Terima
+                                                                        </button>
+                                                                        {transaction.receipt_file && (
+                                                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100 w-fit">
                                                                                 <FaFileAlt /> {transaction.receipt_file}
-                                                                            </div>
-                                                                        ) : (
-                                                                            <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 border border-gray-200 px-2 py-1 rounded">
-                                                                                Tidak Ada Nota
                                                                             </div>
                                                                         )}
                                                                     </div>

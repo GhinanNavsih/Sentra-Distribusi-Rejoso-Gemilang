@@ -48,6 +48,7 @@ export const generateReceipt = (receiptData) => {
         customerName = '',
         paymentMethod = 'Cash',
         isCreditSale = false,
+        isPurchase = false,
         companyInfo = {
             name: 'Sentra Distribusi Rejoso Gemilang',
             subheader: 'Unit Usaha Koperasi',
@@ -106,7 +107,7 @@ export const generateReceipt = (receiptData) => {
 
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    const title = isCreditSale ? 'INVOICE' : 'NOTA PENJUALAN';
+    const title = isPurchase ? 'BUKTI PENERIMAAN' : (isCreditSale ? 'INVOICE' : 'NOTA PENJUALAN');
     doc.text(title, rightX, rightY + 3, { align: 'right' });
 
     rightY += 10;
@@ -120,7 +121,7 @@ export const generateReceipt = (receiptData) => {
     if (customerName) {
         rightY += 6;
         doc.setFont('helvetica', 'italic');
-        doc.text('Kepada Yth.', rightX, rightY, { align: 'right' });
+        doc.text(isPurchase ? 'Dari Supplier:' : 'Kepada Yth.', rightX, rightY, { align: 'right' });
         rightY += 4;
         doc.setFont('helvetica', 'bold');
         doc.text(customerName, rightX, rightY, { align: 'right' });
@@ -183,7 +184,7 @@ export const generateReceipt = (receiptData) => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     // Fixed: Move label further left to prevent overlap
-    doc.text('TOTAL PEMBELIAN:', pageWidth - margin - 65, yPos);
+    doc.text(isPurchase ? 'TOTAL PEMBELIAN:' : 'TOTAL PENJUALAN:', pageWidth - margin - 65, yPos);
     doc.text(`Rp ${grandTotal.toLocaleString('id-ID')}`, colTotal, yPos, { align: 'right' });
 
     yPos += 10;
