@@ -32,11 +32,15 @@ export default function PosPage() {
     // Recalculate prices when customer type changes
     useEffect(() => {
         setCart(prev => prev.map(item => {
-            const newPrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
+            const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
+            const unitPrice = item.selected_unit === 'bulk'
+                ? basePrice * (item.product_obj.bulk_unit_conversion || 1)
+                : basePrice;
+
             return {
                 ...item,
-                unit_price: newPrice,
-                total: newPrice * item.qty
+                unit_price: unitPrice,
+                total: unitPrice * item.qty
             };
         }));
     }, [selectedCustomerType]);
@@ -62,7 +66,10 @@ export default function PosPage() {
                 product_name: product.name,
                 sku: product.sku,
                 base_unit: product.base_unit,
-                product_obj: product, // Store ref for recalculation
+                bulk_unit_name: product.bulk_unit_name,
+                bulk_unit_conversion: product.bulk_unit_conversion,
+                selected_unit: 'base', // Default to base unit
+                product_obj: product,
                 qty: initialQty,
                 unit_price: price,
                 total: price * initialQty
@@ -76,13 +83,16 @@ export default function PosPage() {
         return currentCart.map(item => {
             if (item.product_id === productId) {
                 const safeQty = Math.max(1, newQty);
-                // Recalculate Tiered Price
-                const newPrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
+                const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
+                const currentPrice = item.selected_unit === 'bulk'
+                    ? basePrice * (item.product_obj.bulk_unit_conversion || 1)
+                    : basePrice;
+
                 return {
                     ...item,
                     qty: safeQty,
-                    unit_price: newPrice,
-                    total: newPrice * safeQty
+                    unit_price: currentPrice,
+                    total: currentPrice * safeQty
                 };
             }
             return item;
@@ -95,6 +105,36 @@ export default function PosPage() {
 
     const removeFromCart = (productId) => {
         setCart(prev => prev.filter(item => item.product_id !== productId));
+    };
+
+    const handleUnitChange = (productId, newUnit) => {
+        setCart(prev => prev.map(item => {
+            if (item.product_id === productId) {
+                if (item.selected_unit === newUnit) return item;
+
+                const isGoingToBulk = newUnit === 'bulk';
+                const conversion = item.product_obj.bulk_unit_conversion || 1;
+
+                // Convert Quantity to keep the total amount of "base units" roughly the same
+                // 10 Pcs -> 1 Box (if conversion 10)
+                // 1 Box -> 10 Pcs
+                let newQty = isGoingToBulk
+                    ? Math.max(1, Math.floor(item.qty / conversion))
+                    : item.qty * conversion;
+
+                const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
+                const newUnitPrice = isGoingToBulk ? basePrice * conversion : basePrice;
+
+                return {
+                    ...item,
+                    selected_unit: newUnit,
+                    qty: newQty,
+                    unit_price: newUnitPrice,
+                    total: newUnitPrice * newQty
+                };
+            }
+            return item;
+        }));
     };
 
     const cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
@@ -143,7 +183,8 @@ export default function PosPage() {
                     qty: item.qty,
                     unit_price: item.unit_price,
                     total: item.total,
-                    product_obj: item.product_obj // Keep this for receipt price recalculation
+                    selected_unit_name: item.selected_unit === 'bulk' ? item.bulk_unit_name : item.base_unit,
+                    product_obj: item.product_obj
                 })),
                 grandTotal: cartTotal,
                 selectedCustomerType: selectedCustomerType // This is what gets saved to database
@@ -255,29 +296,43 @@ export default function PosPage() {
                             <div key={item.product_id} className="flex gap-3 items-start border-b border-gray-100 pb-3">
                                 <div className="flex-1">
                                     <div className="font-bold text-gray-900">{item.product_name}</div>
-                                    <div className="text-xs text-blue-600 font-medium">
-                                        @ Rp {item.unit_price.toLocaleString('id-ID')} / {item.base_unit}
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        className="w-16 p-1 border border-gray-300 rounded text-center font-bold text-sm"
-                                        value={item.qty}
-                                        onChange={(e) => handleQtyChange(item.product_id, e.target.value)}
-                                    />
-                                    <div className="text-right w-24">
-                                        <div className="font-bold text-gray-900">
-                                            Rp {item.total.toLocaleString('id-ID')}
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <div className="text-xs text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-100 italic">
+                                            @ Rp {item.unit_price.toLocaleString('id-ID')} / {item.selected_unit === 'bulk' ? item.bulk_unit_name : item.base_unit}
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => removeFromCart(item.product_id)}
-                                        className="text-red-400 hover:text-red-600 p-1"
-                                    >
-                                        &times;
-                                    </button>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                    {item.product_obj.bulk_unit_name && (
+                                        <select
+                                            value={item.selected_unit}
+                                            onChange={(e) => handleUnitChange(item.product_id, e.target.value)}
+                                            className="text-[10px] bg-gray-50 border border-gray-200 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-primary w-24 cursor-pointer"
+                                        >
+                                            <option value="base">{item.base_unit} (Dasar)</option>
+                                            <option value="bulk">{item.bulk_unit_name} (Besar)</option>
+                                        </select>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            className="w-16 p-1 border border-gray-300 rounded text-center font-bold text-sm"
+                                            value={item.qty}
+                                            onChange={(e) => handleQtyChange(item.product_id, e.target.value)}
+                                        />
+                                        <div className="text-right w-24">
+                                            <div className="font-bold text-gray-900">
+                                                Rp {item.total.toLocaleString('id-ID')}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => removeFromCart(item.product_id)}
+                                            className="text-red-400 hover:text-red-600 p-1"
+                                        >
+                                            &times;
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))
