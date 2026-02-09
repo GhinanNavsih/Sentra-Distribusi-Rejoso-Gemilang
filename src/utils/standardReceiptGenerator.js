@@ -39,6 +39,20 @@ const numberToWords = (num) => {
     return convert(num) + ' Rupiah';
 };
 
+// Helper function for currency formatting (Rounds to nearest whole number, no decimals)
+const formatRupiah = (value) => {
+    if (value === undefined || value === null || value === "") return "0";
+
+    // Round to nearest whole number to prevent text overlap
+    const num = Math.round(parseFloat(value));
+    if (isNaN(num)) return "0";
+
+    return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(num);
+};
+
 export const generateReceipt = (receiptData) => {
     const {
         orderId,
@@ -168,8 +182,8 @@ export const generateReceipt = (receiptData) => {
         doc.text(`${index + 1}`, colNo, yPos);
         doc.text(item.product_name, colNama, yPos);
         doc.text(`${item.qty} ${item.base_unit}`, colQty, yPos, { align: 'right' });
-        doc.text(item.unit_price.toLocaleString('id-ID'), colHarga, yPos, { align: 'right' });
-        doc.text(item.total.toLocaleString('id-ID'), colTotal, yPos, { align: 'right' });
+        doc.text(formatRupiah(item.unit_price), colHarga, yPos, { align: 'right' });
+        doc.text(formatRupiah(item.total), colTotal, yPos, { align: 'right' });
 
         yPos += 6;
     });
@@ -185,7 +199,7 @@ export const generateReceipt = (receiptData) => {
     doc.setFontSize(11);
     // Fixed: Move label further left to prevent overlap
     doc.text(isPurchase ? 'TOTAL PEMBELIAN:' : 'TOTAL PENJUALAN:', pageWidth - margin - 65, yPos);
-    doc.text(`Rp ${grandTotal.toLocaleString('id-ID')}`, colTotal, yPos, { align: 'right' });
+    doc.text(`Rp ${formatRupiah(grandTotal)}`, colTotal, yPos, { align: 'right' });
 
     yPos += 10;
 
@@ -193,7 +207,7 @@ export const generateReceipt = (receiptData) => {
     // Terbilang
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(9);
-    const terbilang = numberToWords(grandTotal);
+    const terbilang = numberToWords(Math.round(grandTotal));
     doc.text(`Terbilang: ${terbilang}`, margin, yPos);
 
     yPos += 8;

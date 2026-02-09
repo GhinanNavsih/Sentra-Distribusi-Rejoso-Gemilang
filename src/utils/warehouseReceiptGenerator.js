@@ -1,12 +1,18 @@
 import jsPDF from 'jspdf';
 import logoImage from '../assets/logo-koperasi-unipdu-removebg-preview.png';
 
-// Helper function for currency formatting
+// Helper function for currency formatting (Rounds to nearest whole number, no decimals)
 function formatRupiah(value) {
-    if (!value) return "0";
-    const numeric = value.toString().replace(/\D/g, "");
-    if (!numeric) return "0";
-    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    if (value === undefined || value === null || value === "") return "0";
+
+    // Round to nearest whole number to prevent text overlap
+    const num = Math.round(parseFloat(value));
+    if (isNaN(num)) return "0";
+
+    return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(num);
 }
 
 // Helper function to format date in Indonesian (EEEE, DD MM YYYY)
@@ -47,14 +53,14 @@ function formatIndonesianDate(dateString) {
  * Generate PDF for Regular Customers (Warehouse Exit Style)
  * @param {Object} data - Order data from POS
  */
-export const generateWarehouseExitPDF = async (data) => {
+export const generateWarehouseReceipt = async (data) => {
     // Map POS order data to the format expected by this template
     const record = {
         id: data.orderId,
         createdAt: data.orderDate || new Date(),
         customerDetail: {
             customerName: data.customerName || 'Pelanggan Umum',
-            businessType: 'Pelanggan Reguler' // Default for this template
+            businessType: data.businessType || 'Pelanggan Reguler' // Use custom input or default
         },
         items: data.items.map(item => ({
             itemName: item.product_name,
@@ -360,7 +366,7 @@ export const generateWarehouseExitPDF = async (data) => {
 };
 
 // Print functionality for Regular Receipts
-export const printWarehouseExitReceipt = (data) => {
+export const printWarehouseReceipt = (data) => {
     // Reusing the same generation logic, but calling autoPrint/output
     // For simplicity, we can use the same function but open blob in new window 
     // or just save it. The original code used window.open(blobUrl).
@@ -377,5 +383,5 @@ export const printWarehouseExitReceipt = (data) => {
     // However, sticking to the requested `Download` vs `Print` buttons in modal:
     // We can update the function above to accept an action type. Or just use `doc.autoPrint()`.
 
-    return generateWarehouseExitPDF(data); // Currently saves.
+    return generateWarehouseReceipt(data); // Currently saves.
 };

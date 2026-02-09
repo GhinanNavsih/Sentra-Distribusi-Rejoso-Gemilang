@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 import { FaShoppingCart, FaTruck, FaChevronDown, FaChevronUp, FaCalendar, FaPrint, FaFileAlt } from 'react-icons/fa';
-import { printReceipt } from '../utils/receiptGenerator';
+import { printReceipt } from '../utils/standardReceiptGenerator';
 
 const TransactionHistoryPage = () => {
     const [transactions, setTransactions] = useState([]);

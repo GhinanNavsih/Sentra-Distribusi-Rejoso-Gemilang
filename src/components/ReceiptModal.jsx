@@ -1,17 +1,33 @@
-import React, { useState } from 'react';
-import { downloadReceipt, printReceipt } from '../utils/receiptGenerator';
-import { generateWarehouseExitPDF, printWarehouseExitReceipt } from '../utils/warehouseExitGen';
+import React, { useState, useEffect } from 'react';
+import { downloadReceipt, printReceipt } from '../utils/standardReceiptGenerator';
+import { generateWarehouseReceipt, printWarehouseReceipt } from '../utils/warehouseReceiptGenerator';
 import { productService } from '../services/productService';
 
 export default function ReceiptModal({ isOpen, onClose, orderData }) {
     const [customerName, setCustomerName] = useState('');
+    const [businessType, setBusinessType] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('Cash');
     const [isCreditSale, setIsCreditSale] = useState(false);
 
     // Receipt format selection (for printing only - doesn't affect saved data)
-    const [printRegular, setPrintRegular] = useState(orderData?.selectedCustomerType === 'regular');
-    const [printPremium, setPrintPremium] = useState(orderData?.selectedCustomerType === 'premium');
-    const [printStar, setPrintStar] = useState(orderData?.selectedCustomerType === 'star');
+    const [printRegular, setPrintRegular] = useState(false);
+    const [printPremium, setPrintPremium] = useState(false);
+    const [printStar, setPrintStar] = useState(false);
+
+    // Auto-check the correct receipt format based on the selected tier
+    useEffect(() => {
+        if (isOpen && orderData) {
+            const tier = orderData.selectedCustomerType;
+            setPrintRegular(tier === 'regular');
+            setPrintPremium(tier === 'premium');
+            setPrintStar(tier === 'star');
+            // Clean up other fields for new order
+            setCustomerName('');
+            setBusinessType('');
+            setPaymentMethod('Cash');
+            setIsCreditSale(false);
+        }
+    }, [isOpen, orderData]);
 
     if (!isOpen || !orderData) return null;
 
@@ -65,6 +81,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
         const baseData = {
             ...orderData,
             customerName,
+            businessType,
             paymentMethod,
             isCreditSale
         };
@@ -75,7 +92,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                 items: recalculateItemsForTier('regular'),
                 grandTotal: recalculateItemsForTier('regular').reduce((sum, item) => sum + item.total, 0),
             };
-            generateWarehouseExitPDF(receiptData);
+            generateWarehouseReceipt(receiptData);
         }
 
         if (printPremium) {
@@ -103,6 +120,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
         const baseData = {
             ...orderData,
             customerName,
+            businessType,
             paymentMethod,
             isCreditSale
         };
@@ -113,7 +131,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                 items: recalculateItemsForTier('regular'),
                 grandTotal: recalculateItemsForTier('regular').reduce((sum, item) => sum + item.total, 0),
             };
-            printWarehouseExitReceipt(receiptData);
+            printWarehouseReceipt(receiptData);
         }
 
         if (printPremium) {
@@ -193,6 +211,20 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                                 placeholder="Kosongkan jika tidak perlu"
                                 value={customerName}
                                 onChange={(e) => setCustomerName(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                            />
+                        </div>
+
+                        {/* Business Type */}
+                        <div className="mb-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Jenis Usaha
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Default: Pelanggan Reguler"
+                                value={businessType}
+                                onChange={(e) => setBusinessType(e.target.value)}
                                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                             />
                         </div>
