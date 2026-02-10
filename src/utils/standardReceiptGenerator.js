@@ -181,7 +181,8 @@ export const generateReceipt = (receiptData) => {
 
         doc.text(`${index + 1}`, colNo, yPos);
         doc.text(item.product_name, colNama, yPos);
-        doc.text(`${item.qty} ${item.base_unit}`, colQty, yPos, { align: 'right' });
+        const unitLabel = item.selected_unit === 'bulk' ? (item.bulk_unit_name || 'Unit') : item.base_unit;
+        doc.text(`${item.qty} ${unitLabel}`, colQty, yPos, { align: 'right' });
         doc.text(formatRupiah(item.unit_price), colHarga, yPos, { align: 'right' });
         doc.text(formatRupiah(item.total), colTotal, yPos, { align: 'right' });
 

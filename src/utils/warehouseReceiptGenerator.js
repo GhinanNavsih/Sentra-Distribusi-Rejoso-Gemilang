@@ -65,7 +65,7 @@ export const generateWarehouseReceipt = async (data) => {
         items: data.items.map(item => ({
             itemName: item.product_name,
             quantity: item.qty,
-            unit: item.base_unit,
+            unit: item.selected_unit === 'bulk' ? (item.bulk_unit_name || 'Unit') : item.base_unit,
             unitPrice: item.unit_price,
             subtotal: item.total
         })),

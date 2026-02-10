@@ -54,10 +54,20 @@ export const orderService = {
                         throw new Error(`Produk ${item.product_name} tidak ditemukan di inventori.`);
                     }
 
-                    const currentStock = invDoc.data().current_stock_base || 0;
-                    if (currentStock < item.qty) {
-                        throw new Error(`Stok tidak cukup untuk ${item.product_name}. Diminta: ${item.qty}, Tersedia: ${currentStock}`);
+                    // Calculate deduction amount based on unit
+                    let deductionQty = item.qty;
+                    if (item.selected_unit === 'bulk') {
+                        const conversion = item.bulk_unit_conversion || 1;
+                        deductionQty = item.qty * conversion;
                     }
+
+                    const currentStock = invDoc.data().current_stock_base || 0;
+                    if (currentStock < deductionQty) {
+                        throw new Error(`Stok tidak cukup untuk ${item.product_name}. Diminta: ${deductionQty} ${item.base_unit}, Tersedia: ${currentStock} ${item.base_unit}`);
+                    }
+
+                    // Store deduction qty for next step
+                    item._deductionQty = deductionQty;
                 }
 
                 // --- PHASE 2: ALL WRITES AFTER READS ---
@@ -66,7 +76,7 @@ export const orderService = {
                 for (const { item, invRef, invDoc } of inventoryReads) {
                     const currentStock = invDoc.data().current_stock_base || 0;
                     transaction.update(invRef, {
-                        current_stock_base: currentStock - item.qty
+                        current_stock_base: currentStock - item._deductionQty // Use precalculated deduction
                     });
                 }
 
@@ -75,8 +85,16 @@ export const orderService = {
 
                 // Write 3: Create Order Record with Custom ID
                 const orderRef = doc(db, COLLECTION_NAME, newOrderId);
+
+                // Clean items (remove temporary props like _deductionQty)
+                const itemsToSave = orderData.items.map(item => {
+                    const { _deductionQty, ...cleanItem } = item;
+                    return cleanItem;
+                });
+
                 transaction.set(orderRef, {
                     ...orderData,
+                    items: itemsToSave,
                     id: newOrderId, // Explicitly save ID in data too
                     status: 'completed',
                     created_at: serverTimestamp()

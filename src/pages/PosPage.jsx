@@ -183,6 +183,9 @@ export default function PosPage() {
                     qty: item.qty,
                     unit_price: item.unit_price,
                     total: item.total,
+                    selected_unit: item.selected_unit || 'base',
+                    bulk_unit_name: item.bulk_unit_name,
+                    bulk_unit_conversion: item.bulk_unit_conversion,
                     selected_unit_name: item.selected_unit === 'bulk' ? item.bulk_unit_name : item.base_unit,
                     product_obj: item.product_obj
                 })),

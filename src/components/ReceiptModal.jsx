@@ -67,12 +67,18 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                 tierPrice = item.unit_price;
             }
 
-            console.log('Selected tier price:', tierPrice);
+            console.log('Selected tier price (base):', tierPrice);
+
+            // Apply bulk conversion if necessary
+            let finalTierPrice = tierPrice;
+            if (item.selected_unit === 'bulk') {
+                finalTierPrice = tierPrice * (item.bulk_unit_conversion || 1);
+            }
 
             return {
                 ...item,
-                unit_price: tierPrice,
-                total: tierPrice * item.qty
+                unit_price: finalTierPrice,
+                total: finalTierPrice * item.qty
             };
         });
     };

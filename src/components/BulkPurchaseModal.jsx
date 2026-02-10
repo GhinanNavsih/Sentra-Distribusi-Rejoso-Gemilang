@@ -110,24 +110,46 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
         setRows((prev) =>
             prev.map((row) => {
                 if (row.id === id) {
-                    const updatedRow = { ...row, [field]: value };
+                    let updatedRow = { ...row, [field]: value };
 
-                    // Special logic for Cost (Sanitize to numbers only)
-                    if (field === 'cost') {
-                        // Allow empty string or digits only
-                        if (value === '' || /^\d+$/.test(value)) {
-                            updatedRow.cost = value;
-                        } else {
-                            return row; // Ignore invalid input
+                    // Sanitize numerical inputs
+                    if (field === 'cost' || field === 'subtotal') {
+                        if (value !== '' && !/^\d+$/.test(value)) {
+                            return row;
                         }
                     }
 
-                    // Auto-calculate subtotal
-                    // We calculate based on the NEW values
-                    const q = field === 'qty' ? parseFloat(value) || 0 : parseFloat(row.qty) || 0;
-                    const c = field === 'cost' ? parseFloat(value) || 0 : parseFloat(row.cost) || 0;
+                    // 1. Handle Unit Conversion: Adjust Qty and Cost while keeping Subtotal same
+                    if (field === 'unit' && row.product && row.product.bulk_unit_name) {
+                        const conversion = row.product.bulk_unit_conversion || 1;
+                        const currentQty = parseFloat(row.qty) || 0;
+                        const currentCost = parseFloat(row.cost) || 0;
 
-                    updatedRow.subtotal = q * c;
+                        if (value === row.product.base_unit && row.unit === row.product.bulk_unit_name) {
+                            // Bulk -> Base: Multiply Qty, Divide Cost
+                            updatedRow.qty = currentQty * conversion;
+                            updatedRow.cost = Math.round(currentCost / conversion).toString();
+                        } else if (value === row.product.bulk_unit_name && row.unit === row.product.base_unit) {
+                            // Base -> Bulk: Divide Qty, Multiply Cost
+                            updatedRow.qty = currentQty / conversion;
+                            updatedRow.cost = Math.round(currentCost * conversion).toString();
+                        }
+                    }
+
+                    // 2. Reconcile Subtotal based on the (possibly converted) Qty and Cost
+                    const q = field === 'qty' ? (parseFloat(value) || 0) : (parseFloat(updatedRow.qty) || 0);
+
+                    if (field === 'subtotal') {
+                        // User entered Total -> Calculate unit cost
+                        const s = parseFloat(value) || 0;
+                        if (q > 0) {
+                            updatedRow.cost = Math.round(s / q).toString();
+                        }
+                    } else {
+                        // Calculate/Re-calculate Subtotal
+                        const c = field === 'cost' ? (parseFloat(value) || 0) : (parseFloat(updatedRow.cost) || 0);
+                        updatedRow.subtotal = Math.round(q * c);
+                    }
 
                     return updatedRow;
                 }
@@ -401,8 +423,16 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
 
                                     {/* Subtotal */}
                                     <td className="p-2">
-                                        <div className="w-full px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300">
-                                            {formatCurrency(row.subtotal)}
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-800/50 outline-none focus:ring-2 focus:ring-blue-500 text-right font-medium text-gray-700 dark:text-gray-300"
+                                                value={row.subtotal}
+                                                onChange={(e) => updateRow(row.id, "subtotal", e.target.value)}
+                                                placeholder="0"
+                                            />
                                         </div>
                                     </td>
 
