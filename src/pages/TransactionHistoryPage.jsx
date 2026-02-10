@@ -268,12 +268,18 @@ const TransactionHistoryPage = () => {
 
                                                             {/* Items */}
                                                             <div className="space-y-1">
-                                                                {transaction.items?.map((item, itemIdx) => (
-                                                                    <div key={itemIdx} className="text-sm text-gray-600 flex justify-between">
-                                                                        <span>{item.product_name} × {item.qty}</span>
-                                                                        <span className="text-gray-900 font-medium">{formatCurrency(item.total)}</span>
-                                                                    </div>
-                                                                ))}
+                                                                {transaction.items?.map((item, itemIdx) => {
+                                                                    const unitLabel = transaction.type === 'sale'
+                                                                        ? (item.selected_unit === 'bulk' ? (item.bulk_unit_name || 'Unit') : (item.base_unit || 'pcs'))
+                                                                        : (item.unit || item.base_unit || 'pcs');
+
+                                                                    return (
+                                                                        <div key={itemIdx} className="text-sm text-gray-600 flex justify-between">
+                                                                            <span>{item.product_name} × {item.qty} {unitLabel}</span>
+                                                                            <span className="text-gray-900 font-medium">{formatCurrency(item.total)}</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
                                                             </div>
 
                                                             {/* Supplier for purchases */}
