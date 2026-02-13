@@ -10,6 +10,7 @@ import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 
 import { useUserRole } from '../hooks/useUserRole';
+import * as XLSX from 'xlsx';
 
 // ... (existing imports)
 
@@ -32,7 +33,7 @@ export default function InventoryPage() {
     const [showRepackForm, setShowRepackForm] = useState(false);
     const [showBulkPurchaseModal, setShowBulkPurchaseModal] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+    const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
     const [openMenuId, setOpenMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
     const [searchQuery, setSearchQuery] = useState('');
@@ -159,6 +160,40 @@ export default function InventoryPage() {
                 {sortConfig.direction === 'asc' ? '↑' : '↓'}
             </span>
         );
+    };
+
+    // Export to Excel function
+    const handleExportExcel = () => {
+        try {
+            // Prepare data for export
+            const exportData = sortedProducts.map(product => ({
+                'SKU': product.sku,
+                'Nama Produk': product.name,
+                'Satuan Dasar': product.base_unit,
+                'Jumlah Stok': product.current_stock || 0,
+                'Harga Beli (Satuan)': product.cost_price || 0,
+                'Total Nilai': (product.current_stock || 0) * (product.cost_price || 0),
+                'Satuan Besar': product.bulk_unit_name || '-',
+                'Konversi': product.bulk_unit_conversion || '-'
+            }));
+
+            // Create worksheet
+            const ws = XLSX.utils.json_to_sheet(exportData);
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Inventory");
+
+            // Generate filename with date
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `Inventori_SDRG_${dateStr}.xlsx`;
+
+            // Export file
+            XLSX.writeFile(wb, filename);
+        } catch (error) {
+            console.error("Gagal mengekspor data ke Excel:", error);
+            alert("Terjadi kesalahan saat mengekspor data.");
+        }
     };
 
     const sortedProducts = getFilteredAndSortedProducts();
@@ -346,7 +381,7 @@ export default function InventoryPage() {
             <div className="mb-6 relative">
                 <input
                     type="text"
-                    placeholder="Cari SKU atau Nama Produk..."
+                    placeholder="Cari Nama Produk..."
                     className="w-full p-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -372,11 +407,6 @@ export default function InventoryPage() {
                     <table className="w-full text-left text-sm text-gray-600">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th
-                                    onClick={() => handleSort('sku')}
-                                    className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs cursor-pointer hover:bg-gray-100 transition select-none">
-                                    SKU <SortIndicator columnKey="sku" />
-                                </th>
                                 <th
                                     onClick={() => handleSort('name')}
                                     className="px-6 py-3 font-bold text-gray-900 uppercase tracking-wider text-xs cursor-pointer hover:bg-gray-100 transition select-none">
@@ -409,7 +439,6 @@ export default function InventoryPage() {
                         <tbody className="divide-y divide-gray-100">
                             {sortedProducts.map(product => (
                                 <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-gray-900">{product.sku}</td>
                                     <td className="px-6 py-4">{product.name}</td>
                                     <td className="px-6 py-4">{product.base_unit}</td>
                                     <td className="px-6 py-4 text-right font-bold text-gray-900">
@@ -461,6 +490,21 @@ export default function InventoryPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
                                 Tetapkan Stok
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Export Button Container */}
+                    {isSuperAdmin && (
+                        <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                            <button
+                                onClick={handleExportExcel}
+                                className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-sm hover:bg-green-700 transition flex items-center gap-2 text-sm"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Ekspor ke Excel (.xlsx)
                             </button>
                         </div>
                     )}

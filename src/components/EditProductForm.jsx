@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { productService } from '../services/productService';
+import { productService, PRODUCT_CATEGORIES } from '../services/productService';
 import { inventoryService } from '../services/inventoryService';
 
 export default function EditProductForm({ product, onClose, onSuccess }) {
@@ -12,7 +12,9 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
         cost_price: 0,
         price_regular: 0,
         price_premium: 0,
-        price_star: 0
+        price_star: 0,
+        image_url: '',
+        category: 'Lainnya'
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -24,7 +26,9 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                 cost_price: product.cost_price || 0,
                 price_regular: product.price_regular || 0,
                 price_premium: product.price_premium || 0,
-                price_star: product.price_star || 0
+                price_star: product.price_star || 0,
+                image_url: product.image_url || '',
+                category: product.category || 'Lainnya'
             });
         }
     }, [product]);
@@ -48,7 +52,9 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                 cost_price: Number(formData.cost_price),
                 price_regular: Number(formData.price_regular),
                 price_premium: Number(formData.price_premium),
-                price_star: Number(formData.price_star)
+                price_star: Number(formData.price_star),
+                image_url: formData.image_url,
+                category: formData.category
             };
 
             // Check for Rename (SKU change)
@@ -114,6 +120,15 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Basic Info */}
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Produk</label>
+                        <select name="category" value={formData.category} onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                            {PRODUCT_CATEGORIES.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nama Produk</label>
                         <input required type="text" name="name" value={formData.name} onChange={handleChange}
@@ -124,6 +139,27 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                         <input required type="text" name="sku" value={formData.sku} onChange={handleChange}
                             className="w-full p-2 border border-blue-200 bg-blue-50 rounded text-gray-900 focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
                         <p className="text-[10px] text-gray-500 mt-1">Mengubah SKU akan mengubah kode produk secara permanen.</p>
+                    </div>
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">URL Gambar Produk</label>
+                        <div className="flex gap-4 items-start">
+                            <div className="flex-1">
+                                <input type="text" name="image_url" value={formData.image_url} onChange={handleChange}
+                                    className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="https://drive.google.com/..." />
+                                <p className="text-[10px] text-gray-400 mt-1">Anda bisa langsung tempel link Google Drive atau link gambar lainnya.</p>
+                            </div>
+                            {formData.image_url && (
+                                <div className="w-16 h-16 bg-gray-50 border rounded overflow-hidden flex-shrink-0">
+                                    <img
+                                        src={productService.transformDriveUrl(formData.image_url)}
+                                        alt="Preview"
+                                        className="w-full h-full object-contain"
+                                        referrerPolicy="no-referrer"
+                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Units */}

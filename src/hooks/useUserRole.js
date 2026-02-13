@@ -41,5 +41,10 @@ export function useUserRole() {
         return () => unsubscribe();
     }, [currentUser]);
 
-    return { role, loading, isSuperAdmin: role === 'superadmin' };
+    return {
+        role,
+        loading,
+        isSuperAdmin: role === 'superadmin',
+        isShopper: role === 'shopper'
+    };
 }

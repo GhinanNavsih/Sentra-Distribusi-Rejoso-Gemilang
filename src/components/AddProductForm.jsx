@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { productService } from '../services/productService';
+import { productService, PRODUCT_CATEGORIES } from '../services/productService';
 
 export default function AddProductForm({ onClose, onSuccess }) {
     const [formData, setFormData] = useState({
@@ -10,7 +10,9 @@ export default function AddProductForm({ onClose, onSuccess }) {
         bulk_unit_conversion: 50,
         price_regular: 0,
         price_premium: 0,
-        price_star: 0
+        price_star: 0,
+        image_url: '',
+        category: 'Lainnya'
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -53,6 +55,15 @@ export default function AddProductForm({ onClose, onSuccess }) {
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Basic Info */}
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Produk</label>
+                        <select name="category" value={formData.category} onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                            {PRODUCT_CATEGORIES.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nama Produk</label>
                         <input required type="text" name="name" value={formData.name} onChange={handleChange}
@@ -62,6 +73,11 @@ export default function AddProductForm({ onClose, onSuccess }) {
                         <label className="block text-sm font-medium text-gray-700 mb-1">SKU (Kode Unik)</label>
                         <input required type="text" name="sku" value={formData.sku} onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="Contoh: GULA-001" />
+                    </div>
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">URL Gambar Produk</label>
+                        <input type="text" name="image_url" value={formData.image_url} onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="https://example.com/image.jpg" />
                     </div>
 
                     {/* Units */}

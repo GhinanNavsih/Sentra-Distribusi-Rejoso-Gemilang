@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate 
 import InventoryPage from './pages/InventoryPage';
 import PosPage from './pages/PosPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
+import CatalogPage from './pages/CatalogPage';
 import LoginPage from './pages/LoginPage';
 import logo from './assets/logo_full.png';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -45,30 +46,46 @@ function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-8">
-              <div className="flex items-center gap-3">
+              <Link to="/" className="flex items-center gap-3">
                 <img src={logo} alt="Sentra Distribusi Rejoso Gemilang Logo" className="h-10 w-auto" />
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">Sentra Distribusi Rejoso Gemilang</h1>
-              </div>
-              <nav className="hidden md:flex gap-2">
-                <NavLink to="/inventory">Inventori</NavLink>
-                <NavLink to="/pos">Kasir / POS</NavLink>
-                <NavLink to="/transactions">Transaksi</NavLink>
+                <h1 className="text-xl font-bold text-gray-900 tracking-tight hidden lg:block">Sentra Distribusi Rejoso Gemilang</h1>
+              </Link>
+              <nav className="flex gap-1 md:gap-2">
+                <NavLink to="/">Katalog</NavLink>
+                {currentUser && (
+                  <>
+                    <NavLink to="/inventory">Inventori</NavLink>
+                    <NavLink to="/pos">Kasir</NavLink>
+                    <NavLink to="/transactions">Riwayat</NavLink>
+                  </>
+                )}
               </nav>
             </div>
             <div className="flex items-center gap-4">
               <EnvToggle />
-              <div className="text-xs text-gray-500 font-medium hidden sm:block">
-                {currentUser?.email}
-              </div>
-              <button
-                onClick={handleLogout}
-                className="text-gray-500 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
-                title="Keluar"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
+              {currentUser ? (
+                <>
+                  <div className="text-xs text-gray-500 font-medium hidden sm:block">
+                    {currentUser?.email}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-500 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
+                    title="Keluar"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-red-700 transition"
+                >
+                  Login
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -76,10 +93,11 @@ function Layout() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Routes>
-          <Route path="/" element={<Navigate to="/inventory" replace />} />
-          <Route path="/inventory" element={<InventoryPage />} />
-          <Route path="/pos" element={<PosPage />} />
-          <Route path="/transactions" element={<TransactionHistoryPage />} />
+          <Route path="/" element={<CatalogPage />} />
+          <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
+          <Route path="/pos" element={<ProtectedRoute><PosPage /></ProtectedRoute>} />
+          <Route path="/transactions" element={<ProtectedRoute><TransactionHistoryPage /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>
@@ -92,11 +110,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/*" element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          } />
+          <Route path="/*" element={<Layout />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

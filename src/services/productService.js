@@ -1,6 +1,15 @@
 import { db } from "../firebase.config";
-import { collection, doc, setDoc, getDoc, getDocs, deleteDoc } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc } from "firebase/firestore";
 import { getCollectionName } from "../utils/envMode";
+
+export const PRODUCT_CATEGORIES = [
+    "Beras",
+    "Minyak, Mentega & Lemak",
+    "Tepung",
+    "Saus, Kecap & Sambal",
+    "Bumbu & Bahan Masak",
+    "Lainnya"
+];
 
 export const productService = {
     /**
@@ -72,5 +81,65 @@ export const productService = {
 
         // Default to Regular price
         return Number(product.price_regular || 0);
+    },
+
+    /**
+     * Automatically converts Google Drive sharing links to direct image links
+     * @param {string} url 
+     * @returns {string} transformed url
+     */
+    transformDriveUrl: (url) => {
+        if (!url || typeof url !== 'string') return url;
+        if (url.includes('drive.google.com')) {
+            // Extract the ID from /file/d/ID/view or ?id=ID
+            const driveId = url.split('/d/')[1]?.split('/')[0] || url.split('id=')[1]?.split('&')[0];
+            if (driveId) {
+                // Use the thumbnail endpoint which is much more reliable for embedding in <img> tags
+                return `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`;
+            }
+        }
+        return url;
+    },
+
+    /**
+     * Determine category based on product name
+     */
+    getCategoryByName: (name = "") => {
+        const n = name.toLowerCase();
+        if (n.includes("beras")) return "Beras";
+        if (n.includes("minyak") || n.includes("mentega") || n.includes("blue band")) return "Minyak, Mentega & Lemak";
+        if (n.includes("tepung") || n.includes("panir") || n.includes("tapioka") || n.includes("terigu")) return "Tepung-Tepungan";
+        if (n.includes("saos") || n.includes("kecap") || n.includes("sambal") || n.includes("saori")) return "Saus, Kecap & Sambal";
+        if (
+            n.includes("gula") ||
+            n.includes("garam") ||
+            n.includes("kaldu") ||
+            n.includes("totole") ||
+            n.includes("santan") ||
+            n.includes("kara") ||
+            n.includes("sasa") ||
+            n.includes("fiber creme") ||
+            n.includes("powder")
+        ) return "Bumbu & Bahan Masak";
+        return "Lainnya";
+    },
+
+    /**
+     * Migration helper to categorize all existing products
+     */
+    migrateCategories: async () => {
+        const col = getCollectionName("products");
+        const snapshot = await getDocs(collection(db, col));
+        const updates = snapshot.docs.map(async (d) => {
+            const product = d.data();
+            if (!product.category || product.category === 'Lainnya') {
+                const category = productService.getCategoryByName(product.name);
+                if (category !== 'Lainnya') {
+                    const productRef = doc(db, col, d.id);
+                    await updateDoc(productRef, { category });
+                }
+            }
+        });
+        await Promise.all(updates);
     }
 };
