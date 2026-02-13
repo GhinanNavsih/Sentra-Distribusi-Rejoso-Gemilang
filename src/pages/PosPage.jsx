@@ -147,11 +147,23 @@ export default function PosPage() {
         try {
             const orderPayload = {
                 // eslint-disable-next-line no-unused-vars
-                items: cart.map(({ product_obj: _product_obj, ...rest }) => rest), // Remove object ref
-                grand_total: cartTotal
+                items: cart.map(({ product_obj, ...rest }) => {
+                    const baseBuyPrice = product_obj?.cost_price || 0;
+                    const finalBuyPrice = rest.selected_unit === 'bulk'
+                        ? baseBuyPrice * (product_obj?.bulk_unit_conversion || 1)
+                        : baseBuyPrice;
+
+                    return {
+                        ...rest,
+                        buy_price: finalBuyPrice
+                    };
+                }),
+                grand_total: cartTotal,
+                customer_name: "", // Will be updated in ReceiptModal
+                customer_type: selectedCustomerType
             };
 
-            await orderService.createOrder(orderPayload);
+            const orderId = await orderService.createOrder(orderPayload);
 
             // Prepare receipt data
             const orderDate = new Date().toLocaleDateString('id-ID', {
@@ -160,19 +172,13 @@ export default function PosPage() {
                 year: 'numeric'
             });
 
-            // Generate order ID (same format as in orderService)
-            const d = new Date();
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = String(d.getFullYear()).slice(-2);
-            const dateStr = `${day}-${month}-${year}`;
-
             // We don't have the exact counter, but we can use timestamp for display
-            const timeStr = String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
-            const orderId = `${dateStr}-${timeStr}`;
+            // Actually orderService returns the ID now if we updated it to return user-friendly ID?
+            // Checking orderService... it returns newOrderId.
+            // So we can use that orderId directly.
 
             setCompletedOrderData({
-                orderId,
+                orderId: orderId, // Use the real ID from service
                 orderDate,
                 // Keep product_obj for receipt generation (but won't be saved to DB)
                 items: cart.map(item => ({
@@ -190,7 +196,8 @@ export default function PosPage() {
                     product_obj: item.product_obj
                 })),
                 grandTotal: cartTotal,
-                selectedCustomerType: selectedCustomerType // This is what gets saved to database
+                selectedCustomerType: selectedCustomerType,
+                customer_name: ""
             });
 
             setCart([]);
@@ -251,7 +258,8 @@ export default function PosPage() {
             {/* Right: Cart */}
             <div className="w-1/3 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col">
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <h2 className="text-lg font-bold text-gray-900 mb-2">Pesanan Saat Ini</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">Pesanan Saat Ini</h2>
+
                     {/* Customer Type Selector - Single Select (for pricing & database) */}
                     <div className="space-y-2">
                         <p className="text-xs text-gray-500 font-medium">Pilih Tingkat Harga (disimpan ke database):</p>

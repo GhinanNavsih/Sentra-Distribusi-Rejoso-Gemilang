@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { downloadReceipt, printReceipt } from '../utils/standardReceiptGenerator';
 import { generateWarehouseReceipt, printWarehouseReceipt } from '../utils/warehouseReceiptGenerator';
 import { productService } from '../services/productService';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase.config';
+import { getCollectionName } from '../utils/envMode';
 
 export default function ReceiptModal({ isOpen, onClose, orderData }) {
     const [customerName, setCustomerName] = useState('');
@@ -21,34 +24,35 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
             setPrintRegular(tier === 'regular');
             setPrintPremium(tier === 'premium');
             setPrintStar(tier === 'star');
-            // Clean up other fields for new order
-            setCustomerName('');
+            // Sync with what was entered in POS
+            setCustomerName(orderData.customer_name || '');
             setBusinessType('');
             setPaymentMethod('Cash');
             setIsCreditSale(false);
         }
     }, [isOpen, orderData]);
 
+    // Update customer name in database if changed in modal
+    const updateCustomerNameInDB = async (newName) => {
+        if (!orderData?.orderId) return;
+        try {
+            const orderRef = doc(db, getCollectionName('orders'), orderData.orderId);
+            await updateDoc(orderRef, {
+                customer_name: newName || ""
+            });
+            console.log("Customer name updated in DB");
+        } catch (err) {
+            console.error("Failed to update customer name:", err);
+        }
+    };
+
     if (!isOpen || !orderData) return null;
 
     // Helper to recalculate items with different pricing tier (for receipt display only)
     const recalculateItemsForTier = (tierType) => {
-        console.log('=== RECALCULATING FOR TIER:', tierType, '===');
-
         return orderData.items.map(item => {
-            console.log('Item:', item.product_name);
-            console.log('Product obj:', item.product_obj);
-
             let tierPrice;
-
-            // Access tier-specific prices directly from product_obj
             if (item.product_obj) {
-                console.log('Available prices:', {
-                    regular: item.product_obj.price_regular,
-                    premium: item.product_obj.price_premium,
-                    star: item.product_obj.price_star
-                });
-
                 switch (tierType) {
                     case 'star':
                         tierPrice = item.product_obj.price_star || item.product_obj.price_regular || item.unit_price;
@@ -62,14 +66,9 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                         break;
                 }
             } else {
-                console.log('NO PRODUCT_OBJ - using unit_price:', item.unit_price);
-                // Fallback if product_obj is not available
                 tierPrice = item.unit_price;
             }
 
-            console.log('Selected tier price (base):', tierPrice);
-
-            // Apply bulk conversion if necessary
             let finalTierPrice = tierPrice;
             if (item.selected_unit === 'bulk') {
                 finalTierPrice = tierPrice * (item.bulk_unit_conversion || 1);
@@ -83,7 +82,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
         });
     };
 
-    const handleDownloadReceipts = () => {
+    const handleDownloadReceipts = async () => {
         const baseData = {
             ...orderData,
             customerName,
@@ -98,7 +97,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                 items: recalculateItemsForTier('regular'),
                 grandTotal: recalculateItemsForTier('regular').reduce((sum, item) => sum + item.total, 0),
             };
-            generateWarehouseReceipt(receiptData);
+            await generateWarehouseReceipt(receiptData);
         }
 
         if (printPremium) {
@@ -122,7 +121,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
         setTimeout(onClose, 500);
     };
 
-    const handlePrintReceipts = () => {
+    const handlePrintReceipts = async () => {
         const baseData = {
             ...orderData,
             customerName,
@@ -137,7 +136,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                 items: recalculateItemsForTier('regular'),
                 grandTotal: recalculateItemsForTier('regular').reduce((sum, item) => sum + item.total, 0),
             };
-            printWarehouseReceipt(receiptData);
+            await printWarehouseReceipt(receiptData);
         }
 
         if (printPremium) {
@@ -163,12 +162,14 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
 
     const savedTier = orderData.selectedCustomerType;
     const atLeastOneSelected = printRegular || printPremium || printStar;
+    const isNameValid = customerName.trim().length > 0;
+    const canProceed = atLeastOneSelected && isNameValid;
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4">
+            <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[95vh] flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-primary to-red-600 text-white p-6 rounded-t-lg">
+                <div className="bg-gradient-to-r from-primary to-red-600 text-white p-4 sm:p-5 rounded-t-lg flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold">✓ Order Berhasil!</h2>
@@ -177,19 +178,21 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                                 Disimpan sebagai: tingkat {savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)}
                             </p>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="text-white hover:bg-white/20 rounded-full p-2 transition">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
+                        {isNameValid && (
+                            <button
+                                onClick={onClose}
+                                className="text-white hover:bg-white/20 rounded-full p-2 transition">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                {/* Body */}
-                <div className="p-6 space-y-4">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                {/* Scrollable Body */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
                         <div className="flex items-center gap-2 text-green-800 mb-2">
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -205,20 +208,29 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                     </div>
 
                     <div className="border-t border-gray-200 pt-4">
-                        <h3 className="font-semibold text-gray-900 mb-3">Detail Nota (Opsional)</h3>
+                        <h3 className="font-semibold text-gray-900 mb-3">Detail Nota</h3>
 
-                        {/* Customer Name */}
+                        {/* Customer Name - MANDATORY */}
                         <div className="mb-3">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Nama Pelanggan
+                            <label className="block text-sm font-bold text-gray-700 mb-1">
+                                Nama Pelanggan <span className="text-red-600">* Wajib</span>
                             </label>
                             <input
                                 type="text"
-                                placeholder="Kosongkan jika tidak perlu"
+                                placeholder="Wajib diisi (Contoh: Pak Budi)"
                                 value={customerName}
-                                onChange={(e) => setCustomerName(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setCustomerName(val);
+                                    updateCustomerNameInDB(val);
+                                }}
                                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                             />
+                            {!isNameValid && (
+                                <p className="text-[10px] text-red-600 mt-1 font-medium italic">
+                                    Silahkan masukkan nama pelanggan untuk mencetak atau menutup.
+                                </p>
+                            )}
                         </div>
 
                         {/* Business Type */}
@@ -252,7 +264,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                         </div>
 
                         {/* Credit Sale Toggle */}
-                        <div className="flex items-center gap-2 mb-4">
+                        <div className="flex items-center gap-2 mb-3">
                             <input
                                 type="checkbox"
                                 id="creditSale"
@@ -266,12 +278,12 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                         </div>
 
                         {/* Receipt Format Selection */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
                             <h4 className="text-sm font-semibold text-blue-900 mb-2">
                                 Pilih Format Nota untuk Cetak:
                             </h4>
                             <p className="text-xs text-blue-700 mb-3">
-                                (Hanya untuk tampilan - database disimpan dengan harga {savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)})
+                                (Database disimpan dengan harga {savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)})
                             </p>
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -313,11 +325,11 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="bg-gray-50 px-6 py-4 rounded-b-lg flex gap-3">
+                <div className="bg-gray-50 px-5 py-3 rounded-b-lg flex gap-2 flex-shrink-0">
                     <button
                         onClick={handleDownloadReceipts}
-                        disabled={!atLeastOneSelected}
-                        className={`flex-1 px-4 py-3 rounded-lg font-semibold shadow-sm transition flex items-center justify-center gap-2 ${atLeastOneSelected
+                        disabled={!canProceed}
+                        className={`flex-1 px-3 py-2.5 rounded-lg font-semibold shadow-sm transition flex items-center justify-center gap-2 text-sm ${canProceed
                             ? 'bg-blue-600 hover:bg-blue-700 text-white'
                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             }`}>
@@ -328,8 +340,8 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                     </button>
                     <button
                         onClick={handlePrintReceipts}
-                        disabled={!atLeastOneSelected}
-                        className={`flex-1 px-4 py-3 rounded-lg font-semibold shadow-sm transition flex items-center justify-center gap-2 ${atLeastOneSelected
+                        disabled={!canProceed}
+                        className={`flex-1 px-3 py-2.5 rounded-lg font-semibold shadow-sm transition flex items-center justify-center gap-2 text-sm ${canProceed
                             ? 'bg-primary hover:bg-red-700 text-white'
                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             }`}>
@@ -337,14 +349,6 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
                         Print
-                    </button>
-                </div>
-
-                <div className="px-6 pb-4">
-                    <button
-                        onClick={onClose}
-                        className="w-full text-sm text-gray-500 hover:text-gray-700 py-2">
-                        Lewati, Tutup
                     </button>
                 </div>
             </div>

@@ -22,6 +22,7 @@ export const orderService = {
         const COUNTER_COLLECTION = getCollectionName("counters");
         // We need to run this as a transaction to ensure stock is available and deducted correctly
         // AND to safely increment the daily order ID counter
+        let newOrderId;
         try {
             await runTransaction(db, async (transaction) => {
                 // --- PHASE 1: ALL READS FIRST ---
@@ -38,7 +39,7 @@ export const orderService = {
 
                 // Format: 2026-02-07-0001
                 const countStr = String(nextCount).padStart(4, '0');
-                const newOrderId = `${dateStr}-${countStr}`;
+                newOrderId = `${dateStr}-${countStr}`;
 
                 // Read 2: Check stock for all items (READ ALL FIRST)
                 const inventoryReads = [];
@@ -88,7 +89,14 @@ export const orderService = {
 
                 // Clean items (remove temporary props like _deductionQty)
                 const itemsToSave = orderData.items.map(item => {
-                    const { _deductionQty, ...cleanItem } = item;
+                    const { _deductionQty, product_obj, ...cleanItem } = item;
+
+                    // Capture buy_price at the moment of sale for profit calculation
+                    // If buy_price is already passed, use it; otherwise try to get from product_obj if available
+                    if (cleanItem.buy_price === undefined && product_obj) {
+                        cleanItem.buy_price = product_obj.cost_price || 0;
+                    }
+
                     return cleanItem;
                 });
 
@@ -101,7 +109,7 @@ export const orderService = {
                 });
             });
 
-            return true;
+            return newOrderId;
         } catch (e) {
             console.error("Order Transaction Failed", e);
             throw e;
@@ -115,6 +123,7 @@ export const orderService = {
     createOrderRecord: async (orderData) => {
         const COLLECTION_NAME = getCollectionName("orders");
         const COUNTER_COLLECTION = getCollectionName("counters");
+        let newOrderId;
         try {
             await runTransaction(db, async (transaction) => {
                 const dateStr = getTodayDateString();
@@ -127,7 +136,7 @@ export const orderService = {
                 }
 
                 const countStr = String(nextCount).padStart(4, '0');
-                const newOrderId = `${dateStr}-${countStr}`;
+                newOrderId = `${dateStr}-${countStr}`;
 
                 transaction.set(counterRef, { count: nextCount }, { merge: true });
 
@@ -139,7 +148,7 @@ export const orderService = {
                     created_at: serverTimestamp()
                 });
             });
-            return true;
+            return newOrderId;
         } catch (e) {
             console.error("Order Record Creation Failed", e);
             throw e;

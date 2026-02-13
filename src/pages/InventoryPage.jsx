@@ -9,6 +9,10 @@ import BulkPurchaseModal from '../components/BulkPurchaseModal';
 import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 
+import { useUserRole } from '../hooks/useUserRole';
+
+// ... (existing imports)
+
 const formatCurrency = (value) => {
     if (!value) return "Rp 0";
     return new Intl.NumberFormat("id-ID", {
@@ -20,6 +24,7 @@ const formatCurrency = (value) => {
 };
 
 export default function InventoryPage() {
+    const { isSuperAdmin, loading: roleLoading } = useUserRole();
     const [products, setProducts] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [selectedProductForEdit, setSelectedProductForEdit] = useState(null);
@@ -30,21 +35,29 @@ export default function InventoryPage() {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
     const [openMenuId, setOpenMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Insights State
     const [orders, setOrders] = useState([]);
     const [purchases, setPurchases] = useState([]);
-    const [belanjaPeriod, setBelanjaPeriod] = useState('day'); // day, week, month, year
-    const [pendapatanPeriod, setPendapatanPeriod] = useState('day'); // day, week, month, year
+    const [belanjaPeriod, setBelanjaPeriod] = useState('day');
+    const [pendapatanPeriod, setPendapatanPeriod] = useState('day');
 
     const fetchData = async () => {
         setLoading(true);
         try {
             const productList = await productService.getAllProducts();
-            const [orderList, purchaseList] = await Promise.all([
-                orderService.getAllOrders(),
-                purchaseService.getAllPurchases()
-            ]);
+
+            // Only fetch financial data if SuperAdmin
+            let orderList = [];
+            let purchaseList = [];
+
+            if (isSuperAdmin) {
+                [orderList, purchaseList] = await Promise.all([
+                    orderService.getAllOrders(),
+                    purchaseService.getAllPurchases()
+                ]);
+            }
 
             // Enhance with stock data
             const enhancedList = await Promise.all(productList.map(async (p) => {
@@ -53,8 +66,10 @@ export default function InventoryPage() {
             }));
 
             setProducts(enhancedList);
-            setOrders(orderList);
-            setPurchases(purchaseList);
+            if (isSuperAdmin) {
+                setOrders(orderList);
+                setPurchases(purchaseList);
+            }
         } catch (error) {
             console.error("Failed to load dashboard data", error);
         } finally {
@@ -63,10 +78,10 @@ export default function InventoryPage() {
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
-
-    const [searchQuery, setSearchQuery] = useState('');
+        if (!roleLoading) {
+            fetchData();
+        }
+    }, [roleLoading, isSuperAdmin]); // Re-fetch if role changes/loads
 
     // Sorting function
     const handleSort = (key) => {
@@ -256,29 +271,31 @@ export default function InventoryPage() {
                 </div>
             </div>
 
-            {/* Insights Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <StatCard
-                    title="BELANJA"
-                    value={totalBelanja}
-                    color="text-blue-600"
-                    period={belanjaPeriod}
-                    setPeriod={setBelanjaPeriod}
-                />
-                <StatCard
-                    title="PENDAPATAN"
-                    value={totalPendapatan}
-                    color="text-green-600"
-                    period={pendapatanPeriod}
-                    setPeriod={setPendapatanPeriod}
-                />
-                <StatCard
-                    title="TOTAL NILAI GUDANG"
-                    value={totalGudang}
-                    color="text-gray-900"
-                    hidePeriods
-                />
-            </div>
+            {/* Insights Dashboard - Only Visible to SuperAdmin */}
+            {isSuperAdmin && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <StatCard
+                        title="BELANJA"
+                        value={totalBelanja}
+                        color="text-blue-600"
+                        period={belanjaPeriod}
+                        setPeriod={setBelanjaPeriod}
+                    />
+                    <StatCard
+                        title="PENDAPATAN"
+                        value={totalPendapatan}
+                        color="text-green-600"
+                        period={pendapatanPeriod}
+                        setPeriod={setPendapatanPeriod}
+                    />
+                    <StatCard
+                        title="TOTAL NILAI GUDANG"
+                        value={totalGudang}
+                        color="text-gray-900"
+                        hidePeriods
+                    />
+                </div>
+            )}
 
             {showAddForm && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

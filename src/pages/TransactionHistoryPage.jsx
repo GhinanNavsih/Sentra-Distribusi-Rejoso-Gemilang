@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 import { FaShoppingCart, FaTruck, FaChevronDown, FaChevronUp, FaCalendar, FaPrint, FaFileAlt } from 'react-icons/fa';
 import { printReceipt } from '../utils/standardReceiptGenerator';
+import { useUserRole } from '../hooks/useUserRole';
 
 const TransactionHistoryPage = () => {
+    const { isSuperAdmin } = useUserRole();
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
@@ -89,6 +91,42 @@ const TransactionHistoryPage = () => {
             [dateKey]: !prev[dateKey]
         }));
     };
+
+    // Calculate Summary Stats
+    const stats = useMemo(() => {
+        let totalSales = 0;
+        let totalPurchases = 0;
+        let totalProfit = 0;
+
+        transactions.forEach(t => {
+            if (filter !== 'all' && t.type !== filter) return;
+
+            if (t.type === 'sale') {
+                totalSales += t.total;
+                if (isSuperAdmin) {
+                    const profit = t.items?.reduce((sum, item) => {
+                        const getEffectiveBuyPrice = (it) => {
+                            if (!it.buy_price) return 0;
+                            if (it.selected_unit === 'bulk' && it.bulk_unit_conversion) {
+                                if (it.buy_price < (it.unit_price / 1.5)) {
+                                    return it.buy_price * it.bulk_unit_conversion;
+                                }
+                            }
+                            return it.buy_price;
+                        };
+                        const eBuyPrice = getEffectiveBuyPrice(item);
+                        const p = eBuyPrice ? (item.unit_price - eBuyPrice) * item.qty : 0;
+                        return sum + p;
+                    }, 0) || 0;
+                    totalProfit += profit;
+                }
+            } else if (t.type === 'purchase') {
+                totalPurchases += t.total;
+            }
+        });
+
+        return { totalSales, totalPurchases, totalProfit };
+    }, [transactions, filter, isSuperAdmin]);
 
     const formatCurrency = (value) => {
         return new Intl.NumberFormat('id-ID', {
@@ -184,6 +222,43 @@ const TransactionHistoryPage = () => {
                 </div>
             </div>
 
+            {/* Summary Analytics Widget */}
+            {hasSearched && !loading && transactions.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white p-5 rounded-lg shadow-sm border border-blue-100 flex items-center gap-4">
+                        <div className="bg-blue-50 p-3 rounded-full text-blue-600">
+                            <FaShoppingCart size={24} />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Total Penjualan</p>
+                            <p className="text-xl font-black text-gray-900">{formatCurrency(stats.totalSales)}</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-lg shadow-sm border border-orange-100 flex items-center gap-4">
+                        <div className="bg-orange-50 p-3 rounded-full text-orange-600">
+                            <FaTruck size={24} />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-orange-600 uppercase tracking-wider">Total Pembelian</p>
+                            <p className="text-xl font-black text-gray-900">{formatCurrency(stats.totalPurchases)}</p>
+                        </div>
+                    </div>
+
+                    {isSuperAdmin && (
+                        <div className="bg-white p-5 rounded-lg shadow-sm border border-green-100 flex items-center gap-4">
+                            <div className="bg-green-50 p-3 rounded-full text-green-600">
+                                <FaFileAlt size={24} />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold text-green-600 uppercase tracking-wider">Estimasi Keuntungan</p>
+                                <p className="text-xl font-black text-gray-900">{formatCurrency(stats.totalProfit)}</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Content Section */}
             {!hasSearched ? (
                 <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-12 text-center">
@@ -240,56 +315,101 @@ const TransactionHistoryPage = () => {
                                         {dayTransactions.map((transaction, idx) => (
                                             <div
                                                 key={transaction.id}
-                                                className={`px-6 py-4 hover:bg-gray-50 transition ${idx !== dayTransactions.length - 1 ? 'border-b border-gray-100' : ''
-                                                    }`}
+                                                className={`px-6 py-4 hover:bg-gray-50 transition ${idx !== dayTransactions.length - 1 ? 'border-b border-gray-100' : ''}`}
                                             >
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex items-start gap-3 flex-1">
                                                         {/* Icon */}
-                                                        <div className={`p-2 rounded-lg ${transaction.type === 'sale'
-                                                            ? 'bg-green-100 text-green-600'
-                                                            : 'bg-blue-100 text-blue-600'
-                                                            }`}>
-                                                            {transaction.type === 'sale' ? <FaShoppingCart /> : <FaTruck />}
+                                                        <div className={`mt-1 p-2 rounded-lg ${transaction.type === 'sale' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
+                                                            {transaction.type === 'sale' ? <FaShoppingCart size={16} /> : <FaTruck size={16} />}
                                                         </div>
 
-                                                        {/* Details */}
+                                                        {/* Info */}
                                                         <div className="flex-1">
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <h4 className="font-semibold text-gray-900">{transaction.id}</h4>
-                                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${transaction.type === 'sale'
-                                                                    ? 'bg-green-100 text-green-700'
-                                                                    : 'bg-blue-100 text-blue-700'
-                                                                    }`}>
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <span className="font-bold text-gray-900">{transaction.id}</span>
+                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${transaction.type === 'sale' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
                                                                     {transaction.type === 'sale' ? 'Penjualan' : 'Pembelian'}
                                                                 </span>
+                                                                {/* NEW: Explicitly show Customer/Supplier Name here */}
+                                                                <span className="text-gray-400">|</span>
+                                                                <span className="text-sm font-medium text-gray-700">
+                                                                    {transaction.type === 'sale'
+                                                                        ? `Pel: ${transaction.customer_name || 'Umum'}`
+                                                                        : `Supp: ${transaction.supplier_name || '-'}`
+                                                                    }
+                                                                </span>
                                                             </div>
-                                                            <p className="text-sm text-gray-500 mb-2">{formatTime(transaction.date)}</p>
+                                                            <p className="text-xs text-gray-500 mt-0.5 font-medium">
+                                                                {transaction.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                                            </p>
 
                                                             {/* Items */}
-                                                            <div className="space-y-1">
+                                                            <div className="mt-3 space-y-1">
                                                                 {transaction.items?.map((item, itemIdx) => {
                                                                     const unitLabel = transaction.type === 'sale'
                                                                         ? (item.selected_unit === 'bulk' ? (item.bulk_unit_name || 'Unit') : (item.base_unit || 'pcs'))
                                                                         : (item.unit || item.base_unit || 'pcs');
 
+                                                                    const getEffectiveBuyPrice = (item) => {
+                                                                        if (!item.buy_price) return 0;
+                                                                        // If it's a bulk sale and the buy_price is suspiciously low (less than half the selling price)
+                                                                        // it's likely historical data where we only saved the base unit cost.
+                                                                        if (item.selected_unit === 'bulk' && item.bulk_unit_conversion) {
+                                                                            if (item.buy_price < (item.unit_price / 1.5)) {
+                                                                                return item.buy_price * item.bulk_unit_conversion;
+                                                                            }
+                                                                        }
+                                                                        return item.buy_price;
+                                                                    };
+
+                                                                    const effectiveBuyPrice = getEffectiveBuyPrice(item);
+                                                                    const itemProfit = transaction.type === 'sale' && effectiveBuyPrice
+                                                                        ? (item.unit_price - effectiveBuyPrice) * item.qty
+                                                                        : 0;
+
                                                                     return (
                                                                         <div key={itemIdx} className="text-sm text-gray-600 flex justify-between">
-                                                                            <span>{item.product_name} × {item.qty} {unitLabel}</span>
+                                                                            <span>
+                                                                                {item.product_name} × {item.qty} {unitLabel}
+                                                                                {isSuperAdmin && transaction.type === 'sale' && itemProfit > 0 && (
+                                                                                    <span className="ml-2 text-xs text-green-600 bg-green-50 px-1 rounded">
+                                                                                        (Untung: {formatCurrency(itemProfit)})
+                                                                                    </span>
+                                                                                )}
+                                                                            </span>
                                                                             <span className="text-gray-900 font-medium">{formatCurrency(item.total)}</span>
                                                                         </div>
                                                                     );
                                                                 })}
                                                             </div>
 
-                                                            {/* Supplier for purchases */}
-                                                            {transaction.type === 'purchase' && transaction.supplier_name && (
-                                                                <p className="text-sm text-gray-500 mt-2">
-                                                                    Supplier: <span className="font-medium">{transaction.supplier_name}</span>
-                                                                </p>
+                                                            {/* Profit Summary for SuperAdmin */}
+                                                            {isSuperAdmin && transaction.type === 'sale' && (
+                                                                <div className="mt-2 pt-2 border-t border-dashed border-gray-200 flex justify-between items-center bg-green-50/50 p-2 rounded">
+                                                                    <span className="text-xs font-bold text-green-700">Total Keuntungan Transaksi Ini</span>
+                                                                    <span className="text-sm font-bold text-green-700">
+                                                                        {formatCurrency(
+                                                                            transaction.items?.reduce((sum, item) => {
+                                                                                const getEffectiveBuyPrice = (item) => {
+                                                                                    if (!item.buy_price) return 0;
+                                                                                    if (item.selected_unit === 'bulk' && item.bulk_unit_conversion) {
+                                                                                        if (item.buy_price < (item.unit_price / 1.5)) {
+                                                                                            return item.buy_price * item.bulk_unit_conversion;
+                                                                                        }
+                                                                                    }
+                                                                                    return item.buy_price;
+                                                                                };
+                                                                                const eBuyPrice = getEffectiveBuyPrice(item);
+                                                                                const p = eBuyPrice ? (item.unit_price - eBuyPrice) * item.qty : 0;
+                                                                                return sum + p;
+                                                                            }, 0)
+                                                                        )}
+                                                                    </span>
+                                                                </div>
                                                             )}
 
-                                                            {/* Receipt View/Indicator */}
+                                                            {/* Actions (Receipt/Print) */}
                                                             <div className="mt-4 flex items-center gap-3">
                                                                 {transaction.type === 'sale' ? (
                                                                     <button
@@ -333,7 +453,7 @@ const TransactionHistoryPage = () => {
                                                         </div>
                                                     </div>
 
-                                                    {/* Total */}
+                                                    {/* Total Amount */}
                                                     <div className="text-right">
                                                         <p className="text-sm text-gray-500">Total</p>
                                                         <p className="text-lg font-bold text-gray-900">{formatCurrency(transaction.total)}</p>

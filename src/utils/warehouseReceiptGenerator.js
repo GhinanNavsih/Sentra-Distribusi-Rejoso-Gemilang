@@ -16,13 +16,39 @@ function formatRupiah(value) {
 }
 
 // Helper function to format date in Indonesian (EEEE, DD MM YYYY)
-function formatIndonesianDate(dateString) {
-    if (!dateString) return "N/A";
+function formatIndonesianDate(dateInput) {
+    if (!dateInput) return "N/A";
 
-    const date =
-        typeof dateString === "string"
-            ? new Date(dateString)
-            : dateString.toDate?.() || new Date(); // Fallback to now if invalid
+    let date;
+
+    // Handle Firestore Timestamp or similar objects with toDate
+    if (dateInput.toDate && typeof dateInput.toDate === "function") {
+        date = dateInput.toDate();
+    }
+    // Handle Date objects
+    else if (dateInput instanceof Date) {
+        date = dateInput;
+    }
+    // Handle strings
+    else if (typeof dateInput === "string") {
+        // Try parsing DD/MM/YYYY format (common in ID locale)
+        // Regex matches: 1-2 digits / 1-2 digits / 4 digits
+        const match = dateInput.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+        if (match) {
+            // match[1] = Day, match[2] = Month, match[3] = Year
+            // Month is 0-indexed in JS Date constructor
+            date = new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
+        } else {
+            // Fallback for YYYY-MM-DD or other formats
+            date = new Date(dateInput);
+        }
+    }
+    else {
+        // Fallback or invalid input
+        date = new Date();
+    }
+
     if (!date || isNaN(date.getTime())) return "N/A";
 
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
