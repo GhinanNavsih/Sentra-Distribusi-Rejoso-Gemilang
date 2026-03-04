@@ -16,14 +16,34 @@ service cloud.firestore {
     // Ideally, you'd want role-based access control (RBAC) here.
     
     match /inventory/{productId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    match /inventory_test/{productId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /products_test/{productId} {
+      allow read: if true;
       allow write: if isAuthenticated();
     }
     
     match /orders/{orderId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      // Prevent editing/deleting history for integrity, if desired
+      allow update, delete: if false; 
+    }
+
+    match /orders_test/{orderId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
       allow update, delete: if false; 
     }
     
@@ -31,9 +51,22 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
     }
+
+    match /purchases_test/{purchaseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
     
     match /counters/{counterId} {
       allow read, write: if isAuthenticated();
+    }
+
+    match /counters_test/{counterId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
     }
   }
 }

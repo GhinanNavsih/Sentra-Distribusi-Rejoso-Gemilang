@@ -83,21 +83,21 @@ const CatalogPage = () => {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
                 {products
                     .filter(p => selectedCategory === "Semua" || p.category === selectedCategory)
                     .map((product) => (
                         <div
                             key={product.sku}
-                            className="group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
+                            className="group relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
                         >
                             {/* Mau Lebih Untung Badge */}
-                            <div className="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-br-lg z-10">
+                            <div className="absolute top-0 left-0 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-br-lg z-10">
                                 Mau Lebih Untung?
                             </div>
 
                             {/* Image Container */}
-                            <div className="aspect-square w-full bg-gray-50 flex items-center justify-center p-6 overflow-hidden">
+                            <div className="aspect-square w-full bg-gray-50 flex items-center justify-center p-4 overflow-hidden">
                                 {product.image_url ? (
                                     <img
                                         src={productService.transformDriveUrl(product.image_url)}
@@ -110,22 +110,22 @@ const CatalogPage = () => {
                                     />
                                 ) : (
                                     <div className="text-gray-300 flex flex-col items-center">
-                                        <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        <span className="text-xs mt-2 uppercase font-bold tracking-widest">{product.base_unit}</span>
+                                        <span className="text-[10px] mt-1 uppercase font-bold tracking-widest">{product.base_unit}</span>
                                     </div>
                                 )}
                             </div>
 
                             {/* Content */}
-                            <div className="p-5 flex-1 flex flex-col">
-                                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-tight line-clamp-2 min-h-[2.5rem] mb-4">
+                            <div className="p-3 sm:p-4 flex-1 flex flex-col">
+                                <h3 className="text-xs sm:text-sm font-bold text-gray-800 uppercase tracking-tight line-clamp-2 min-h-[2.5rem] mb-2">
                                     {product.name}
                                 </h3>
 
                                 {/* Prices Area */}
-                                <div className="space-y-3 mt-4">
+                                <div className="space-y-2 mt-2">
                                     {(() => {
                                         const premiumPrice = product.price_premium || product.price_regular;
                                         const oldPrice = product.price_regular > premiumPrice ? product.price_regular : Math.floor(product.price_regular * 1.05);
@@ -134,15 +134,15 @@ const CatalogPage = () => {
                                             <>
                                                 {/* Base Unit Price */}
                                                 <div className="flex items-stretch bg-gray-50 rounded-lg border border-gray-100 overflow-hidden">
-                                                    <div className="bg-red-600 text-white px-2 py-3 flex flex-col justify-center items-center min-w-[60px]">
-                                                        <span className="text-[10px] font-bold uppercase leading-tight">{product.base_unit}</span>
-                                                        <span className="text-[8px] font-medium opacity-80 uppercase leading-tight">isi 1</span>
+                                                    <div className="bg-red-600 text-white px-1.5 py-2 flex flex-col justify-center items-center min-w-[50px]">
+                                                        <span className="text-[9px] font-bold uppercase leading-tight">{product.base_unit}</span>
+                                                        <span className="text-[7px] font-medium opacity-80 uppercase leading-tight">isi 1</span>
                                                     </div>
-                                                    <div className="flex-1 px-3 py-2 flex flex-col justify-center">
-                                                        <div className="text-[10px] text-gray-400 line-through">
+                                                    <div className="flex-1 px-2 py-1.5 flex flex-col justify-center">
+                                                        <div className="text-[9px] text-gray-400 line-through">
                                                             {formatCurrency(oldPrice)}
                                                         </div>
-                                                        <div className="text-sm font-black text-red-600">
+                                                        <div className="text-xs sm:text-sm font-black text-red-600">
                                                             {formatCurrency(premiumPrice)}
                                                         </div>
                                                     </div>
@@ -151,15 +151,15 @@ const CatalogPage = () => {
                                                 {/* Bulk Unit Price */}
                                                 {product.bulk_unit_name && product.bulk_unit_conversion > 1 && (
                                                     <div className="flex items-stretch bg-gray-50 rounded-lg border border-gray-100 overflow-hidden">
-                                                        <div className="bg-blue-900 text-white px-2 py-3 flex flex-col justify-center items-center min-w-[60px]">
-                                                            <span className="text-[10px] font-bold uppercase leading-tight">{product.bulk_unit_name}</span>
-                                                            <span className="text-[8px] font-medium opacity-80 uppercase leading-tight">isi {product.bulk_unit_conversion}</span>
+                                                        <div className="bg-blue-900 text-white px-1.5 py-2 flex flex-col justify-center items-center min-w-[50px]">
+                                                            <span className="text-[9px] font-bold uppercase leading-tight">{product.bulk_unit_name}</span>
+                                                            <span className="text-[7px] font-medium opacity-80 uppercase leading-tight">isi {product.bulk_unit_conversion}</span>
                                                         </div>
-                                                        <div className="flex-1 px-3 py-2 flex flex-col justify-center">
-                                                            <div className="text-[10px] text-gray-400 line-through">
+                                                        <div className="flex-1 px-2 py-1.5 flex flex-col justify-center">
+                                                            <div className="text-[9px] text-gray-400 line-through">
                                                                 {formatCurrency(oldPrice * product.bulk_unit_conversion)}
                                                             </div>
-                                                            <div className="text-sm font-black text-red-600">
+                                                            <div className="text-xs sm:text-sm font-black text-red-600">
                                                                 {formatCurrency(premiumPrice * product.bulk_unit_conversion)}
                                                             </div>
                                                         </div>
@@ -171,19 +171,19 @@ const CatalogPage = () => {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="mt-auto pt-8 flex gap-2">
+                                <div className="mt-auto pt-4 flex gap-1.5">
                                     {currentUser && (
-                                        <button className="flex-1 bg-blue-900 text-white font-bold py-3 rounded-lg text-sm hover:bg-blue-800 transition shadow-sm">
+                                        <button className="flex-1 bg-blue-900 text-white font-bold py-2 rounded-lg text-xs hover:bg-blue-800 transition shadow-sm">
                                             + Keranjang
                                         </button>
                                     )}
                                     {canEdit && (
                                         <button
                                             onClick={() => setSelectedProduct(product)}
-                                            className="bg-gray-100 text-gray-600 p-3 rounded-lg hover:bg-gray-200 transition"
+                                            className="bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition"
                                             title="Edit Produk"
                                         >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                             </svg>
                                         </button>

@@ -42,7 +42,7 @@ function Layout() {
           STAGING MODE — Data ditulis ke koleksi *_test. Tidak mempengaruhi data produksi.
         </div>
       )}
-      <header className={`bg-white border-b sticky top-0 z-10 ${stagingActive ? 'border-amber-300' : 'border-gray-200'}`}>
+      <header className={`bg-white border-b sticky top-0 z-50 ${stagingActive ? 'border-amber-300' : 'border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-8">
