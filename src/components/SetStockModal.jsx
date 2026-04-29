@@ -16,7 +16,10 @@ const formatCurrency = (value) => {
 function StepSetStock({ product, onCancel, onNext }) {
     const [newStock, setNewStock] = useState(product.current_stock || 0);
     const currentStock = product.current_stock || 0;
-    const diff = newStock - currentStock;
+    
+    // Treat empty string as 0 for calculation
+    const stockValue = newStock === '' ? 0 : Number(newStock);
+    const diff = stockValue - currentStock;
 
     return (
         <div className="p-6">
@@ -33,7 +36,11 @@ function StepSetStock({ product, onCancel, onNext }) {
                     <input
                         type="number"
                         value={newStock}
-                        onChange={(e) => setNewStock(Number(e.target.value))}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (val && val.startsWith('-')) return;
+                            setNewStock(val === '' ? '' : Number(val));
+                        }}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none font-bold text-xl text-center"
                         min="0"
                         autoFocus
@@ -51,7 +58,7 @@ function StepSetStock({ product, onCancel, onNext }) {
                     Batal
                 </button>
                 <button
-                    onClick={() => onNext(newStock)}
+                    onClick={() => onNext(stockValue)}
                     disabled={diff === 0}
                     className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-red-700 text-sm font-bold disabled:opacity-40"
                 >
@@ -343,7 +350,11 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
                         <input
                             type="number"
                             value={unitCost}
-                            onChange={(e) => setUnitCost(Number(e.target.value) || 0)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val && val.startsWith('-')) return;
+                                setUnitCost(val === '' ? '' : Number(val));
+                            }}
                             className="w-full pl-9 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold"
                             min="0"
                         />
@@ -362,7 +373,7 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
                             min="0"
                         />
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">{diff} × {formatCurrency(unitCost)}</p>
+                    <p className="text-xs text-gray-400 mt-1">{diff} × {formatCurrency(unitCost || 0)}</p>
                 </div>
             </div>
 

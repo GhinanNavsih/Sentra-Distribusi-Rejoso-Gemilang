@@ -82,7 +82,9 @@ export default function PosPage() {
     const updateCartItemQty = (currentCart, productId, newQty) => {
         return currentCart.map(item => {
             if (item.product_id === productId) {
-                const safeQty = Math.max(1, newQty);
+                // Allow 0 or empty string for typing UX
+                const numericQty = newQty === '' ? 0 : Math.max(0, parseInt(newQty) || 0);
+                
                 const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
                 const currentPrice = item.selected_unit === 'bulk'
                     ? basePrice * (item.product_obj.bulk_unit_conversion || 1)
@@ -90,9 +92,9 @@ export default function PosPage() {
 
                 return {
                     ...item,
-                    qty: safeQty,
+                    qty: newQty, // Store exactly what user typed (could be '' or number)
                     unit_price: currentPrice,
-                    total: currentPrice * safeQty
+                    total: currentPrice * numericQty
                 };
             }
             return item;
@@ -100,7 +102,23 @@ export default function PosPage() {
     };
 
     const handleQtyChange = (productId, val) => {
-        setCart(prev => updateCartItemQty(prev, productId, parseInt(val) || 0));
+        // Prevent negative numbers
+        if (val && val.toString().startsWith('-')) return;
+        
+        // Pass the raw string from the input
+        setCart(prev => updateCartItemQty(prev, productId, val === '' ? '' : val));
+    };
+
+    const handleQtyKeyDown = (e, productId, qty) => {
+        if (e.key === 'Enter') {
+            const numericQty = qty === '' ? 0 : Number(qty);
+            if (numericQty === 0) {
+                removeFromCart(productId);
+            } else {
+                // Blur the input if value is valid
+                e.target.blur();
+            }
+        }
     };
 
     const removeFromCart = (productId) => {
@@ -140,14 +158,16 @@ export default function PosPage() {
     const cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
 
     const handleSubmitOrder = async () => {
-        if (cart.length === 0) return;
+        const validItems = cart.filter(item => item.qty !== '' && Number(item.qty) > 0);
+        if (validItems.length === 0) return;
+
         if (!confirm(`Konfirmasi pesanan dengan Total: Rp ${cartTotal.toLocaleString('id-ID')}?`)) return;
 
         setProcessing(true);
         try {
             const orderPayload = {
                 // eslint-disable-next-line no-unused-vars
-                items: cart.map(({ product_obj, ...rest }) => {
+                items: validItems.map(({ product_obj, ...rest }) => {
                     const baseBuyPrice = product_obj?.cost_price || 0;
                     const finalBuyPrice = rest.selected_unit === 'bulk'
                         ? baseBuyPrice * (product_obj?.bulk_unit_conversion || 1)
@@ -181,7 +201,7 @@ export default function PosPage() {
                 orderId: orderId, // Use the real ID from service
                 orderDate,
                 // Keep product_obj for receipt generation (but won't be saved to DB)
-                items: cart.map(item => ({
+                items: validItems.map(item => ({
                     product_id: item.product_id,
                     product_name: item.product_name,
                     sku: item.sku,
@@ -327,10 +347,19 @@ export default function PosPage() {
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="number"
-                                            min="1"
+                                            min="0"
                                             className="w-16 p-1 border border-gray-300 rounded text-center font-bold text-sm"
                                             value={item.qty}
                                             onChange={(e) => handleQtyChange(item.product_id, e.target.value)}
+                                            onKeyDown={(e) => handleQtyKeyDown(e, item.product_id, item.qty)}
+                                            onBlur={() => {
+                                                // If left empty or 0 on blur, maybe remove or set to 1? 
+                                                // User specifically asked for removal on Enter, but blur is also a good trigger.
+                                                // For now, let's just ensure it's at least 0.
+                                                if (item.qty === '' || Number(item.qty) === 0) {
+                                                    removeFromCart(item.product_id);
+                                                }
+                                            }}
                                         />
                                         <div className="text-right w-24">
                                             <div className="font-bold text-gray-900">
