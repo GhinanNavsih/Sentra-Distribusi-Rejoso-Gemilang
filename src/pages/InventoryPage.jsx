@@ -337,7 +337,12 @@ export default function InventoryPage() {
                     <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl overflow-y-auto max-h-[90vh]">
                         <AddProductForm
                             onClose={() => setShowAddForm(false)}
-                            onSuccess={() => { setShowAddForm(false); fetchData(); }}
+                            onSuccess={(newProduct) => {
+                                setShowAddForm(false);
+                                fetchData();
+                                // Automatically open stock adjustment for the newly created product
+                                setSelectedProductForStock({ ...newProduct, current_stock: 0 });
+                            }}
                         />
                     </div>
                 </div>

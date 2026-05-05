@@ -23,10 +23,10 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
         if (product) {
             setFormData({
                 ...product,
-                cost_price: product.cost_price || 0,
-                price_regular: product.price_regular || 0,
-                price_premium: product.price_premium || 0,
-                price_star: product.price_star || 0,
+                cost_price: product.cost_price || '',
+                price_regular: product.price_regular || '',
+                price_premium: product.price_premium || '',
+                price_star: product.price_star || '',
                 image_url: product.image_url || '',
                 category: product.category || 'Lainnya'
             });
@@ -34,8 +34,18 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
     }, [product]);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        // For number inputs, allow empty string to let user clear the field
+        const val = type === 'number' ? (value === '' ? '' : Number(value)) : value;
+
+        setFormData(prev => {
+            const next = { ...prev, [name]: val };
+            // Auto-sync VIP price with cost price
+            if (name === 'cost_price') {
+                next.price_star = val;
+            }
+            return next;
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -43,16 +53,25 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
         setLoading(true);
         setError(null);
         try {
+            // Validation for NaN
+            const numericFields = ['price_regular', 'price_premium', 'price_star', 'cost_price', 'bulk_unit_conversion'];
+            for (const field of numericFields) {
+                const val = formData[field];
+                if (val !== '' && isNaN(Number(val))) {
+                    throw new Error(`Nilai untuk ${field} tidak valid (bukan angka).`);
+                }
+            }
+
             const payload = {
                 name: formData.name,
                 sku: formData.sku,
                 base_unit: formData.base_unit,
                 bulk_unit_name: formData.bulk_unit_name,
-                bulk_unit_conversion: Number(formData.bulk_unit_conversion),
-                cost_price: Number(formData.cost_price),
-                price_regular: Number(formData.price_regular),
-                price_premium: Number(formData.price_premium),
-                price_star: Number(formData.price_star),
+                bulk_unit_conversion: Number(formData.bulk_unit_conversion || 0),
+                cost_price: Number(formData.cost_price || 0),
+                price_regular: Number(formData.price_regular || 0),
+                price_premium: Number(formData.price_premium || 0),
+                price_star: Number(formData.price_star || 0),
                 image_url: formData.image_url,
                 category: formData.category
             };
@@ -229,13 +248,12 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                             <p className="text-[10px] text-gray-400 mt-1">Sedikit potongan harga</p>
                         </div>
 
-                        {/* Star */}
                         <div>
-                            <label className="block text-xs uppercase text-purple-600 mb-1 font-bold">Harga Bintang (VIP)</label>
+                            <label className="block text-xs uppercase text-purple-600 mb-1 font-bold">Harga Bintang <span className="text-[10px] lowercase font-normal">(Sesuai Modal)</span></label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
-                                <input type="number" name="price_star" required value={formData.price_star} onChange={handleChange}
-                                    className="w-full pl-9 p-2 border border-purple-200 bg-purple-50 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-bold text-purple-900"
+                                <input type="number" name="price_star" readOnly value={formData.cost_price}
+                                    className="w-full pl-9 p-2 border border-purple-100 bg-purple-50/50 rounded outline-none font-bold text-purple-900 cursor-not-allowed"
                                     placeholder="0" />
                             </div>
                             <p className="text-[10px] text-gray-400 mt-1">Harga termurah / Grosir</p>

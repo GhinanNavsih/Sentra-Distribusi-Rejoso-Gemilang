@@ -8,9 +8,10 @@ export default function AddProductForm({ onClose, onSuccess }) {
         base_unit: 'kg',
         bulk_unit_name: 'Sack',
         bulk_unit_conversion: 50,
-        price_regular: 0,
-        price_premium: 0,
-        price_star: 0,
+        price_regular: '',
+        price_premium: '',
+        price_star: '',
+        cost_price: '',
         image_url: '',
         category: 'Lainnya'
     });
@@ -18,8 +19,18 @@ export default function AddProductForm({ onClose, onSuccess }) {
     const [error, setError] = useState(null);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        // For number inputs, allow empty string to let user clear the field
+        const val = type === 'number' ? (value === '' ? '' : Number(value)) : value;
+        
+        setFormData(prev => {
+            const next = { ...prev, [name]: val };
+            // Auto-sync VIP price with cost price
+            if (name === 'cost_price') {
+                next.price_star = val;
+            }
+            return next;
+        });
     };
 
 
@@ -29,8 +40,25 @@ export default function AddProductForm({ onClose, onSuccess }) {
         setLoading(true);
         setError(null);
         try {
-            await productService.saveProduct(formData);
-            if (onSuccess) onSuccess();
+            // Validation for NaN
+            const numericFields = ['price_regular', 'price_premium', 'price_star', 'cost_price', 'bulk_unit_conversion'];
+            for (const field of numericFields) {
+                const val = formData[field];
+                if (val !== '' && isNaN(Number(val))) {
+                    throw new Error(`Nilai untuk ${field} tidak valid (bukan angka).`);
+                }
+            }
+
+            const payload = {
+                ...formData,
+                price_regular: Number(formData.price_regular || 0),
+                price_premium: Number(formData.price_premium || 0),
+                price_star: Number(formData.price_star || 0),
+                cost_price: Number(formData.cost_price || 0),
+                bulk_unit_conversion: Number(formData.bulk_unit_conversion || 0)
+            };
+            await productService.saveProduct(payload);
+            if (onSuccess) onSuccess(payload);
             if (onClose) onClose();
         } catch (err) {
             setError(err.message);
@@ -113,6 +141,16 @@ export default function AddProductForm({ onClose, onSuccess }) {
                 {/* Pricing Tiers */}
                 {/* Pricing Structure */}
                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                    <div className="mb-4">
+                        <label className="block text-sm font-bold text-gray-900 mb-1">Harga Beli (Modal)</label>
+                        <p className="text-xs text-gray-500 mb-2">Rata-rata biaya pembelian item ini (per satuan dasar).</p>
+                        <div className="relative">
+                            <span className="absolute left-3 top-2 text-gray-500 text-sm">Rp</span>
+                            <input type="number" name="cost_price" value={formData.cost_price} onChange={handleChange}
+                                className="w-full pl-9 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="0" />
+                        </div>
+                    </div>
+
                     <label className="block text-sm font-bold text-gray-900 mb-3">Strategi Harga Jual</label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Regular */}
@@ -139,13 +177,12 @@ export default function AddProductForm({ onClose, onSuccess }) {
                             <p className="text-[10px] text-gray-400 mt-1">Sedikit potongan harga</p>
                         </div>
 
-                        {/* Star */}
                         <div>
-                            <label className="block text-xs uppercase text-purple-600 mb-1 font-bold">Harga Bintang (VIP)</label>
+                            <label className="block text-xs uppercase text-purple-600 mb-1 font-bold">Harga Bintang <span className="text-[10px] lowercase font-normal">(Sesuai Modal)</span></label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
-                                <input type="number" name="price_star" required value={formData.price_star} onChange={handleChange}
-                                    className="w-full pl-9 p-2 border border-purple-200 bg-purple-50 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-bold text-purple-900"
+                                <input type="number" name="price_star" readOnly value={formData.cost_price}
+                                    className="w-full pl-9 p-2 border border-purple-100 bg-purple-50/50 rounded outline-none font-bold text-purple-900 cursor-not-allowed"
                                     placeholder="0" />
                             </div>
                             <p className="text-[10px] text-gray-400 mt-1">Harga termurah / Grosir</p>

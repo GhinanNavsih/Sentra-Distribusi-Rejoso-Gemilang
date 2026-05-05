@@ -8,7 +8,7 @@ const formatCurrency = (value) => {
     if (!value) return "Rp 0";
     return new Intl.NumberFormat("id-ID", {
         style: "currency", currency: "IDR",
-        minimumFractionDigits: 0, maximumFractionDigits: 0,
+        minimumFractionDigits: 0, maximumFractionDigits: 2,
     }).format(value);
 };
 
@@ -289,30 +289,40 @@ function StepStockDecrease({ product, currentStock, newStock, onCancel, onDone }
 // Step 2b: Stock INCREASED — confirm purchase
 function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }) {
     const diff = newStock - currentStock;
-    const [unitCost, setUnitCost] = useState(product.cost_price || 0);
-    const subtotal = diff * unitCost;
+    const [unitCost, setUnitCost] = useState(product.cost_price || '');
+    const subtotal = unitCost === '' ? '' : diff * unitCost;
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const handleSubtotalChange = (val) => {
-        const sub = Number(val) || 0;
-        setUnitCost(diff > 0 ? Math.round(sub / diff) : 0);
+        if (val === '') {
+            setUnitCost('');
+            return;
+        }
+        const sub = Number(val);
+        if (diff > 0) {
+            setUnitCost(sub / diff);
+        }
     };
 
     const handleSubmit = async () => {
+        if (isNaN(Number(unitCost)) || isNaN(Number(subtotal))) {
+            setError("Nilai harga atau subtotal tidak valid.");
+            return;
+        }
         setLoading(true);
         setError(null);
         try {
-            // Create purchase record
+            // Prepare purchase record
             const purchaseData = {
                 items: [{
                     product_id: product.sku,
                     product_name: product.name,
                     qty: diff,
-                    unit_price: unitCost,
-                    total: subtotal
+                    unit_price: Number(unitCost || 0),
+                    total: Number(subtotal || 0)
                 }],
-                grand_total: subtotal,
+                grand_total: Number(subtotal || 0),
                 source: 'stock_adjustment'
             };
             await purchaseService.createPurchase(purchaseData);
@@ -357,6 +367,7 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
                             }}
                             className="w-full pl-9 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold"
                             min="0"
+                            step="any"
                         />
                     </div>
                 </div>
@@ -367,10 +378,11 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
                         <span className="absolute left-3 top-3 text-gray-400 text-sm">Rp</span>
                         <input
                             type="number"
-                            value={subtotal}
+                            value={subtotal === '' ? '' : subtotal.toFixed(2).replace(/\.00$/, '')}
                             onChange={(e) => handleSubtotalChange(e.target.value)}
                             className="w-full pl-9 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold"
                             min="0"
+                            step="any"
                         />
                     </div>
                     <p className="text-xs text-gray-400 mt-1">{diff} × {formatCurrency(unitCost || 0)}</p>
