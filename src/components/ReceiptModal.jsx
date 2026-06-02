@@ -32,18 +32,25 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
         }
     }, [isOpen, orderData]);
 
-    // Update customer name in database if changed in modal
-    const updateCustomerNameInDB = async (newName) => {
+    // Save all order details (customer name, payment method, credit sale) to the database
+    const saveOrderDetailsToDB = async (name = customerName, method = paymentMethod, credit = isCreditSale) => {
         if (!orderData?.orderId) return;
         try {
             const orderRef = doc(db, getCollectionName('orders'), orderData.orderId);
             await updateDoc(orderRef, {
-                customer_name: newName || ""
+                customer_name: name.trim() || "",
+                payment_method: method,
+                is_credit_sale: credit
             });
-            console.log("Customer name updated in DB");
+            console.log("Order details updated in DB");
         } catch (err) {
-            console.error("Failed to update customer name:", err);
+            console.error("Failed to update order details:", err);
         }
+    };
+
+    const handleClose = async () => {
+        await saveOrderDetailsToDB(customerName, paymentMethod, isCreditSale);
+        onClose();
     };
 
     if (!isOpen || !orderData) return null;
@@ -83,6 +90,8 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
     };
 
     const handleDownloadReceipts = async () => {
+        await saveOrderDetailsToDB(customerName, paymentMethod, isCreditSale);
+
         const baseData = {
             ...orderData,
             customerName,
@@ -122,6 +131,8 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
     };
 
     const handlePrintReceipts = async () => {
+        await saveOrderDetailsToDB(customerName, paymentMethod, isCreditSale);
+
         const baseData = {
             ...orderData,
             customerName,
@@ -180,7 +191,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                         </div>
                         {isNameValid && (
                             <button
-                                onClick={onClose}
+                                onClick={handleClose}
                                 className="text-white hover:bg-white/20 rounded-full p-2 transition">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -219,11 +230,8 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                                 type="text"
                                 placeholder="Wajib diisi (Contoh: Pak Budi)"
                                 value={customerName}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    setCustomerName(val);
-                                    updateCustomerNameInDB(val);
-                                }}
+                                onChange={(e) => setCustomerName(e.target.value)}
+                                onBlur={(e) => saveOrderDetailsToDB(e.target.value, paymentMethod, isCreditSale)}
                                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                             />
                             {!isNameValid && (
@@ -254,7 +262,11 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                             </label>
                             <select
                                 value={paymentMethod}
-                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setPaymentMethod(val);
+                                    saveOrderDetailsToDB(customerName, val, isCreditSale);
+                                }}
                                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary outline-none">
                                 <option value="Cash">Tunai</option>
                                 <option value="QRIS">QRIS</option>
@@ -269,7 +281,11 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
                                 type="checkbox"
                                 id="creditSale"
                                 checked={isCreditSale}
-                                onChange={(e) => setIsCreditSale(e.target.checked)}
+                                onChange={(e) => {
+                                    const val = e.target.checked;
+                                    setIsCreditSale(val);
+                                    saveOrderDetailsToDB(customerName, paymentMethod, val);
+                                }}
                                 className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                             />
                             <label htmlFor="creditSale" className="text-sm text-gray-700">
