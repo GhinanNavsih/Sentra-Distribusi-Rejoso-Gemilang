@@ -50,6 +50,7 @@ export const orderService = {
                 }
 
                 // Validate stock availability
+                const insufficientItems = [];
                 for (const { item, invDoc } of inventoryReads) {
                     if (!invDoc.exists()) {
                         throw new Error(`Produk ${item.product_name} tidak ditemukan di inventori.`);
@@ -64,11 +65,29 @@ export const orderService = {
 
                     const currentStock = invDoc.data().current_stock_base || 0;
                     if (currentStock < deductionQty) {
-                        throw new Error(`Stok tidak cukup untuk ${item.product_name}. Diminta: ${deductionQty} ${item.base_unit}, Tersedia: ${currentStock} ${item.base_unit}`);
+                        insufficientItems.push({
+                            product_id: item.product_id,
+                            product_name: item.product_name,
+                            base_unit: item.base_unit,
+                            qty: item.qty,
+                            selected_unit: item.selected_unit || 'base',
+                            bulk_unit_name: item.bulk_unit_name,
+                            bulk_unit_conversion: item.bulk_unit_conversion,
+                            demanded_base: deductionQty,
+                            available_base: currentStock,
+                            delta_base: deductionQty - currentStock
+                        });
                     }
 
                     // Store deduction qty for next step
                     item._deductionQty = deductionQty;
+                }
+
+                if (insufficientItems.length > 0) {
+                    const err = new Error("Stok tidak mencukupi");
+                    err.name = "InsufficientStockError";
+                    err.details = insufficientItems;
+                    throw err;
                 }
 
                 // --- PHASE 2: ALL WRITES AFTER READS ---

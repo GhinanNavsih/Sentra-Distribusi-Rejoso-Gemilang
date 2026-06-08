@@ -3,6 +3,7 @@ import { productService } from '../services/productService';
 import { inventoryService } from '../services/inventoryService';
 import { orderService } from '../services/orderService';
 import ReceiptModal from '../components/ReceiptModal';
+import InsufficientStockModal from '../components/InsufficientStockModal';
 
 export default function PosPage() {
     const [products, setProducts] = useState([]);
@@ -18,6 +19,8 @@ export default function PosPage() {
     const [selectedCustomerType, setSelectedCustomerType] = useState(() => {
         return localStorage.getItem('pos_customer_type') || 'regular';
     }); // Single selection - what gets saved
+    const [showStockErrorModal, setShowStockErrorModal] = useState(false);
+    const [stockErrorDetails, setStockErrorDetails] = useState([]);
 
     // Save cart and customer type to localStorage when they change
     useEffect(() => {
@@ -277,7 +280,12 @@ export default function PosPage() {
             setCart([]);
             setShowReceiptModal(true);
         } catch (err) {
-            alert("Pesanan Gagal: " + err.message);
+            if (err.name === "InsufficientStockError") {
+                setStockErrorDetails(err.details);
+                setShowStockErrorModal(true);
+            } else {
+                alert("Pesanan Gagal: " + err.message);
+            }
         } finally {
             setProcessing(false);
         }
@@ -453,6 +461,13 @@ export default function PosPage() {
                 isOpen={showReceiptModal}
                 onClose={() => setShowReceiptModal(false)}
                 orderData={completedOrderData}
+            />
+
+            {/* Insufficient Stock Modal */}
+            <InsufficientStockModal
+                isOpen={showStockErrorModal}
+                onClose={() => setShowStockErrorModal(false)}
+                details={stockErrorDetails}
             />
         </div>
     );
