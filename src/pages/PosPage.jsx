@@ -7,16 +7,31 @@ import ReceiptModal from '../components/ReceiptModal';
 export default function PosPage() {
     const [products, setProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [cart, setCart] = useState([]);
+    const [cart, setCart] = useState(() => {
+        const saved = localStorage.getItem('pos_cart');
+        return saved ? JSON.parse(saved) : [];
+    });
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [completedOrderData, setCompletedOrderData] = useState(null);
-    const [selectedCustomerType, setSelectedCustomerType] = useState('regular'); // Single selection - what gets saved
+    const [selectedCustomerType, setSelectedCustomerType] = useState(() => {
+        return localStorage.getItem('pos_customer_type') || 'regular';
+    }); // Single selection - what gets saved
+
+    // Save cart and customer type to localStorage when they change
+    useEffect(() => {
+        localStorage.setItem('pos_cart', JSON.stringify(cart));
+    }, [cart]);
+
+    useEffect(() => {
+        localStorage.setItem('pos_customer_type', selectedCustomerType);
+    }, [selectedCustomerType]);
 
     // Load Catalog
     useEffect(() => {
         const load = async () => {
+            const activeCustomerType = localStorage.getItem('pos_customer_type') || 'regular';
             const list = await productService.getAllProducts();
             // Get stock for each to prevent overselling (optional visual cue)
             const listWithStock = await Promise.all(list.map(async p => {
@@ -24,6 +39,39 @@ export default function PosPage() {
                 return { ...p, stock };
             }));
             setProducts(listWithStock);
+
+            // Sync cart items with the latest database data (prices, stock, cost price)
+            setCart(prevCart => {
+                if (prevCart.length === 0) return prevCart;
+                return prevCart
+                    .map(item => {
+                        const latestProduct = listWithStock.find(p => p.id === item.product_id);
+                        if (!latestProduct) return null; // Remove deleted products
+
+                        const basePrice = productService.calculatePrice(latestProduct, activeCustomerType);
+                        const unitPrice = item.selected_unit === 'bulk'
+                            ? basePrice * (latestProduct.bulk_unit_conversion || 1)
+                            : basePrice;
+                        
+                        const qtyVal = item.qty;
+                        const numericQty = qtyVal === '' ? 0 : Number(qtyVal);
+
+                        return {
+                            ...item,
+                            product_name: latestProduct.name,
+                            sku: latestProduct.sku,
+                            base_unit: latestProduct.base_unit,
+                            bulk_unit_name: latestProduct.bulk_unit_name,
+                            bulk_unit_conversion: latestProduct.bulk_unit_conversion,
+                            product_obj: latestProduct,
+                            unit_price: unitPrice,
+                            qty: qtyVal,
+                            total: unitPrice * numericQty
+                        };
+                    })
+                    .filter(Boolean);
+            });
+
             setLoading(false);
         };
         load();
@@ -45,11 +93,17 @@ export default function PosPage() {
         }));
     }, [selectedCustomerType]);
 
-    // Filter products
+    // Filter products using word-by-word keyword matching (order-insensitive)
     const filteredProducts = useMemo(() => {
         if (!searchQuery) return products; // Return all if no query
-        const lower = searchQuery.toLowerCase();
-        return products.filter(p => p.name.toLowerCase().includes(lower) || p.sku.toLowerCase().includes(lower));
+        const queryWords = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+        if (queryWords.length === 0) return products;
+
+        return products.filter(p => {
+            const nameLower = (p.name || '').toLowerCase();
+            const skuLower = (p.sku || '').toLowerCase();
+            return queryWords.every(word => nameLower.includes(word) || skuLower.includes(word));
+        });
     }, [products, searchQuery]);
 
     // Add to cart

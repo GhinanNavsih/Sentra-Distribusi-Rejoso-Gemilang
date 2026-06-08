@@ -98,14 +98,17 @@ export default function InventoryPage() {
 
     // Get filtered and sorted products
     const getFilteredAndSortedProducts = () => {
-        // First filter by search query
+        // First filter by search query using order-insensitive keywords
         let filtered = products;
         if (searchQuery) {
-            const lowerQuery = searchQuery.toLowerCase();
-            filtered = products.filter(p =>
-                (p.name || '').toLowerCase().includes(lowerQuery) ||
-                (p.sku || '').toLowerCase().includes(lowerQuery)
-            );
+            const queryWords = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+            if (queryWords.length > 0) {
+                filtered = products.filter(p => {
+                    const nameLower = (p.name || '').toLowerCase();
+                    const skuLower = (p.sku || '').toLowerCase();
+                    return queryWords.every(word => nameLower.includes(word) || skuLower.includes(word));
+                });
+            }
         }
 
         if (!sortConfig.key) return filtered;

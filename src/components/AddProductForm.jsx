@@ -20,8 +20,15 @@ export default function AddProductForm({ onClose, onSuccess }) {
 
     const handleChange = (e) => {
         const { name, value, type } = e.target;
-        // For number inputs, allow empty string to let user clear the field
-        const val = type === 'number' ? (value === '' ? '' : Number(value)) : value;
+        const isPriceField = ['price_regular', 'price_premium', 'price_star', 'cost_price'].includes(name);
+
+        let val = value;
+        if (isPriceField) {
+            const cleanDigits = value.replace(/\D/g, '');
+            val = cleanDigits === '' ? '' : Number(cleanDigits).toLocaleString('id-ID');
+        } else if (type === 'number') {
+            val = value === '' ? '' : Number(value);
+        }
         
         setFormData(prev => {
             const next = { ...prev, [name]: val };
@@ -40,21 +47,14 @@ export default function AddProductForm({ onClose, onSuccess }) {
         setLoading(true);
         setError(null);
         try {
-            // Validation for NaN
-            const numericFields = ['price_regular', 'price_premium', 'price_star', 'cost_price', 'bulk_unit_conversion'];
-            for (const field of numericFields) {
-                const val = formData[field];
-                if (val !== '' && isNaN(Number(val))) {
-                    throw new Error(`Nilai untuk ${field} tidak valid (bukan angka).`);
-                }
-            }
+            const parsePrice = (val) => Number(val.toString().replace(/\D/g, '') || 0);
 
             const payload = {
                 ...formData,
-                price_regular: Number(formData.price_regular || 0),
-                price_premium: Number(formData.price_premium || 0),
-                price_star: Number(formData.price_star || 0),
-                cost_price: Number(formData.cost_price || 0),
+                price_regular: parsePrice(formData.price_regular),
+                price_premium: parsePrice(formData.price_premium),
+                price_star: parsePrice(formData.price_star),
+                cost_price: parsePrice(formData.cost_price),
                 bulk_unit_conversion: Number(formData.bulk_unit_conversion || 0)
             };
             await productService.saveProduct(payload);
@@ -146,7 +146,7 @@ export default function AddProductForm({ onClose, onSuccess }) {
                         <p className="text-xs text-gray-500 mb-2">Rata-rata biaya pembelian item ini (per satuan dasar).</p>
                         <div className="relative">
                             <span className="absolute left-3 top-2 text-gray-500 text-sm">Rp</span>
-                            <input type="number" name="cost_price" value={formData.cost_price} onChange={handleChange}
+                            <input type="text" inputMode="numeric" name="cost_price" value={formData.cost_price} onChange={handleChange}
                                 className="w-full pl-9 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="0" />
                         </div>
                     </div>
@@ -158,7 +158,7 @@ export default function AddProductForm({ onClose, onSuccess }) {
                             <label className="block text-xs uppercase text-gray-500 mb-1 font-bold">Harga Reguler</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
-                                <input type="number" name="price_regular" required value={formData.price_regular} onChange={handleChange}
+                                <input type="text" inputMode="numeric" name="price_regular" required value={formData.price_regular} onChange={handleChange}
                                     className="w-full pl-9 p-2 border border-blue-200 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none font-bold text-gray-900"
                                     placeholder="0" />
                             </div>
@@ -170,7 +170,7 @@ export default function AddProductForm({ onClose, onSuccess }) {
                             <label className="block text-xs uppercase text-yellow-600 mb-1 font-bold">Harga Premium</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
-                                <input type="number" name="price_premium" required value={formData.price_premium} onChange={handleChange}
+                                <input type="text" inputMode="numeric" name="price_premium" required value={formData.price_premium} onChange={handleChange}
                                     className="w-full pl-9 p-2 border border-yellow-200 bg-yellow-50 rounded focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 outline-none font-bold text-yellow-900"
                                     placeholder="0" />
                             </div>
@@ -181,7 +181,7 @@ export default function AddProductForm({ onClose, onSuccess }) {
                             <label className="block text-xs uppercase text-purple-600 mb-1 font-bold">Harga Bintang <span className="text-[10px] lowercase font-normal">(Sesuai Modal)</span></label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2 text-gray-400 text-sm">Rp</span>
-                                <input type="number" name="price_star" readOnly value={formData.cost_price}
+                                <input type="text" inputMode="numeric" name="price_star" readOnly value={formData.cost_price}
                                     className="w-full pl-9 p-2 border border-purple-100 bg-purple-50/50 rounded outline-none font-bold text-purple-900 cursor-not-allowed"
                                     placeholder="0" />
                             </div>

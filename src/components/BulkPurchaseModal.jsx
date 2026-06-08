@@ -114,7 +114,8 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
 
                     // Sanitize numerical inputs
                     if (field === 'cost' || field === 'subtotal') {
-                        if (value !== '' && !/^\d+$/.test(value)) {
+                        const cleanDigits = value.toString().replace(/\D/g, '');
+                        if (value !== '' && cleanDigits === '') {
                             return row;
                         }
                     }
@@ -123,16 +124,16 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                     if (field === 'unit' && row.product && row.product.bulk_unit_name) {
                         const conversion = row.product.bulk_unit_conversion || 1;
                         const currentQty = parseFloat(row.qty) || 0;
-                        const currentCost = parseFloat(row.cost) || 0;
+                        const currentCost = parseFloat(row.cost.toString().replace(/\D/g, '')) || 0;
 
                         if (value === row.product.base_unit && row.unit === row.product.bulk_unit_name) {
                             // Bulk -> Base: Multiply Qty, Divide Cost
                             updatedRow.qty = currentQty * conversion;
-                            updatedRow.cost = Math.round(currentCost / conversion).toString();
+                            updatedRow.cost = Math.round(currentCost / conversion).toLocaleString('id-ID');
                         } else if (value === row.product.bulk_unit_name && row.unit === row.product.base_unit) {
                             // Base -> Bulk: Divide Qty, Multiply Cost
                             updatedRow.qty = currentQty / conversion;
-                            updatedRow.cost = Math.round(currentCost * conversion).toString();
+                            updatedRow.cost = Math.round(currentCost * conversion).toLocaleString('id-ID');
                         }
                     }
 
@@ -141,14 +142,21 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
 
                     if (field === 'subtotal') {
                         // User entered Total -> Calculate unit cost
-                        const s = parseFloat(value) || 0;
+                        const cleanSubtotal = value.toString().replace(/\D/g, '');
+                        const s = parseFloat(cleanSubtotal) || 0;
+                        updatedRow.subtotal = cleanSubtotal === '' ? '' : Number(cleanSubtotal).toLocaleString('id-ID');
                         if (q > 0) {
-                            updatedRow.cost = Math.round(s / q).toString();
+                            updatedRow.cost = Math.round(s / q).toLocaleString('id-ID');
                         }
+                    } else if (field === 'cost') {
+                        const cleanCost = value.toString().replace(/\D/g, '');
+                        const c = parseFloat(cleanCost) || 0;
+                        updatedRow.cost = cleanCost === '' ? '' : Number(cleanCost).toLocaleString('id-ID');
+                        updatedRow.subtotal = Math.round(q * c).toLocaleString('id-ID');
                     } else {
-                        // Calculate/Re-calculate Subtotal
-                        const c = field === 'cost' ? (parseFloat(value) || 0) : (parseFloat(updatedRow.cost) || 0);
-                        updatedRow.subtotal = Math.round(q * c);
+                        const cleanCost = (updatedRow.cost || '').toString().replace(/\D/g, '');
+                        const c = parseFloat(cleanCost) || 0;
+                        updatedRow.subtotal = Math.round(q * c).toLocaleString('id-ID');
                     }
 
                     return updatedRow;
@@ -159,7 +167,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
     };
 
     // Calculate Grand Total
-    const grandTotal = rows.reduce((sum, row) => sum + (parseFloat(row.subtotal) || 0), 0);
+    const grandTotal = rows.reduce((sum, row) => sum + (parseFloat(row.subtotal.toString().replace(/\D/g, '')) || 0), 0);
 
     // Submit Handler
     const handleSubmit = async () => {
@@ -184,6 +192,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
             // Process each row
             for (const row of validRows) {
                 const { product, qty, unit, cost } = row;
+                const cleanCost = parseFloat(cost.toString().replace(/\D/g, '')) || 0;
 
                 let multiplier = 1;
                 if (unit === product.bulk_unit_name) {
@@ -191,10 +200,10 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                 }
 
                 const changeInBaseUnits = parseFloat(qty) * multiplier;
-                const totalCost = parseFloat(cost) * parseFloat(qty);
+                const totalCost = cleanCost * parseFloat(qty);
 
                 // Calculate cost per base unit
-                const costPerBaseUnit = parseFloat(cost) / multiplier;
+                const costPerBaseUnit = cleanCost / multiplier;
 
                 // Update Inventory
                 await inventoryService.updateStock(product.sku, changeInBaseUnits);
@@ -211,7 +220,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                     product_name: product.name,
                     qty: parseFloat(qty),
                     unit: unit,
-                    cost_per_unit: parseFloat(cost),
+                    cost_per_unit: cleanCost,
                     total: totalCost
                 });
 
@@ -399,7 +408,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                         <input
                                             type="number"
                                             min="0"
-                                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 outline-none focus:ring-2 focus:ring-blue-500 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             value={row.qty}
                                             onChange={(e) => updateRow(row.id, "qty", e.target.value)}
                                             placeholder="0"
@@ -413,7 +422,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                             <input
                                                 type="text"
                                                 inputMode="numeric"
-                                                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg pl-9 pr-3 py-2 bg-white dark:bg-gray-700 outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                                                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg pl-9 pr-3 py-2 bg-white dark:bg-gray-700 outline-none focus:ring-2 focus:ring-blue-500 text-center"
                                                 value={row.cost}
                                                 onChange={(e) => updateRow(row.id, "cost", e.target.value)}
                                                 placeholder="0"
@@ -428,7 +437,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                             <input
                                                 type="text"
                                                 inputMode="numeric"
-                                                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-800/50 outline-none focus:ring-2 focus:ring-blue-500 text-right font-medium text-gray-700 dark:text-gray-300"
+                                                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-800/50 outline-none focus:ring-2 focus:ring-blue-500 text-center font-medium text-gray-700 dark:text-gray-300"
                                                 value={row.subtotal}
                                                 onChange={(e) => updateRow(row.id, "subtotal", e.target.value)}
                                                 placeholder="0"

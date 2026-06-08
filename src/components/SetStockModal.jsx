@@ -289,8 +289,9 @@ function StepStockDecrease({ product, currentStock, newStock, onCancel, onDone }
 // Step 2b: Stock INCREASED — confirm purchase
 function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }) {
     const diff = newStock - currentStock;
-    const [unitCost, setUnitCost] = useState(product.cost_price || '');
-    const subtotal = unitCost === '' ? '' : diff * unitCost;
+    const [unitCost, setUnitCost] = useState(product.cost_price ? Number(product.cost_price).toLocaleString('id-ID') : '');
+    const numericUnitCost = unitCost === '' ? 0 : Number(unitCost.toString().replace(/\D/g, ''));
+    const subtotalVal = unitCost === '' ? '' : (diff * numericUnitCost).toLocaleString('id-ID');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -299,17 +300,16 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
             setUnitCost('');
             return;
         }
-        const sub = Number(val);
+        const cleanVal = val.replace(/\D/g, '');
+        const sub = Number(cleanVal);
         if (diff > 0) {
-            setUnitCost(sub / diff);
+            setUnitCost(Math.round(sub / diff).toLocaleString('id-ID'));
         }
     };
 
     const handleSubmit = async () => {
-        if (isNaN(Number(unitCost)) || isNaN(Number(subtotal))) {
-            setError("Nilai harga atau subtotal tidak valid.");
-            return;
-        }
+        const numericUnitCostVal = Number(unitCost.toString().replace(/\D/g, '') || 0);
+        const numericSubtotal = diff * numericUnitCostVal;
         setLoading(true);
         setError(null);
         try {
@@ -319,10 +319,10 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
                     product_id: product.sku,
                     product_name: product.name,
                     qty: diff,
-                    unit_price: Number(unitCost || 0),
-                    total: Number(subtotal || 0)
+                    unit_price: numericUnitCostVal,
+                    total: numericSubtotal
                 }],
-                grand_total: Number(subtotal || 0),
+                grand_total: numericSubtotal,
                 source: 'stock_adjustment'
             };
             await purchaseService.createPurchase(purchaseData);
@@ -358,16 +358,15 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
                     <div className="relative">
                         <span className="absolute left-3 top-3 text-gray-400 text-sm">Rp</span>
                         <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={unitCost}
                             onChange={(e) => {
-                                const val = e.target.value;
-                                if (val && val.startsWith('-')) return;
-                                setUnitCost(val === '' ? '' : Number(val));
+                                const val = e.target.value.replace(/\D/g, '');
+                                setUnitCost(val === '' ? '' : Number(val).toLocaleString('id-ID'));
                             }}
                             className="w-full pl-9 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold"
-                            min="0"
-                            step="any"
+                            placeholder="0"
                         />
                     </div>
                 </div>
@@ -377,15 +376,15 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
                     <div className="relative">
                         <span className="absolute left-3 top-3 text-gray-400 text-sm">Rp</span>
                         <input
-                            type="number"
-                            value={subtotal === '' ? '' : subtotal.toFixed(2).replace(/\.00$/, '')}
+                            type="text"
+                            inputMode="numeric"
+                            value={subtotalVal}
                             onChange={(e) => handleSubtotalChange(e.target.value)}
                             className="w-full pl-9 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold"
-                            min="0"
-                            step="any"
+                            placeholder="0"
                         />
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">{diff} × {formatCurrency(unitCost || 0)}</p>
+                    <p className="text-xs text-gray-400 mt-1">{diff} × {formatCurrency(numericUnitCost)}</p>
                 </div>
             </div>
 
