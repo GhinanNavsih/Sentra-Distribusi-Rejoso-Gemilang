@@ -410,7 +410,7 @@ export default function PosPage() {
                                         <input
                                             type="number"
                                             min="0"
-                                            className="w-16 p-1 border border-gray-300 rounded text-center font-bold text-sm"
+                                            className="w-16 p-1 border border-gray-300 rounded text-center font-bold text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             value={item.qty}
                                             onChange={(e) => handleQtyChange(item.product_id, e.target.value)}
                                             onKeyDown={(e) => handleQtyKeyDown(e, item.product_id, item.qty)}

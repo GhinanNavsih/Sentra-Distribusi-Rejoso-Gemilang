@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { FaTimes, FaPlus, FaTrash } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
 import { inventoryService } from "../services/inventoryService";
+import { storage } from "../firebase.config";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
 
 // Helper for currency - Strict Integer
 const formatCurrency = (value) => {
@@ -229,12 +232,28 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                 console.log(`Added ${changeInBaseUnits} ${product.base_unit} of ${product.name} at ${costPerBaseUnit} per ${product.base_unit}`);
             }
 
+            // Upload receipt file if exists
+            let receiptFileUrl = null;
+            if (receiptFile) {
+                try {
+                    const safeName = receiptFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                    const storageRef = ref(storage, `receipts/${Date.now()}_${safeName}`);
+                    const uploadResult = await uploadBytes(storageRef, receiptFile);
+                    receiptFileUrl = await getDownloadURL(uploadResult.ref);
+                } catch (storageError) {
+                    console.error("Error uploading receipt to Firebase Storage:", storageError);
+                    alert("Gagal mengupload file nota ke cloud storage. Transaksi dibatalkan. Detail: " + storageError.message);
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+
             // Save purchase record
             await purchaseService.createPurchase({
                 items: purchaseItems,
                 grand_total: grandTotal,
                 supplier_name: supplierName || 'N/A',
-                receipt_file: receiptFile ? receiptFile.name : null
+                receipt_file: receiptFileUrl || null
             });
 
             onSuccess();

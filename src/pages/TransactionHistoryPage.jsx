@@ -1,13 +1,300 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 import { FaShoppingCart, FaTruck, FaChevronDown, FaChevronUp, FaCalendar, FaPrint, FaFileAlt } from 'react-icons/fa';
 import { printReceipt } from '../utils/standardReceiptGenerator';
 import { useUserRole } from '../hooks/useUserRole';
+import { productService } from '../services/productService';
+import * as XLSX from 'xlsx';
+
+const getFilenameFromUrl = (url) => {
+    if (!url) return '';
+    if (!url.startsWith('http://') && !url.startsWith('https://')) return url;
+    try {
+        const decoded = decodeURIComponent(url.split('/o/')[1].split('?')[0]);
+        const parts = decoded.split('/');
+        const filename = parts[parts.length - 1];
+        return filename.replace(/^\d+_/, '');
+    } catch (e) {
+        return 'Lihat Nota';
+    }
+};
+
+const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }) => {
+    const [items, setItems] = useState([]);
+    const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && transaction) {
+            setItems(transaction.items.map(item => ({ ...item })));
+        }
+    }, [isOpen, transaction]);
+
+    if (!isOpen || !transaction) return null;
+
+    const handleQtyChange = (productId, value) => {
+        setItems(prev => prev.map(item => {
+            if (item.product_id === productId) {
+                const newQty = Math.max(0, parseFloat(value) || 0);
+                const price = item.unit_price || item.cost_per_unit || 0;
+                return {
+                    ...item,
+                    qty: newQty,
+                    total: newQty * price
+                };
+            }
+            return item;
+        }));
+    };
+
+    const grandTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
+
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    };
+
+    const handleConfirm = async () => {
+        setIsSaving(true);
+        try {
+            const updated = items.map(item => {
+                let multiplier = 1;
+                if (transaction.type === 'purchase') {
+                    const productObj = products.find(p => p.sku === item.product_id);
+                    if (productObj && productObj.bulk_unit_name && item.unit === productObj.bulk_unit_name) {
+                        multiplier = productObj.bulk_unit_conversion || 1;
+                    }
+                }
+                return {
+                    product_id: item.product_id,
+                    qty: item.qty,
+                    multiplier
+                };
+            });
+
+            await onSave(transaction.id, updated, transaction.type);
+            onClose();
+        } catch (e) {
+            alert("Gagal mengedit transaksi: " + e.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                            Edit Jumlah Item
+                        </h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            No. Transaksi: {transaction.id} ({transaction.type === 'sale' ? 'Penjualan' : 'Pembelian'})
+                        </p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-auto p-6 space-y-4">
+                    <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-3 text-xs text-yellow-800 dark:text-yellow-200">
+                        <span className="font-bold">PENTING:</span> Mengubah jumlah item di sini akan secara otomatis menyesuaikan stok fisik barang di inventori/katalog sesuai selisihnya.
+                    </div>
+
+                    <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                        {items.map((item, idx) => {
+                            const unitLabel = transaction.type === 'sale'
+                                ? (item.selected_unit === 'bulk' ? (item.bulk_unit_name || 'Unit') : (item.base_unit || 'pcs'))
+                                : (item.unit || item.base_unit || 'pcs');
+                            const price = item.unit_price || item.cost_per_unit || 0;
+
+                            return (
+                                <div key={item.product_id || idx} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="flex-1">
+                                        <h4 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
+                                            {item.product_name}
+                                        </h4>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Harga/satuan: {formatCurrency(price)} per {unitLabel}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-700">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleQtyChange(item.product_id, item.qty - 1)}
+                                                className="px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 font-bold"
+                                            >
+                                                -
+                                            </button>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={item.qty}
+                                                onChange={(e) => handleQtyChange(item.product_id, e.target.value)}
+                                                className="w-16 text-center py-1.5 outline-none bg-transparent dark:text-white font-medium text-sm font-semibold"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleQtyChange(item.product_id, item.qty + 1)}
+                                                className="px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 font-bold"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                        <div className="text-right w-28">
+                                            <p className="text-xs text-gray-400">Subtotal</p>
+                                            <p className="font-bold text-gray-800 dark:text-gray-200 text-sm">
+                                                {formatCurrency(item.total || 0)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+                    <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Total Transaksi Baru</p>
+                        <p className="text-lg font-black text-gray-900 dark:text-white">
+                            {formatCurrency(grandTotal)}
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleConfirm}
+                            disabled={isSaving}
+                            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-sm transition disabled:opacity-50"
+                        >
+                            {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const TransactionHistoryPage = () => {
     const { isSuperAdmin } = useUserRole();
     const [transactions, setTransactions] = useState([]);
+    const [products, setProducts] = useState([]);
+    const [previewImage, setPreviewImage] = useState(null);
+    const [editingTransaction, setEditingTransaction] = useState(null);
+
+    const handleSaveEdit = async (transactionId, updatedItems, type) => {
+        try {
+            if (type === 'sale') {
+                await orderService.updateOrder(transactionId, updatedItems);
+            } else {
+                await purchaseService.updatePurchase(transactionId, updatedItems);
+            }
+            alert("Transaksi berhasil diperbarui!");
+            handleSearch();
+        } catch (e) {
+            console.error("Error updating transaction:", e);
+            throw e;
+        }
+    };
+
+
+    const handleOpenReceipt = (receiptFile) => {
+        if (!receiptFile) return;
+        if (receiptFile.startsWith('http://') || receiptFile.startsWith('https://')) {
+            const filename = getFilenameFromUrl(receiptFile).toLowerCase();
+            const isImage = filename.endsWith('.jpg') || filename.endsWith('.jpeg') || filename.endsWith('.png');
+            if (isImage) {
+                setPreviewImage(receiptFile);
+            } else {
+                window.open(receiptFile, '_blank', 'noopener,noreferrer');
+            }
+        } else {
+            alert(`File nota: "${receiptFile}" tidak dapat dibuka karena hanya nama file yang tersimpan.`);
+        }
+    };
+
+    const handleExportToExcel = () => {
+        try {
+            const filtered = transactions.filter(t => filter === 'all' || t.type === filter);
+            if (filtered.length === 0) {
+                alert("Tidak ada data transaksi untuk diexport.");
+                return;
+            }
+
+            const rows = [];
+            filtered.forEach(t => {
+                const dateStr = t.date.toLocaleDateString('id-ID', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }) + ' ' + t.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                
+                const typeLabel = t.type === 'sale' ? 'Penjualan' : 'Pembelian';
+                const partner = t.type === 'sale' ? (t.customer_name || 'Umum') : (t.supplier_name || '-');
+                
+                t.items?.forEach((item) => {
+                    const unitLabel = t.type === 'sale'
+                        ? (item.selected_unit === 'bulk' ? (item.bulk_unit_name || 'Unit') : (item.base_unit || 'pcs'))
+                        : (item.unit || item.base_unit || 'pcs');
+                        
+                    const price = item.unit_price || item.cost_per_unit || 0;
+                    const subtotal = item.total || 0;
+                    
+                    rows.push({
+                        'ID Transaksi': t.id,
+                        'Jenis': typeLabel,
+                        'Tanggal': dateStr,
+                        'Mitra (Pelanggan/Supplier)': partner,
+                        'Nama Produk': item.product_name,
+                        'Jumlah': item.qty,
+                        'Satuan': unitLabel,
+                        'Harga Satuan (Rp)': price,
+                        'Subtotal Item (Rp)': subtotal,
+                        'Total Transaksi (Rp)': t.total,
+                        'Metode Pembayaran': t.type === 'sale' ? (t.payment_method || 'Cash') : 'Cash',
+                        'Penjualan Kredit': t.type === 'sale' ? (t.is_credit_sale ? 'Ya' : 'Tidak') : '-'
+                    });
+                });
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(rows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Transaksi');
+            
+            const max_width = rows.reduce((w, r) => {
+                Object.keys(r).forEach((key, colIdx) => {
+                    const cellVal = r[key] ? r[key].toString() : '';
+                    w[colIdx] = Math.max(w[colIdx] || 0, cellVal.length, key.length);
+                });
+                return w;
+            }, []);
+            worksheet['!cols'] = max_width.map(w => ({ wch: w + 2 }));
+
+            XLSX.writeFile(workbook, `Laporan_Transaksi_${startDate}_sd_${endDate}.xlsx`);
+        } catch (e) {
+            console.error("Export failed:", e);
+            alert("Gagal melakukan export Excel: " + e.message);
+        }
+    };
+
     const [loading, setLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const today = new Date().toLocaleDateString('en-CA');
@@ -27,10 +314,12 @@ const TransactionHistoryPage = () => {
         setLoading(true);
         setHasSearched(true);
         try {
-            const [orders, purchases] = await Promise.all([
+            const [orders, purchases, allProducts] = await Promise.all([
                 orderService.getAllOrders(),
-                purchaseService.getAllPurchases()
+                purchaseService.getAllPurchases(),
+                productService.getAllProducts()
             ]);
+            setProducts(allProducts);
 
             // Combine and format transactions
             let allTransactions = [
@@ -149,7 +438,7 @@ const TransactionHistoryPage = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Riwayat Transaksi</h1>
                     <p className="text-sm text-gray-500 mt-1">Pilih rentang tanggal untuk melihat transaksi</p>
@@ -212,13 +501,24 @@ const TransactionHistoryPage = () => {
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    <button
-                        onClick={handleSearch}
-                        disabled={loading}
-                        className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                    >
-                        {loading ? 'Mencari...' : 'Tampilkan Riwayat'}
-                    </button>
+                    <div className="flex gap-2">
+                        {hasSearched && !loading && transactions.length > 0 && (
+                            <button
+                                onClick={handleExportToExcel}
+                                className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm rounded-lg transition shadow-sm cursor-pointer whitespace-nowrap"
+                            >
+                                <FaFileAlt size={14} />
+                                Export ke Excel
+                            </button>
+                        )}
+                        <button
+                            onClick={handleSearch}
+                            disabled={loading}
+                            className="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                        >
+                            {loading ? 'Mencari...' : 'Tampilkan Riwayat'}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -412,47 +712,71 @@ const TransactionHistoryPage = () => {
                                                             {/* Actions (Receipt/Print) */}
                                                             <div className="mt-4 flex items-center gap-3">
                                                                 {transaction.type === 'sale' ? (
-                                                                    <button
-                                                                        onClick={() => printReceipt({
-                                                                            orderId: transaction.id,
-                                                                            orderDate: transaction.date.toLocaleDateString('id-ID'),
-                                                                            items: transaction.items,
-                                                                            grandTotal: transaction.grand_total,
-                                                                            customerName: transaction.customer_name,
-                                                                            paymentMethod: transaction.payment_method,
-                                                                            isCreditSale: transaction.is_credit_sale
-                                                                        })}
-                                                                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition"
-                                                                    >
-                                                                        <FaPrint /> Cetak Nota
-                                                                    </button>
-                                                                ) : (
-                                                                    <div className="flex flex-col gap-2">
+                                                                    <div className="flex gap-2">
                                                                         <button
                                                                             onClick={() => printReceipt({
                                                                                 orderId: transaction.id,
                                                                                 orderDate: transaction.date.toLocaleDateString('id-ID'),
                                                                                 items: transaction.items,
-                                                                                grandTotal: transaction.total,
-                                                                                customerName: transaction.supplier_name,
-                                                                                paymentMethod: 'Cash',
-                                                                                isPurchase: true
+                                                                                grandTotal: transaction.grand_total,
+                                                                                customerName: transaction.customer_name,
+                                                                                paymentMethod: transaction.payment_method,
+                                                                                isCreditSale: transaction.is_credit_sale
                                                                             })}
-                                                                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition w-fit"
+                                                                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition"
                                                                         >
-                                                                            <FaPrint /> Cetak Bukti Terima
+                                                                            <FaPrint /> Cetak Nota
                                                                         </button>
+                                                                        {isSuperAdmin && (
+                                                                            <button
+                                                                                onClick={() => setEditingTransaction(transaction)}
+                                                                                className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg border border-yellow-200 transition cursor-pointer"
+                                                                            >
+                                                                                Edit Transaksi
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <div className="flex gap-2">
+                                                                            <button
+                                                                                onClick={() => printReceipt({
+                                                                                    orderId: transaction.id,
+                                                                                    orderDate: transaction.date.toLocaleDateString('id-ID'),
+                                                                                    items: transaction.items,
+                                                                                    grandTotal: transaction.total,
+                                                                                    customerName: transaction.supplier_name,
+                                                                                    paymentMethod: 'Cash',
+                                                                                    isPurchase: true
+                                                                                })}
+                                                                                className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition w-fit"
+                                                                            >
+                                                                                <FaPrint /> Cetak Bukti Terima
+                                                                            </button>
+                                                                            {isSuperAdmin && (
+                                                                                <button
+                                                                                    onClick={() => setEditingTransaction(transaction)}
+                                                                                    className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg border border-yellow-200 transition cursor-pointer w-fit"
+                                                                                >
+                                                                                    Edit Transaksi
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
                                                                         {transaction.receipt_file && (
-                                                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100 w-fit">
-                                                                                <FaFileAlt /> {transaction.receipt_file}
-                                                                            </div>
+                                                                            <button
+                                                                                onClick={() => handleOpenReceipt(transaction.receipt_file)}
+                                                                                className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg border border-blue-100 w-fit transition cursor-pointer"
+                                                                                title="Klik untuk membuka/melihat nota"
+                                                                            >
+                                                                                <FaFileAlt /> {getFilenameFromUrl(transaction.receipt_file)}
+                                                                            </button>
                                                                         )}
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         </div>
                                                     </div>
-
+ 
                                                     {/* Total Amount */}
                                                     <div className="text-right">
                                                         <p className="text-sm text-gray-500">Total</p>
@@ -468,6 +792,49 @@ const TransactionHistoryPage = () => {
                     })}
                 </div>
             )}
+
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <div 
+                    className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center p-2 bg-gray-900 rounded-lg shadow-2xl border border-gray-700" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                            className="absolute -top-12 right-0 text-white hover:text-red-500 transition text-sm font-bold flex items-center gap-1 bg-black/40 px-3 py-1.5 rounded-lg border border-gray-700 hover:border-red-500/50 cursor-pointer"
+                            onClick={() => setPreviewImage(null)}
+                        >
+                            Tutup
+                        </button>
+                        <img 
+                            src={previewImage} 
+                            alt="Nota Pembelian" 
+                            className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-inner"
+                        />
+                        <div className="mt-4 flex gap-4 w-full justify-between items-center px-2">
+                            <span className="text-gray-400 text-xs truncate max-w-[60%]">
+                                {getFilenameFromUrl(previewImage)}
+                            </span>
+                            <a 
+                                href={previewImage} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer flex items-center gap-1"
+                            >
+                                Buka di Tab Baru
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Edit Transaction Modal */}
+            <EditTransactionModal
+                isOpen={!!editingTransaction}
+                onClose={() => setEditingTransaction(null)}
+                transaction={editingTransaction}
+                products={products}
+                onSave={handleSaveEdit}
+            />
         </div>
     );
 };

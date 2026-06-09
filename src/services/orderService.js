@@ -173,6 +173,96 @@ export const orderService = {
             throw e;
         }
     },
+    /**
+     * Update an existing order and adjust inventory accordingly
+     * @param {string} orderId
+     * @param {Array} updatedItems - [{ product_id, qty }]
+     */
+    updateOrder: async (orderId, updatedItems) => {
+        const COLLECTION_NAME = getCollectionName("orders");
+        const INVENTORY_COLLECTION = getCollectionName("inventory");
+        
+        try {
+            await runTransaction(db, async (transaction) => {
+                const orderRef = doc(db, COLLECTION_NAME, orderId);
+                const orderDoc = await transaction.get(orderRef);
+                if (!orderDoc.exists()) {
+                    throw new Error("Order tidak ditemukan");
+                }
+                
+                const originalOrder = orderDoc.data();
+                const originalItems = originalOrder.items || [];
+                
+                const originalItemsMap = {};
+                originalItems.forEach(item => {
+                    originalItemsMap[item.product_id] = item;
+                });
+
+                // PHASE 1: READ ALL INVENTORY DOCS FIRST
+                const inventoryReads = [];
+                for (const updatedItem of updatedItems) {
+                    const originalItem = originalItemsMap[updatedItem.product_id];
+                    if (!originalItem) continue;
+                    
+                    const oldQty = originalItem.qty;
+                    const newQty = Number(updatedItem.qty);
+                    
+                    if (oldQty !== newQty) {
+                        const invRef = doc(db, INVENTORY_COLLECTION, updatedItem.product_id);
+                        const invDoc = await transaction.get(invRef);
+                        inventoryReads.push({ updatedItem, originalItem, invRef, invDoc });
+                    }
+                }
+                
+                // PHASE 2: WRITE ALL MODIFICATIONS
+                for (const { updatedItem, originalItem, invRef, invDoc } of inventoryReads) {
+                    const oldQty = originalItem.qty;
+                    const newQty = Number(updatedItem.qty);
+                    const conversion = originalItem.bulk_unit_conversion || 1;
+                    const isBulk = originalItem.selected_unit === 'bulk';
+                    const multiplier = isBulk ? conversion : 1;
+                    
+                    // Change = (oldQty - newQty) * multiplier
+                    const changeInBaseUnits = (oldQty - newQty) * multiplier;
+                    
+                    if (invDoc.exists()) {
+                        const currentStock = invDoc.data().current_stock_base || 0;
+                        transaction.update(invRef, {
+                            current_stock_base: currentStock + changeInBaseUnits
+                        });
+                    } else {
+                        transaction.set(invRef, {
+                            product_id: updatedItem.product_id,
+                            current_stock_base: changeInBaseUnits
+                        });
+                    }
+                }
+                
+                const newItems = originalItems.map(origItem => {
+                    const updated = updatedItems.find(u => u.product_id === origItem.product_id);
+                    if (updated) {
+                        const newQty = Number(updated.qty);
+                        return {
+                            ...origItem,
+                            qty: newQty,
+                            total: newQty * (origItem.unit_price || 0)
+                        };
+                    }
+                    return origItem;
+                });
+                
+                const newGrandTotal = newItems.reduce((sum, item) => sum + (item.total || 0), 0);
+                
+                transaction.update(orderRef, {
+                    items: newItems,
+                    grand_total: newGrandTotal
+                });
+            });
+        } catch (error) {
+            console.error("Failed to update order:", error);
+            throw error;
+        }
+    },
 
     /**
      * Get all orders

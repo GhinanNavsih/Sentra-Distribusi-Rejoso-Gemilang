@@ -1,5 +1,5 @@
 import { db } from "../firebase.config";
-import { collection, doc, serverTimestamp, setDoc, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, doc, serverTimestamp, setDoc, getDocs, query, orderBy, runTransaction } from "firebase/firestore";
 import { getCollectionName } from "../utils/envMode";
 
 // Helper to get today's date string YYYY-MM-DD
@@ -51,6 +51,95 @@ export const purchaseService = {
             return newPurchaseId;
         } catch (error) {
             console.error("Error creating purchase:", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Update an existing purchase and adjust inventory accordingly
+     * @param {string} purchaseId
+     * @param {Array} updatedItems - [{ product_id, qty, multiplier }]
+     */
+    updatePurchase: async (purchaseId, updatedItems) => {
+        const COLLECTION_NAME = getCollectionName("purchases");
+        const INVENTORY_COLLECTION = getCollectionName("inventory");
+        
+        try {
+            await runTransaction(db, async (transaction) => {
+                const purchaseRef = doc(db, COLLECTION_NAME, purchaseId);
+                const purchaseDoc = await transaction.get(purchaseRef);
+                if (!purchaseDoc.exists()) {
+                    throw new Error("Purchase tidak ditemukan");
+                }
+                
+                const originalPurchase = purchaseDoc.data();
+                const originalItems = originalPurchase.items || [];
+                
+                const originalItemsMap = {};
+                originalItems.forEach(item => {
+                    originalItemsMap[item.product_id] = item;
+                });
+
+                // PHASE 1: READ ALL INVENTORY DOCS FIRST
+                const inventoryReads = [];
+                for (const updatedItem of updatedItems) {
+                    const originalItem = originalItemsMap[updatedItem.product_id];
+                    if (!originalItem) continue;
+                    
+                    const oldQty = originalItem.qty;
+                    const newQty = Number(updatedItem.qty);
+                    
+                    if (oldQty !== newQty) {
+                        const invRef = doc(db, INVENTORY_COLLECTION, updatedItem.product_id);
+                        const invDoc = await transaction.get(invRef);
+                        inventoryReads.push({ updatedItem, originalItem, invRef, invDoc });
+                    }
+                }
+                
+                // PHASE 2: WRITE ALL MODIFICATIONS
+                for (const { updatedItem, originalItem, invRef, invDoc } of inventoryReads) {
+                    const oldQty = originalItem.qty;
+                    const newQty = Number(updatedItem.qty);
+                    const multiplier = Number(updatedItem.multiplier || 1);
+                    
+                    // Change = (newQty - oldQty) * multiplier
+                    const changeInBaseUnits = (newQty - oldQty) * multiplier;
+                    
+                    if (invDoc.exists()) {
+                        const currentStock = invDoc.data().current_stock_base || 0;
+                        transaction.update(invRef, {
+                            current_stock_base: currentStock + changeInBaseUnits
+                        });
+                    } else {
+                        transaction.set(invRef, {
+                            product_id: updatedItem.product_id,
+                            current_stock_base: changeInBaseUnits
+                        });
+                    }
+                }
+                
+                const newItems = originalItems.map(origItem => {
+                    const updated = updatedItems.find(u => u.product_id === origItem.product_id);
+                    if (updated) {
+                        const newQty = Number(updated.qty);
+                        return {
+                            ...origItem,
+                            qty: newQty,
+                            total: newQty * (origItem.cost_per_unit || 0)
+                        };
+                    }
+                    return origItem;
+                });
+                
+                const newGrandTotal = newItems.reduce((sum, item) => sum + (item.total || 0), 0);
+                
+                transaction.update(purchaseRef, {
+                    items: newItems,
+                    grand_total: newGrandTotal
+                });
+            });
+        } catch (error) {
+            console.error("Failed to update purchase:", error);
             throw error;
         }
     },
