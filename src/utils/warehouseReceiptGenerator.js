@@ -79,7 +79,7 @@ function formatIndonesianDate(dateInput) {
  * Generate PDF for Regular Customers (Warehouse Exit Style)
  * @param {Object} data - Order data from POS
  */
-export const generateWarehouseReceipt = async (data) => {
+export const generateWarehouseReceipt = async (data, isPrint = false) => {
     // Map POS order data to the format expected by this template
     const record = {
         id: data.orderId,
@@ -387,27 +387,16 @@ export const generateWarehouseReceipt = async (data) => {
         { align: "center" }
     );
 
-    // Save functionality
-    doc.save(`receipt-regular-${record.id}.pdf`);
+    // Save/Print functionality
+    if (isPrint) {
+        doc.autoPrint();
+        window.open(doc.output('bloburl'), '_blank');
+    } else {
+        doc.save(`receipt-regular-${record.id}.pdf`);
+    }
 };
 
 // Print functionality for Regular Receipts
-export const printWarehouseReceipt = (data) => {
-    // Reusing the same generation logic, but calling autoPrint/output
-    // For simplicity, we can use the same function but open blob in new window 
-    // or just save it. The original code used window.open(blobUrl).
-    // Let's adapt generateWarehouseExitPDF to support print mode if needed, 
-    // or just create a separate function reusing the core logic.
-
-    // For now, let's keep it simple: Download is primary. 
-    // If print needed, we can open the blob.
-    // The implementation above does `doc.save`. 
-    // Let's modify if needed.
-    // Actually, `window.open` is better for printing.
-
-    // To implement "Print", we'll just replicate the logic but do autoPrint.
-    // However, sticking to the requested `Download` vs `Print` buttons in modal:
-    // We can update the function above to accept an action type. Or just use `doc.autoPrint()`.
-
-    return generateWarehouseReceipt(data); // Currently saves.
+export const printWarehouseReceipt = async (data) => {
+    return generateWarehouseReceipt(data, true);
 };

@@ -3,6 +3,7 @@ import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 import { FaShoppingCart, FaTruck, FaChevronDown, FaChevronUp, FaCalendar, FaPrint, FaFileAlt } from 'react-icons/fa';
 import { printReceipt } from '../utils/standardReceiptGenerator';
+import { printWarehouseReceipt } from '../utils/warehouseReceiptGenerator';
 import { useUserRole } from '../hooks/useUserRole';
 import { productService } from '../services/productService';
 import * as XLSX from 'xlsx';
@@ -714,15 +715,22 @@ const TransactionHistoryPage = () => {
                                                                 {transaction.type === 'sale' ? (
                                                                     <div className="flex gap-2">
                                                                         <button
-                                                                            onClick={() => printReceipt({
-                                                                                orderId: transaction.id,
-                                                                                orderDate: transaction.date.toLocaleDateString('id-ID'),
-                                                                                items: transaction.items,
-                                                                                grandTotal: transaction.grand_total,
-                                                                                customerName: transaction.customer_name,
-                                                                                paymentMethod: transaction.payment_method,
-                                                                                isCreditSale: transaction.is_credit_sale
-                                                                            })}
+                                                                            onClick={() => {
+                                                                                const receiptData = {
+                                                                                    orderId: transaction.id,
+                                                                                    orderDate: transaction.date.toLocaleDateString('id-ID'),
+                                                                                    items: transaction.items,
+                                                                                    grandTotal: transaction.grand_total,
+                                                                                    customerName: transaction.customer_name,
+                                                                                    paymentMethod: transaction.payment_method,
+                                                                                    isCreditSale: transaction.is_credit_sale
+                                                                                };
+                                                                                if (!transaction.customer_type || transaction.customer_type === 'regular') {
+                                                                                    printWarehouseReceipt(receiptData);
+                                                                                } else {
+                                                                                    printReceipt(receiptData);
+                                                                                }
+                                                                            }}
                                                                             className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition"
                                                                         >
                                                                             <FaPrint /> Cetak Nota
