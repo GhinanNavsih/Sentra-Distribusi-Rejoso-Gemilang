@@ -19,14 +19,32 @@ const formatCurrency = (value) => {
 };
 
 const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
-    // Rows state - 3 default rows
-    const [rows, setRows] = useState([
-        { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
-        { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
-        { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
-    ]);
+    // Rows state - load from localStorage if available, otherwise 3 default blank rows
+    const [rows, setRows] = useState(() => {
+        try {
+            const saved = localStorage.getItem("purchase_draft_rows");
+            return saved ? JSON.parse(saved) : [
+                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
+                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
+                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
+            ];
+        } catch (e) {
+            console.error("Error reading purchase_draft_rows from localStorage:", e);
+            return [
+                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
+                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
+                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
+            ];
+        }
+    });
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [supplierName, setSupplierName] = useState("");
+    const [supplierName, setSupplierName] = useState(() => {
+        try {
+            return localStorage.getItem("purchase_draft_supplier") || "";
+        } catch (e) {
+            return "";
+        }
+    });
     const [receiptFile, setReceiptFile] = useState(null);
 
     // Search/Autocomplete state
@@ -57,20 +75,83 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [showDropdown]);
 
-    // Reset when opened
+    // Reset state on open (except persisted rows and supplier)
     useEffect(() => {
         if (isOpen) {
-            setRows([
-                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
-                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
-                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
-            ]);
-            setSearchQuery({});
             setShowDropdown({});
-            setSupplierName("");
             setReceiptFile(null);
         }
     }, [isOpen]);
+
+    // Save rows and supplier name to localStorage when they change
+    useEffect(() => {
+        localStorage.setItem("purchase_draft_rows", JSON.stringify(rows));
+    }, [rows]);
+
+    useEffect(() => {
+        localStorage.setItem("purchase_draft_supplier", supplierName);
+    }, [supplierName]);
+
+    // Sync draft items with latest firebase database products
+    useEffect(() => {
+        if (!products || products.length === 0) return;
+
+        setRows((prevRows) => {
+            let changed = false;
+            const updated = prevRows.map((row) => {
+                if (!row.product) return row;
+
+                const latestProduct = products.find(
+                    (p) => p.sku === row.product.sku || p.id === row.product.id
+                );
+
+                if (!latestProduct) {
+                    // Product deleted from database
+                    changed = true;
+                    return {
+                        id: row.id,
+                        product: null,
+                        qty: "",
+                        unit: "",
+                        cost: "",
+                        subtotal: "",
+                    };
+                }
+
+                // Check if key product properties or reference changed
+                const isProductChanged =
+                    row.product !== latestProduct ||
+                    row.product.name !== latestProduct.name ||
+                    row.product.base_unit !== latestProduct.base_unit ||
+                    row.product.bulk_unit_name !== latestProduct.bulk_unit_name ||
+                    row.product.bulk_unit_conversion !== latestProduct.bulk_unit_conversion;
+
+                if (isProductChanged) {
+                    changed = true;
+
+                    // Reconcile units
+                    let newUnit = row.unit;
+                    if (row.unit === row.product.bulk_unit_name) {
+                        newUnit = latestProduct.bulk_unit_name || latestProduct.base_unit;
+                    } else if (row.unit === row.product.base_unit) {
+                        newUnit = latestProduct.base_unit;
+                    } else {
+                        newUnit = latestProduct.bulk_unit_name || latestProduct.base_unit;
+                    }
+
+                    return {
+                        ...row,
+                        product: latestProduct,
+                        unit: newUnit,
+                    };
+                }
+
+                return row;
+            });
+
+            return changed ? updated : prevRows;
+        });
+    }, [products]);
 
     // Add Row
     const addRow = () => {
@@ -93,12 +174,19 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
         setRows((prev) =>
             prev.map((row) => {
                 if (row.id === rowId) {
+                    const defaultUnit = product.bulk_unit_name || product.base_unit;
+                    const isBulk = product.bulk_unit_name && defaultUnit === product.bulk_unit_name;
+                    const conversion = product.bulk_unit_conversion || 1;
+                    const dbCost = product.cost_price || 0;
+                    const initialCostVal = isBulk ? dbCost * conversion : dbCost;
+                    const formattedCost = initialCostVal > 0 ? Math.round(initialCostVal).toLocaleString('id-ID') : "";
+
                     return {
                         ...row,
                         product,
-                        unit: product.bulk_unit_name || product.base_unit,
+                        unit: defaultUnit,
                         qty: "", // Reset qty to force entry
-                        cost: "", // Reset cost to force entry
+                        cost: formattedCost, // Auto input current price
                         subtotal: 0,
                     };
                 }
@@ -255,6 +343,17 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                 supplier_name: supplierName || 'N/A',
                 receipt_file: receiptFileUrl || null
             });
+
+            // Clear draft on successful submit
+            localStorage.removeItem("purchase_draft_rows");
+            localStorage.removeItem("purchase_draft_supplier");
+            setRows([
+                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
+                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
+                { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
+            ]);
+            setSupplierName("");
+            setReceiptFile(null);
 
             onSuccess();
             onClose();

@@ -31,7 +31,18 @@ export default function InventoryPage() {
     const [selectedProductForEdit, setSelectedProductForEdit] = useState(null);
     const [selectedProductForStock, setSelectedProductForStock] = useState(null);
     const [showRepackForm, setShowRepackForm] = useState(false);
-    const [showBulkPurchaseModal, setShowBulkPurchaseModal] = useState(false);
+    const [showBulkPurchaseModal, setShowBulkPurchaseModal] = useState(() => {
+        try {
+            return localStorage.getItem("show_bulk_purchase_modal") === "true";
+        } catch (e) {
+            return false;
+        }
+    });
+
+    useEffect(() => {
+        localStorage.setItem("show_bulk_purchase_modal", showBulkPurchaseModal);
+    }, [showBulkPurchaseModal]);
+
     const [loading, setLoading] = useState(true);
     const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
     const [openMenuId, setOpenMenuId] = useState(null);
