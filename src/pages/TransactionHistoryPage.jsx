@@ -7,6 +7,7 @@ import { printWarehouseReceipt } from '../utils/warehouseReceiptGenerator';
 import { useUserRole } from '../hooks/useUserRole';
 import { productService } from '../services/productService';
 import * as XLSX from 'xlsx';
+import PrintReceiptModal from '../components/PrintReceiptModal';
 
 const getFilenameFromUrl = (url) => {
     if (!url) return '';
@@ -200,6 +201,7 @@ const TransactionHistoryPage = () => {
     const [products, setProducts] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
     const [editingTransaction, setEditingTransaction] = useState(null);
+    const [printingTransaction, setPrintingTransaction] = useState(null);
 
     const handleSaveEdit = async (transactionId, updatedItems, type) => {
         try {
@@ -712,29 +714,14 @@ const TransactionHistoryPage = () => {
 
                                                             {/* Actions (Receipt/Print) */}
                                                             <div className="mt-4 flex items-center gap-3">
-                                                                {transaction.type === 'sale' ? (
-                                                                    <div className="flex gap-2">
+                                                                {transaction.type === 'sale' ? (                                                                     <div className="flex gap-2">
                                                                         <button
-                                                                            onClick={() => {
-                                                                                const receiptData = {
-                                                                                    orderId: transaction.id,
-                                                                                    orderDate: transaction.date.toLocaleDateString('id-ID'),
-                                                                                    items: transaction.items,
-                                                                                    grandTotal: transaction.grand_total,
-                                                                                    customerName: transaction.customer_name,
-                                                                                    paymentMethod: transaction.payment_method,
-                                                                                    isCreditSale: transaction.is_credit_sale
-                                                                                };
-                                                                                if (!transaction.customer_type || transaction.customer_type === 'regular') {
-                                                                                    printWarehouseReceipt(receiptData);
-                                                                                } else {
-                                                                                    printReceipt(receiptData);
-                                                                                }
-                                                                            }}
+                                                                            onClick={() => setPrintingTransaction(transaction)}
                                                                             className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition"
                                                                         >
                                                                             <FaPrint /> Cetak Nota
                                                                         </button>
+
                                                                         {isSuperAdmin && (
                                                                             <button
                                                                                 onClick={() => setEditingTransaction(transaction)}
@@ -842,6 +829,14 @@ const TransactionHistoryPage = () => {
                 transaction={editingTransaction}
                 products={products}
                 onSave={handleSaveEdit}
+            />
+            {/* Print Receipt Modal */}
+            <PrintReceiptModal
+                isOpen={!!printingTransaction}
+                onClose={() => setPrintingTransaction(null)}
+                orderData={printingTransaction}
+                products={products}
+                onSaveSuccess={handleSearch}
             />
         </div>
     );
