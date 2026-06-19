@@ -17,7 +17,7 @@ export default function EnvToggle() {
     return (
         <button
             onClick={handleToggle}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer ${
                 isStaging
                     ? 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
                     : 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
@@ -25,7 +25,8 @@ export default function EnvToggle() {
             title={`Currently: ${isStaging ? 'STAGING' : 'PRODUCTION'} — Click to switch`}
         >
             <span className={`inline-block w-2 h-2 rounded-full ${isStaging ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
-            {isStaging ? 'STAGING' : 'PRODUCTION'}
+            <span className="hidden sm:inline">{isStaging ? 'STAGING' : 'PRODUCTION'}</span>
+            <span className="inline sm:hidden">{isStaging ? 'STAG' : 'PROD'}</span>
         </button>
     );
 }

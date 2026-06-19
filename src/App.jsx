@@ -16,7 +16,7 @@ function NavLink({ to, children }) {
   const isActive = location.pathname === to;
 
   return (
-    <Link to={to} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${isActive ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}>{children}</Link>
+    <Link to={to} className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors flex-shrink-0 ${isActive ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}>{children}</Link>
   );
 }
 
@@ -43,14 +43,19 @@ function Layout() {
         </div>
       )}
       <header className={`bg-white border-b sticky top-0 z-50 ${stagingActive ? 'border-amber-300' : 'border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-8">
-              <Link to="/" className="flex items-center gap-3">
-                <img src={logo} alt="Sentra Distribusi Rejoso Gemilang Logo" className="h-10 w-auto" />
+        <style>{`
+          nav::-webkit-scrollbar {
+            display: none !important;
+          }
+        `}</style>
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-6 md:gap-8 flex-1 min-w-0">
+              <Link to="/" className="flex items-center gap-3 flex-shrink-0">
+                <img src={logo} alt="Sentra Distribusi Rejoso Gemilang Logo" className="h-7 sm:h-10 w-auto" />
                 <h1 className="text-xl font-bold text-gray-900 tracking-tight hidden lg:block">Sentra Distribusi Rejoso Gemilang</h1>
               </Link>
-              <nav className="flex gap-1 md:gap-2">
+              <nav className="flex gap-1 md:gap-2 overflow-x-auto whitespace-nowrap min-w-0 py-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <NavLink to="/">Katalog</NavLink>
                 {currentUser && (
                   <>
@@ -61,7 +66,7 @@ function Layout() {
                 )}
               </nav>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               <EnvToggle />
               {currentUser ? (
                 <>
