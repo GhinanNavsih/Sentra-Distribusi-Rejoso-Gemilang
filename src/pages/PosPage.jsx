@@ -21,6 +21,7 @@ export default function PosPage() {
     }); // Single selection - what gets saved
     const [showStockErrorModal, setShowStockErrorModal] = useState(false);
     const [stockErrorDetails, setStockErrorDetails] = useState([]);
+    const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'cart'
 
     // Save cart and customer type to localStorage when they change
     useEffect(() => {
@@ -292,9 +293,38 @@ export default function PosPage() {
     };
 
     return (
-        <div className="flex h-[calc(100vh-80px)] gap-6 p-6">
+        <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-80px)] gap-4 lg:gap-6 p-2 lg:p-6">
+            {/* Mobile Tabs Header */}
+            <div className="flex border-b border-gray-200 lg:hidden bg-white rounded-lg shadow-sm overflow-hidden">
+                <button
+                    onClick={() => setActiveTab('catalog')}
+                    className={`flex-1 py-3 text-center font-bold text-sm border-b-2 transition-all ${
+                        activeTab === 'catalog'
+                            ? 'border-primary text-primary bg-red-50/20'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    Katalog ({filteredProducts.length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('cart')}
+                    className={`flex-1 py-3 text-center font-bold text-sm border-b-2 transition-all relative ${
+                        activeTab === 'cart'
+                            ? 'border-primary text-primary bg-red-50/20'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    Keranjang ({cart.length})
+                    {cart.length > 0 && (
+                        <span className="ml-1.5 bg-primary text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                            {cart.reduce((sum, item) => sum + (item.qty === '' ? 0 : Number(item.qty)), 0)}
+                        </span>
+                    )}
+                </button>
+            </div>
+
             {/* Left: Product Search & Catalog */}
-            <div className="flex-1 flex flex-col gap-4">
+            <div className={`flex-1 flex flex-col gap-4 ${activeTab === 'catalog' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="relative">
                     <input
                         autoFocus
@@ -338,7 +368,7 @@ export default function PosPage() {
             </div>
 
             {/* Right: Cart */}
-            <div className="w-1/3 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col">
+            <div className={`w-full lg:w-1/3 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col ${activeTab === 'cart' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
                     <h2 className="text-lg font-bold text-gray-900 mb-4">Pesanan Saat Ini</h2>
 
