@@ -457,7 +457,14 @@ export default function InventoryPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {sortedProducts.map(product => (
-                                <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                                <tr 
+                                    key={product.id} 
+                                    className={`transition-colors ${
+                                        product.needs_stock_check 
+                                            ? 'bg-yellow-50 hover:bg-yellow-100/80 dark:bg-yellow-950/20 dark:hover:bg-yellow-900/30' 
+                                            : 'hover:bg-gray-50'
+                                    }`}
+                                >
                                     <td className="px-6 py-4">{product.name}</td>
                                     <td className="px-6 py-4">{product.base_unit}</td>
                                     <td className="px-6 py-4 text-right font-bold text-gray-900">
@@ -509,6 +516,30 @@ export default function InventoryPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
                                 Tetapkan Stok
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const p = products.find(p => p.id === openMenuId);
+                                    if (p) {
+                                        setOpenMenuId(null);
+                                        try {
+                                            await productService.saveProduct({
+                                                id: p.id,
+                                                sku: p.sku,
+                                                needs_stock_check: !p.needs_stock_check
+                                            });
+                                            fetchData();
+                                        } catch (e) {
+                                            alert("Gagal menandai produk: " + e.message);
+                                        }
+                                    }
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                </svg>
+                                {products.find(p => p.id === openMenuId)?.needs_stock_check ? 'Hapus Tanda' : 'Tandai'}
                             </button>
                         </div>
                     )}
