@@ -204,7 +204,11 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                     let updatedRow = { ...row, [field]: value };
 
                     // Sanitize numerical inputs
-                    if (field === 'cost' || field === 'subtotal') {
+                    if (field === 'qty') {
+                        // Truncate decimal part and strip non-digit characters
+                        const cleanDigits = value.toString().split(/[.,]/)[0].replace(/\D/g, '');
+                        updatedRow.qty = cleanDigits === '' ? '' : parseInt(cleanDigits, 10);
+                    } else if (field === 'cost' || field === 'subtotal') {
                         const cleanDigits = value.toString().replace(/\D/g, '');
                         if (value !== '' && cleanDigits === '') {
                             return row;
@@ -214,22 +218,22 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                     // 1. Handle Unit Conversion: Adjust Qty and Cost while keeping Subtotal same
                     if (field === 'unit' && row.product && row.product.bulk_unit_name) {
                         const conversion = row.product.bulk_unit_conversion || 1;
-                        const currentQty = parseFloat(row.qty) || 0;
+                        const currentQty = parseInt(row.qty, 10) || 0;
                         const currentCost = parseFloat(row.cost.toString().replace(/\D/g, '')) || 0;
 
                         if (value === row.product.base_unit && row.unit === row.product.bulk_unit_name) {
                             // Bulk -> Base: Multiply Qty, Divide Cost
-                            updatedRow.qty = currentQty * conversion;
+                            updatedRow.qty = Math.round(currentQty * conversion);
                             updatedRow.cost = Math.round(currentCost / conversion).toLocaleString('id-ID');
                         } else if (value === row.product.bulk_unit_name && row.unit === row.product.base_unit) {
-                            // Base -> Bulk: Divide Qty, Multiply Cost
-                            updatedRow.qty = currentQty / conversion;
+                            // Base -> Bulk: Floor/Truncate Qty, Multiply Cost (to keep integer quantities)
+                            updatedRow.qty = Math.floor(currentQty / conversion);
                             updatedRow.cost = Math.round(currentCost * conversion).toLocaleString('id-ID');
                         }
                     }
 
                     // 2. Reconcile Subtotal based on the (possibly converted) Qty and Cost
-                    const q = field === 'qty' ? (parseFloat(value) || 0) : (parseFloat(updatedRow.qty) || 0);
+                    const q = field === 'qty' ? (parseInt(value, 10) || 0) : (parseInt(updatedRow.qty, 10) || 0);
 
                     if (field === 'subtotal') {
                         // User entered Total -> Calculate unit cost
@@ -299,10 +303,11 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                 // Update Inventory
                 await inventoryService.updateStock(product.sku, changeInBaseUnits);
 
-                // Update Product with cost_price
+                // Update Product with cost_price and price_star
                 await productService.saveProduct({
                     sku: product.sku,
-                    cost_price: costPerBaseUnit
+                    cost_price: costPerBaseUnit,
+                    price_star: costPerBaseUnit
                 });
 
                 // Add to purchase items

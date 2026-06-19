@@ -60,7 +60,7 @@ export const purchaseService = {
      * @param {string} purchaseId
      * @param {Array} updatedItems - [{ product_id, qty, multiplier }]
      */
-    updatePurchase: async (purchaseId, updatedItems) => {
+    updatePurchase: async (purchaseId, updatedItems, editorEmail) => {
         const COLLECTION_NAME = getCollectionName("purchases");
         const INVENTORY_COLLECTION = getCollectionName("inventory");
         
@@ -133,9 +133,20 @@ export const purchaseService = {
                 
                 const newGrandTotal = newItems.reduce((sum, item) => sum + (item.total || 0), 0);
                 
+                // Track edit history
+                const existingLogs = originalPurchase.change_logs || [];
+                const newLog = {
+                    edited_at: new Date().toISOString(),
+                    edited_by: editorEmail || 'Unknown',
+                    previous_items: originalItems,
+                    new_items: newItems
+                };
+                const updatedLogs = [...existingLogs, newLog];
+
                 transaction.update(purchaseRef, {
                     items: newItems,
-                    grand_total: newGrandTotal
+                    grand_total: newGrandTotal,
+                    change_logs: updatedLogs
                 });
             });
         } catch (error) {

@@ -3,6 +3,7 @@ import { inventoryService } from '../services/inventoryService';
 import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 import { stockLossService } from '../services/stockLossService';
+import { productService } from '../services/productService';
 
 const formatCurrency = (value) => {
     if (!value) return "Rp 0";
@@ -329,6 +330,14 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
 
             // Set new stock
             await inventoryService.setStock(product.sku, newStock);
+
+            // Update product catalog cost and star price
+            await productService.saveProduct({
+                sku: product.sku,
+                cost_price: numericUnitCostVal,
+                price_star: numericUnitCostVal
+            });
+
             onDone();
         } catch (err) {
             setError(err.message);

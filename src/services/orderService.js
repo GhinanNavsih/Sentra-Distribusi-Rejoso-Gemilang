@@ -178,7 +178,7 @@ export const orderService = {
      * @param {string} orderId
      * @param {Array} updatedItems - [{ product_id, qty }]
      */
-    updateOrder: async (orderId, updatedItems) => {
+    updateOrder: async (orderId, updatedItems, editorEmail) => {
         const COLLECTION_NAME = getCollectionName("orders");
         const INVENTORY_COLLECTION = getCollectionName("inventory");
         
@@ -253,9 +253,20 @@ export const orderService = {
                 
                 const newGrandTotal = newItems.reduce((sum, item) => sum + (item.total || 0), 0);
                 
+                // Track edit history
+                const existingLogs = originalOrder.change_logs || [];
+                const newLog = {
+                    edited_at: new Date().toISOString(),
+                    edited_by: editorEmail || 'Unknown',
+                    previous_items: originalItems,
+                    new_items: newItems
+                };
+                const updatedLogs = [...existingLogs, newLog];
+
                 transaction.update(orderRef, {
                     items: newItems,
-                    grand_total: newGrandTotal
+                    grand_total: newGrandTotal,
+                    change_logs: updatedLogs
                 });
             });
         } catch (error) {
