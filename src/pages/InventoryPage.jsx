@@ -97,11 +97,11 @@ export default function InventoryPage() {
 
     // Sorting function
     const handleSort = (key) => {
-        let direction = 'asc';
+        let direction = 'desc';
 
         // If clicking the same column, toggle direction
-        if (sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
+        if (sortConfig.key === key && sortConfig.direction === 'desc') {
+            direction = 'asc';
         }
 
         setSortConfig({ key, direction });
