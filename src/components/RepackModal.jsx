@@ -93,6 +93,7 @@ export default function RepackModal({ onClose, onSuccess }) {
                                     <label className="block text-sm font-medium text-gray-900">Berapa satuan yang dibuka?</label>
                                     <div className="flex items-center gap-2 mt-1">
                                         <input type="number" min="1" required value={qtyToOpen} onChange={e => setQtyToOpen(e.target.value)}
+                                            onWheel={(e) => e.target.blur()}
                                             className="w-24 p-2 border border-gray-300 rounded font-bold" />
                                         <span className="text-gray-600 font-medium">
                                             {getSourceProduct()?.bulk_unit_name || 'Satuan'} dari {getSourceProduct()?.name}
@@ -105,6 +106,7 @@ export default function RepackModal({ onClose, onSuccess }) {
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className="text-gray-500 text-sm">1 Satuan berisi</span>
                                         <input type="number" min="1" required value={conversionRate} onChange={e => setConversionRate(e.target.value)}
+                                            onWheel={(e) => e.target.blur()}
                                             className="w-24 p-2 border border-gray-300 rounded font-bold" />
                                         <span className="text-gray-600 font-medium">
                                             {getTargetProduct()?.base_unit} of {getTargetProduct()?.name}

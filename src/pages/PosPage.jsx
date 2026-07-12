@@ -54,11 +54,12 @@ export default function PosPage() {
 
                         const basePrice = productService.calculatePrice(latestProduct, activeCustomerType);
                         const unitPrice = item.selected_unit === 'bulk'
-                            ? basePrice * (latestProduct.bulk_unit_conversion || 1)
+                            ? Math.ceil(basePrice * (latestProduct.bulk_unit_conversion || 1))
                             : basePrice;
                         
                         const qtyVal = item.qty;
-                        const numericQty = qtyVal === '' ? 0 : Number(qtyVal);
+                        const cleanQty = qtyVal.toString().replace(/,/g, '.');
+                        const numericQty = qtyVal === '' ? 0 : parseFloat(cleanQty) || 0;
 
                         return {
                             ...item,
@@ -70,7 +71,7 @@ export default function PosPage() {
                             product_obj: latestProduct,
                             unit_price: unitPrice,
                             qty: qtyVal,
-                            total: unitPrice * numericQty
+                            total: Math.ceil(unitPrice * numericQty)
                         };
                     })
                     .filter(Boolean);
@@ -86,13 +87,16 @@ export default function PosPage() {
         setCart(prev => prev.map(item => {
             const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
             const unitPrice = item.selected_unit === 'bulk'
-                ? basePrice * (item.product_obj.bulk_unit_conversion || 1)
+                ? Math.ceil(basePrice * (item.product_obj.bulk_unit_conversion || 1))
                 : basePrice;
+
+            const cleanQty = item.qty.toString().replace(/,/g, '.');
+            const numericQty = item.qty === '' ? 0 : parseFloat(cleanQty) || 0;
 
             return {
                 ...item,
                 unit_price: unitPrice,
-                total: unitPrice * item.qty
+                total: Math.ceil(unitPrice * numericQty)
             };
         }));
     }, [selectedCustomerType]);
@@ -140,19 +144,20 @@ export default function PosPage() {
     const updateCartItemQty = (currentCart, productId, newQty) => {
         return currentCart.map(item => {
             if (item.product_id === productId) {
-                // Allow 0 or empty string for typing UX
-                const numericQty = newQty === '' ? 0 : Math.max(0, parseInt(newQty) || 0);
+                // Allow 0 or empty string for typing UX, support decimal quantities
+                const cleanQty = newQty.toString().replace(/,/g, '.');
+                const numericQty = newQty === '' ? 0 : Math.max(0, parseFloat(cleanQty) || 0);
                 
                 const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
                 const currentPrice = item.selected_unit === 'bulk'
-                    ? basePrice * (item.product_obj.bulk_unit_conversion || 1)
+                    ? Math.ceil(basePrice * (item.product_obj.bulk_unit_conversion || 1))
                     : basePrice;
 
                 return {
                     ...item,
                     qty: newQty, // Store exactly what user typed (could be '' or number)
                     unit_price: currentPrice,
-                    total: currentPrice * numericQty
+                    total: Math.ceil(currentPrice * numericQty)
                 };
             }
             return item;
@@ -169,7 +174,8 @@ export default function PosPage() {
 
     const handleQtyKeyDown = (e, productId, qty) => {
         if (e.key === 'Enter') {
-            const numericQty = qty === '' ? 0 : Number(qty);
+            const cleanQty = qty.toString().replace(/,/g, '.');
+            const numericQty = qty === '' ? 0 : parseFloat(cleanQty) || 0;
             if (numericQty === 0) {
                 removeFromCart(productId);
             } else {
@@ -199,14 +205,14 @@ export default function PosPage() {
                     : item.qty * conversion;
 
                 const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
-                const newUnitPrice = isGoingToBulk ? basePrice * conversion : basePrice;
+                const newUnitPrice = isGoingToBulk ? Math.ceil(basePrice * conversion) : basePrice;
 
                 return {
                     ...item,
                     selected_unit: newUnit,
                     qty: newQty,
                     unit_price: newUnitPrice,
-                    total: newUnitPrice * newQty
+                    total: Math.ceil(newUnitPrice * newQty)
                 };
             }
             return item;
@@ -439,11 +445,13 @@ export default function PosPage() {
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="number"
+                                            step="any"
                                             min="0"
                                             className="w-16 p-1 border border-gray-300 rounded text-center font-bold text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             value={item.qty}
                                             onChange={(e) => handleQtyChange(item.product_id, e.target.value)}
                                             onKeyDown={(e) => handleQtyKeyDown(e, item.product_id, item.qty)}
+                                            onWheel={(e) => e.target.blur()}
                                             onBlur={() => {
                                                 // If left empty or 0 on blur, maybe remove or set to 1? 
                                                 // User specifically asked for removal on Enter, but blur is also a good trigger.

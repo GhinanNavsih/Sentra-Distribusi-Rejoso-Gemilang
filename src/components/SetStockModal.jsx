@@ -4,6 +4,7 @@ import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 import { stockLossService } from '../services/stockLossService';
 import { productService } from '../services/productService';
+import { formatPriceInput, parsePrice, parseLocaleNumber } from '../utils/decimalHelper';
 
 const formatCurrency = (value) => {
     if (!value) return "Rp 0";
@@ -36,12 +37,15 @@ function StepSetStock({ product, onCancel, onNext }) {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Stok baru</label>
                     <input
                         type="number"
+                        step="any"
                         value={newStock}
                         onChange={(e) => {
                             const val = e.target.value;
                             if (val && val.startsWith('-')) return;
-                            setNewStock(val === '' ? '' : Number(val));
+                            const clean = val.replace(/,/g, '.');
+                            setNewStock(clean === '' ? '' : Number(clean));
                         }}
+                        onWheel={(e) => e.target.blur()}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none font-bold text-xl text-center"
                         min="0"
                         autoFocus
@@ -290,9 +294,22 @@ function StepStockDecrease({ product, currentStock, newStock, onCancel, onDone }
 // Step 2b: Stock INCREASED — confirm purchase
 function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }) {
     const diff = newStock - currentStock;
-    const [unitCost, setUnitCost] = useState(product.cost_price ? Number(product.cost_price).toLocaleString('id-ID') : '');
-    const numericUnitCost = unitCost === '' ? 0 : Number(unitCost.toString().replace(/\D/g, ''));
-    const subtotalVal = unitCost === '' ? '' : (diff * numericUnitCost).toLocaleString('id-ID');
+    
+    const formatPrice = (val) => {
+        if (val === undefined || val === null || val === '') return '';
+        const num = Number(val);
+        return num % 1 === 0 ? num.toLocaleString('id-ID') : num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    };
+
+    const [unitCost, setUnitCost] = useState(product.cost_price ? formatPrice(product.cost_price) : '');
+    const numericUnitCost = unitCost === '' ? 0 : parseLocaleNumber(unitCost);
+
+    const formatPriceVal = (num) => {
+        if (num <= 0) return '';
+        return formatPriceInput(Math.ceil(num));
+    };
+
+    const subtotalVal = unitCost === '' ? '' : formatPriceVal(diff * numericUnitCost);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -301,16 +318,15 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
             setUnitCost('');
             return;
         }
-        const cleanVal = val.replace(/\D/g, '');
-        const sub = Number(cleanVal);
+        const sub = parseLocaleNumber(val);
         if (diff > 0) {
-            setUnitCost(Math.round(sub / diff).toLocaleString('id-ID'));
+            setUnitCost(formatPriceVal(sub / diff));
         }
     };
 
     const handleSubmit = async () => {
-        const numericUnitCostVal = Number(unitCost.toString().replace(/\D/g, '') || 0);
-        const numericSubtotal = diff * numericUnitCostVal;
+        const numericUnitCostVal = parsePrice(unitCost);
+        const numericSubtotal = Math.ceil(diff * numericUnitCostVal);
         setLoading(true);
         setError(null);
         try {
@@ -371,8 +387,7 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
                             inputMode="numeric"
                             value={unitCost}
                             onChange={(e) => {
-                                const val = e.target.value.replace(/\D/g, '');
-                                setUnitCost(val === '' ? '' : Number(val).toLocaleString('id-ID'));
+                                setUnitCost(formatPriceInput(e.target.value));
                             }}
                             className="w-full pl-9 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold"
                             placeholder="0"

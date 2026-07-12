@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { productService, PRODUCT_CATEGORIES } from '../services/productService';
+import { formatPriceInput, parsePrice } from '../utils/decimalHelper';
 
 export default function AddProductForm({ onClose, onSuccess }) {
     const [formData, setFormData] = useState({
@@ -24,8 +25,7 @@ export default function AddProductForm({ onClose, onSuccess }) {
 
         let val = value;
         if (isPriceField) {
-            const cleanDigits = value.replace(/\D/g, '');
-            val = cleanDigits === '' ? '' : Number(cleanDigits).toLocaleString('id-ID');
+            val = formatPriceInput(value);
         } else if (type === 'number') {
             val = value === '' ? '' : Number(value);
         }
@@ -47,8 +47,6 @@ export default function AddProductForm({ onClose, onSuccess }) {
         setLoading(true);
         setError(null);
         try {
-            const parsePrice = (val) => Number(val.toString().replace(/\D/g, '') || 0);
-
             const payload = {
                 ...formData,
                 price_regular: parsePrice(formData.price_regular),

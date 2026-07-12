@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { productService, PRODUCT_CATEGORIES } from '../services/productService';
 import { inventoryService } from '../services/inventoryService';
+import { formatPriceInput, parsePrice } from '../utils/decimalHelper';
 
 export default function EditProductForm({ product, onClose, onSuccess }) {
     const [formData, setFormData] = useState({
@@ -21,7 +22,11 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
 
     useEffect(() => {
         if (product) {
-            const formatPrice = (val) => val ? Number(val).toLocaleString('id-ID') : '';
+            const formatPrice = (val) => {
+                if (val === undefined || val === null || val === '') return '';
+                const num = Number(val);
+                return num % 1 === 0 ? num.toLocaleString('id-ID') : num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            };
             setFormData({
                 ...product,
                 cost_price: formatPrice(product.cost_price),
@@ -40,8 +45,7 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
 
         let val = value;
         if (isPriceField) {
-            const cleanDigits = value.replace(/\D/g, '');
-            val = cleanDigits === '' ? '' : Number(cleanDigits).toLocaleString('id-ID');
+            val = formatPriceInput(value);
         } else if (type === 'number') {
             val = value === '' ? '' : Number(value);
         }
@@ -61,8 +65,6 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
         setLoading(true);
         setError(null);
         try {
-            const parsePrice = (val) => Number(val.toString().replace(/\D/g, '') || 0);
-
             const payload = {
                 name: formData.name,
                 sku: formData.sku,

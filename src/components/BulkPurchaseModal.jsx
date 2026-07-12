@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { FaTimes, FaPlus, FaTrash } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
 import { inventoryService } from "../services/inventoryService";
 import { storage } from "../firebase.config";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { formatPriceInput, parsePrice, parseLocaleNumber } from "../utils/decimalHelper";
 
 
 // Helper for currency - Strict Integer
@@ -14,7 +16,7 @@ const formatCurrency = (value) => {
         style: "currency",
         currency: "IDR",
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        maximumFractionDigits: 2,
     }).format(value);
 };
 
@@ -53,18 +55,44 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
 
     // Click outside to close dropdowns
     const dropdownRefs = useRef({});
+    const inputRefs = useRef({});
+    const portalRef = useRef(null);
+    const [dropdownPos, setDropdownPos] = useState({});
+
+    const getFilteredProducts = (query) => {
+        if (!query) return products;
+        const queryWords = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+        if (queryWords.length === 0) return products;
+        return products.filter(p => {
+            const nameLower = (p.name || '').toLowerCase();
+            const skuLower = (p.sku || '').toLowerCase();
+            return queryWords.every(word => nameLower.includes(word) || skuLower.includes(word));
+        });
+    };
+
+    const updateDropdownPos = useCallback((rowId) => {
+        const inputEl = inputRefs.current[rowId];
+        if (inputEl) {
+            const rect = inputEl.getBoundingClientRect();
+            setDropdownPos(prev => ({ ...prev, [rowId]: { top: rect.bottom + 4, left: rect.left, width: rect.width } }));
+        }
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (Object.keys(showDropdown).length === 0) return;
 
-            // Check if click is outside any active dropdown
+            // Check if click is outside any active dropdown or the portal itself
             let isOutside = true;
             Object.keys(dropdownRefs.current).forEach(id => {
                 if (dropdownRefs.current[id] && dropdownRefs.current[id].contains(event.target)) {
                     isOutside = false;
                 }
             });
+
+            if (portalRef.current && portalRef.current.contains(event.target)) {
+                isOutside = false;
+            }
 
             if (isOutside) {
                 setShowDropdown({});
@@ -179,7 +207,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                     const conversion = product.bulk_unit_conversion || 1;
                     const dbCost = product.cost_price || 0;
                     const initialCostVal = isBulk ? dbCost * conversion : dbCost;
-                    const formattedCost = initialCostVal > 0 ? Math.round(initialCostVal).toLocaleString('id-ID') : "";
+                    const formattedCost = initialCostVal > 0 ? formatPriceInput(Math.ceil(initialCostVal)) : "";
 
                     return {
                         ...row,
@@ -196,6 +224,14 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
         setShowDropdown((prev) => ({ ...prev, [rowId]: false }));
     };
 
+    // Helper for parsing quantity safely
+    const parseQtyVal = (v) => {
+        if (v === undefined || v === null || v === '') return 0;
+        const cleaned = v.toString().replace(/,/g, '.');
+        const parsed = parseFloat(cleaned);
+        return isNaN(parsed) ? 0 : parsed;
+    };
+
     // Handle Input Changes
     const updateRow = (id, field, value) => {
         setRows((prev) =>
@@ -205,53 +241,51 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
 
                     // Sanitize numerical inputs
                     if (field === 'qty') {
-                        // Truncate decimal part and strip non-digit characters
-                        const cleanDigits = value.toString().split(/[.,]/)[0].replace(/\D/g, '');
-                        updatedRow.qty = cleanDigits === '' ? '' : parseInt(cleanDigits, 10);
+                        // Allow decimal qty input
+                        const cleanQty = value.toString().replace(/,/g, '.');
+                        updatedRow.qty = value === '' ? '' : (parseFloat(cleanQty) || 0);
                     } else if (field === 'cost' || field === 'subtotal') {
-                        const cleanDigits = value.toString().replace(/\D/g, '');
-                        if (value !== '' && cleanDigits === '') {
-                            return row;
-                        }
+                        // Allow decimals dynamically (formatted as user types)
+                        updatedRow[field] = formatPriceInput(value);
                     }
 
                     // 1. Handle Unit Conversion: Adjust Qty and Cost while keeping Subtotal same
                     if (field === 'unit' && row.product && row.product.bulk_unit_name) {
                         const conversion = row.product.bulk_unit_conversion || 1;
-                        const currentQty = parseInt(row.qty, 10) || 0;
-                        const currentCost = parseFloat(row.cost.toString().replace(/\D/g, '')) || 0;
+                        const currentQty = parseQtyVal(row.qty);
+                        const currentCost = parseLocaleNumber(row.cost);
 
                         if (value === row.product.base_unit && row.unit === row.product.bulk_unit_name) {
-                            // Bulk -> Base: Multiply Qty, Divide Cost
-                            updatedRow.qty = Math.round(currentQty * conversion);
-                            updatedRow.cost = Math.round(currentCost / conversion).toLocaleString('id-ID');
+                            // Bulk -> Base: Multiply Qty, Divide Cost (and round UP)
+                            updatedRow.qty = currentQty * conversion;
+                            updatedRow.cost = formatPriceInput(Math.ceil(currentCost / conversion));
                         } else if (value === row.product.bulk_unit_name && row.unit === row.product.base_unit) {
-                            // Base -> Bulk: Floor/Truncate Qty, Multiply Cost (to keep integer quantities)
-                            updatedRow.qty = Math.floor(currentQty / conversion);
-                            updatedRow.cost = Math.round(currentCost * conversion).toLocaleString('id-ID');
+                            // Base -> Bulk: Divide Qty, Multiply Cost (and round UP)
+                            updatedRow.qty = currentQty / conversion;
+                            updatedRow.cost = formatPriceInput(Math.ceil(currentCost * conversion));
                         }
                     }
 
                     // 2. Reconcile Subtotal based on the (possibly converted) Qty and Cost
-                    const q = field === 'qty' ? (parseInt(value, 10) || 0) : (parseInt(updatedRow.qty, 10) || 0);
+                    const q = field === 'qty' ? parseQtyVal(value) : parseQtyVal(updatedRow.qty);
+
+                    const formatPriceVal = (num) => {
+                        if (num <= 0) return '';
+                        return formatPriceInput(Math.ceil(num));
+                    };
 
                     if (field === 'subtotal') {
-                        // User entered Total -> Calculate unit cost
-                        const cleanSubtotal = value.toString().replace(/\D/g, '');
-                        const s = parseFloat(cleanSubtotal) || 0;
-                        updatedRow.subtotal = cleanSubtotal === '' ? '' : Number(cleanSubtotal).toLocaleString('id-ID');
+                        // User entered Total -> Calculate unit cost (and round UP)
+                        const s = parseLocaleNumber(value);
                         if (q > 0) {
-                            updatedRow.cost = Math.round(s / q).toLocaleString('id-ID');
+                            updatedRow.cost = formatPriceVal(s / q);
                         }
                     } else if (field === 'cost') {
-                        const cleanCost = value.toString().replace(/\D/g, '');
-                        const c = parseFloat(cleanCost) || 0;
-                        updatedRow.cost = cleanCost === '' ? '' : Number(cleanCost).toLocaleString('id-ID');
-                        updatedRow.subtotal = Math.round(q * c).toLocaleString('id-ID');
+                        const c = parseLocaleNumber(value);
+                        updatedRow.subtotal = formatPriceVal(q * c);
                     } else {
-                        const cleanCost = (updatedRow.cost || '').toString().replace(/\D/g, '');
-                        const c = parseFloat(cleanCost) || 0;
-                        updatedRow.subtotal = Math.round(q * c).toLocaleString('id-ID');
+                        const c = parseLocaleNumber(updatedRow.cost);
+                        updatedRow.subtotal = formatPriceVal(q * c);
                     }
 
                     return updatedRow;
@@ -262,13 +296,13 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
     };
 
     // Calculate Grand Total
-    const grandTotal = rows.reduce((sum, row) => sum + (parseFloat(row.subtotal.toString().replace(/\D/g, '')) || 0), 0);
+    const grandTotal = rows.reduce((sum, row) => sum + parseLocaleNumber(row.subtotal), 0);
 
     // Submit Handler
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            const validRows = rows.filter((r) => r.product && r.qty > 0);
+            const validRows = rows.filter((r) => r.product && parseQtyVal(r.qty) > 0);
 
             if (validRows.length === 0) {
                 alert("Silakan tambahkan setidaknya satu item yang valid.");
@@ -287,18 +321,18 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
             // Process each row
             for (const row of validRows) {
                 const { product, qty, unit, cost } = row;
-                const cleanCost = parseFloat(cost.toString().replace(/\D/g, '')) || 0;
+                const cleanCost = parsePrice(cost);
 
                 let multiplier = 1;
                 if (unit === product.bulk_unit_name) {
                     multiplier = product.bulk_unit_conversion || 1;
                 }
 
-                const changeInBaseUnits = parseFloat(qty) * multiplier;
-                const totalCost = cleanCost * parseFloat(qty);
+                const changeInBaseUnits = parseQtyVal(qty) * multiplier;
+                const totalCost = Math.ceil(cleanCost * parseQtyVal(qty));
 
-                // Calculate cost per base unit
-                const costPerBaseUnit = cleanCost / multiplier;
+                // Calculate cost per base unit (round UP)
+                const costPerBaseUnit = Math.ceil(cleanCost / multiplier);
 
                 // Update Inventory
                 await inventoryService.updateStock(product.sku, changeInBaseUnits);
@@ -314,7 +348,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                 purchaseItems.push({
                     product_id: product.sku,
                     product_name: product.name,
-                    qty: parseFloat(qty),
+                    qty: parseQtyVal(qty),
                     unit: unit,
                     cost_per_unit: cleanCost,
                     total: totalCost
@@ -455,12 +489,13 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {rows.map((row) => (
+                            {rows.map((row, index) => (
                                 <tr key={row.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
 
                                     {/* Product Search */}
-                                    <td className="p-2 relative" ref={el => dropdownRefs.current[row.id] = el}>
+                                    <td className="p-2" ref={el => dropdownRefs.current[row.id] = el}>
                                         <input
+                                            ref={el => inputRefs.current[row.id] = el}
                                             type="text"
                                             autoComplete="off"
                                             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
@@ -469,15 +504,17 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 setSearchQuery({ ...searchQuery, [row.id]: val });
-                                                setShowDropdown({ ...showDropdown, [row.id]: true });
+                                                setShowDropdown({ [row.id]: true });
+                                                updateDropdownPos(row.id);
                                                 // If there was a product selected, clear it so they can search again
                                                 if (row.product) {
                                                     updateRow(row.id, "product", null);
-                                                    setSearchQuery({ ...searchQuery, [row.id]: val }); // Ensure query updates
+                                                    setSearchQuery({ ...searchQuery, [row.id]: val });
                                                 }
                                             }}
                                             onFocus={() => {
-                                                setShowDropdown({ ...showDropdown, [row.id]: true });
+                                                setShowDropdown({ [row.id]: true });
+                                                updateDropdownPos(row.id);
                                                 // Pre-fill query if product exists to allow editing
                                                 if (row.product && !searchQuery[row.id]) {
                                                     setSearchQuery({ ...searchQuery, [row.id]: row.product.name });
@@ -485,11 +522,21 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                             }}
                                         />
 
-                                        {/* Dropdown */}
-                                        {showDropdown[row.id] && !row.product && (
-                                            <div className="absolute top-full left-0 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 list-none shadow-lg rounded-lg mt-1 max-h-48 overflow-auto z-50">
-                                                {products
-                                                    .filter(p => p.name.toLowerCase().includes((searchQuery[row.id] || "").toLowerCase()))
+                                        {/* Dropdown - rendered via portal to escape overflow clipping */}
+                                        {showDropdown[row.id] && !row.product && dropdownPos[row.id] && createPortal(
+                                            <div
+                                                ref={portalRef}
+                                                className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 list-none shadow-xl rounded-lg max-h-48 overflow-auto"
+                                                style={{
+                                                    position: 'fixed',
+                                                    top: dropdownPos[row.id].top,
+                                                    left: dropdownPos[row.id].left,
+                                                    width: dropdownPos[row.id].width,
+                                                    zIndex: 9999,
+                                                }}
+                                                onMouseDown={(e) => e.preventDefault()}
+                                            >
+                                                {getFilteredProducts(searchQuery[row.id] || "")
                                                     .map(p => (
                                                         <div
                                                             key={p.sku}
@@ -500,10 +547,11 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                                             <div className="text-xs text-gray-500">SKU: {p.sku}</div>
                                                         </div>
                                                     ))}
-                                                {products.filter(p => p.name.toLowerCase().includes((searchQuery[row.id] || "").toLowerCase())).length === 0 && (
+                                                {getFilteredProducts(searchQuery[row.id] || "").length === 0 && (
                                                     <div className="px-4 py-2 text-sm text-gray-500">Tidak ada produk ditemukan</div>
                                                 )}
-                                            </div>
+                                            </div>,
+                                            document.body
                                         )}
                                     </td>
 
@@ -530,10 +578,12 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
                                     <td className="p-2">
                                         <input
                                             type="number"
+                                            step="any"
                                             min="0"
                                             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 outline-none focus:ring-2 focus:ring-blue-500 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             value={row.qty}
                                             onChange={(e) => updateRow(row.id, "qty", e.target.value)}
+                                            onWheel={(e) => e.target.blur()}
                                             placeholder="0"
                                         />
                                     </td>
