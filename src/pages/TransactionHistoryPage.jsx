@@ -367,6 +367,28 @@ const TransactionHistoryPage = () => {
         }
     };
 
+    const handleUndoTransaction = async (transaction) => {
+        const confirmMsg = `Apakah Anda yakin ingin membatalkan transaksi ${transaction.id}? \nTindakan ini akan mengembalikan stok barang di inventori/katalog dan transaksi ini tidak dapat diaktifkan kembali.`;
+        if (!window.confirm(confirmMsg)) return;
+
+        setLoading(true);
+        try {
+            const operatorEmail = currentUser?.email || currentUser?.uid || 'Unknown';
+            if (transaction.type === 'sale') {
+                await orderService.cancelOrder(transaction.id, operatorEmail);
+            } else {
+                await purchaseService.cancelPurchase(transaction.id, operatorEmail);
+            }
+            alert("Transaksi berhasil dibatalkan!");
+            await handleSearch();
+        } catch (e) {
+            console.error("Error cancelling transaction:", e);
+            alert("Gagal membatalkan transaksi: " + e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     const handleOpenReceipt = (receiptFile) => {
         if (!receiptFile) return;
@@ -385,7 +407,7 @@ const TransactionHistoryPage = () => {
 
     const handleExportToExcel = () => {
         try {
-            const filtered = transactions.filter(t => filter === 'all' || t.type === filter);
+            const filtered = transactions.filter(t => (filter === 'all' || t.type === filter) && t.status !== 'cancelled');
             if (filtered.length === 0) {
                 alert("Tidak ada data transaksi untuk diexport.");
                 return;
@@ -540,6 +562,7 @@ const TransactionHistoryPage = () => {
         let totalProfit = 0;
 
         transactions.forEach(t => {
+            if (t.status === 'cancelled') return;
             if (filter !== 'all' && t.type !== filter) return;
 
             if (t.type === 'sale') {
@@ -767,7 +790,7 @@ const TransactionHistoryPage = () => {
                                         {dayTransactions.map((transaction, idx) => (
                                             <div
                                                 key={transaction.id}
-                                                className={`px-6 py-4 hover:bg-gray-50 transition ${idx !== dayTransactions.length - 1 ? 'border-b border-gray-100' : ''}`}
+                                                className={`px-6 py-4 hover:bg-gray-50 transition ${idx !== dayTransactions.length - 1 ? 'border-b border-gray-100' : ''} ${transaction.status === 'cancelled' ? 'bg-gray-50/70 dark:bg-gray-800/40 opacity-60' : ''}`}
                                             >
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex items-start gap-3 flex-1">
@@ -779,9 +802,9 @@ const TransactionHistoryPage = () => {
                                                         {/* Info */}
                                                         <div className="flex-1">
                                                             <div className="flex flex-wrap items-center gap-2">
-                                                                <span className="font-bold text-gray-900">{transaction.id}</span>
-                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${transaction.type === 'sale' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                                                                    {transaction.type === 'sale' ? 'Penjualan' : 'Pembelian'}
+                                                                <span className={`font-bold text-gray-900 ${transaction.status === 'cancelled' ? 'line-through text-gray-400' : ''}`}>{transaction.id}</span>
+                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${transaction.status === 'cancelled' ? 'bg-gray-100 text-gray-400 border border-gray-200' : transaction.type === 'sale' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                                    {transaction.status === 'cancelled' ? 'Dibatalkan' : transaction.type === 'sale' ? 'Penjualan' : 'Pembelian'}
                                                                 </span>
                                                                 {/* NEW: Explicitly show Customer/Supplier Name here */}
                                                                 <span className="text-gray-400">|</span>
@@ -821,7 +844,7 @@ const TransactionHistoryPage = () => {
                                                                         : 0;
 
                                                                     return (
-                                                                        <div key={itemIdx} className="text-sm text-gray-600 flex justify-between">
+                                                                        <div key={itemIdx} className={`text-sm text-gray-600 flex justify-between ${transaction.status === 'cancelled' ? 'line-through text-gray-400' : ''}`}>
                                                                             <span>
                                                                                 {item.product_name} × {item.qty} {unitLabel}
                                                                                 {isSuperAdmin && transaction.type === 'sale' && itemProfit > 0 && (
@@ -837,7 +860,7 @@ const TransactionHistoryPage = () => {
                                                             </div>
 
                                                             {/* Profit Summary for SuperAdmin */}
-                                                            {isSuperAdmin && transaction.type === 'sale' && (
+                                                            {isSuperAdmin && transaction.type === 'sale' && transaction.status !== 'cancelled' && (
                                                                 <div className="mt-2 pt-2 border-t border-dashed border-gray-200 flex justify-between items-center bg-green-50/50 p-2 rounded">
                                                                     <span className="text-xs font-bold text-green-700">Total Keuntungan Transaksi Ini</span>
                                                                     <span className="text-sm font-bold text-green-700">
@@ -865,19 +888,31 @@ const TransactionHistoryPage = () => {
                                                             <div className="mt-4 flex items-center gap-3">
                                                                 {transaction.type === 'sale' ? (
                                                                     <div className="flex flex-wrap gap-2">
-                                                                        <button
-                                                                            onClick={() => setPrintingTransaction(transaction)}
-                                                                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition"
-                                                                        >
-                                                                            <FaPrint /> Cetak Nota
-                                                                        </button>
-                                                                        {(isSuperAdmin || isShopper) && (
-                                                                            <button
-                                                                                onClick={() => setEditingTransaction(transaction)}
-                                                                                className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg border border-yellow-200 transition cursor-pointer"
-                                                                            >
-                                                                                Edit Transaksi
-                                                                            </button>
+                                                                        {transaction.status !== 'cancelled' && (
+                                                                            <>
+                                                                                <button
+                                                                                    onClick={() => setPrintingTransaction(transaction)}
+                                                                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition shadow-sm cursor-pointer"
+                                                                                >
+                                                                                    <FaPrint /> Cetak Nota
+                                                                                </button>
+                                                                                {(isSuperAdmin || isShopper) && (
+                                                                                    <button
+                                                                                        onClick={() => setEditingTransaction(transaction)}
+                                                                                        className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg border border-yellow-200 transition cursor-pointer"
+                                                                                    >
+                                                                                        Edit Transaksi
+                                                                                    </button>
+                                                                                )}
+                                                                                {isSuperAdmin && (
+                                                                                    <button
+                                                                                        onClick={() => handleUndoTransaction(transaction)}
+                                                                                        className="flex items-center gap-2 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-lg border border-red-200 transition cursor-pointer"
+                                                                                    >
+                                                                                        Batalkan Transaksi
+                                                                                    </button>
+                                                                                )}
+                                                                            </>
                                                                         )}
                                                                         {(isSuperAdmin || isShopper) && transaction.change_logs && transaction.change_logs.length > 0 && (
                                                                             <button
@@ -890,28 +925,40 @@ const TransactionHistoryPage = () => {
                                                                     </div>
                                                                 ) : (
                                                                     <div className="flex flex-col gap-2">
-                                                                        <div className="flex gap-2">
-                                                                            <button
-                                                                                onClick={() => printReceipt({
-                                                                                    orderId: transaction.id,
-                                                                                    orderDate: transaction.date.toLocaleDateString('id-ID'),
-                                                                                    items: transaction.items,
-                                                                                    grandTotal: transaction.total,
-                                                                                    customerName: transaction.supplier_name,
-                                                                                    paymentMethod: 'Cash',
-                                                                                    isPurchase: true
-                                                                                })}
-                                                                                className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition w-fit"
-                                                                            >
-                                                                                <FaPrint /> Cetak Bukti Terima
-                                                                            </button>
-                                                                            {(isSuperAdmin || isShopper) && (
-                                                                                <button
-                                                                                    onClick={() => setEditingTransaction(transaction)}
-                                                                                    className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg border border-yellow-200 transition cursor-pointer w-fit"
-                                                                                >
-                                                                                    Edit Transaksi
-                                                                                </button>
+                                                                        <div className="flex flex-wrap gap-2">
+                                                                            {transaction.status !== 'cancelled' && (
+                                                                                <>
+                                                                                    <button
+                                                                                        onClick={() => printReceipt({
+                                                                                            orderId: transaction.id,
+                                                                                            orderDate: transaction.date.toLocaleDateString('id-ID'),
+                                                                                            items: transaction.items,
+                                                                                            grandTotal: transaction.total,
+                                                                                            customerName: transaction.supplier_name,
+                                                                                            paymentMethod: 'Cash',
+                                                                                            isPurchase: true
+                                                                                        })}
+                                                                                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition w-fit shadow-sm cursor-pointer"
+                                                                                    >
+                                                                                        <FaPrint /> Cetak Bukti Terima
+                                                                                    </button>
+                                                                                    {(isSuperAdmin || isShopper) && (
+                                                                                        <button
+                                                                                            onClick={() => setEditingTransaction(transaction)}
+                                                                                            className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg border border-yellow-200 transition cursor-pointer w-fit"
+                                                                                        >
+                                                                                            Edit Transaksi
+                                                                                        </button>
+                                                                                    )}
+                                                                                    {isSuperAdmin && (
+                                                                                        <button
+                                                                                            onClick={() => handleUndoTransaction(transaction)}
+                                                                                            className="flex items-center gap-2 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-lg border border-red-200 transition cursor-pointer w-fit"
+                                                                                        >
+                                                                                            Batalkan Transaksi
+                                                                                        </button>
+                                                                                    )}
+                                                                                </>
                                                                             )}
                                                                             {(isSuperAdmin || isShopper) && transaction.change_logs && transaction.change_logs.length > 0 && (
                                                                                 <button
@@ -922,7 +969,7 @@ const TransactionHistoryPage = () => {
                                                                                 </button>
                                                                             )}
                                                                         </div>
-                                                                        {transaction.receipt_file && (
+                                                                        {transaction.status !== 'cancelled' && transaction.receipt_file && (
                                                                             <button
                                                                                 onClick={() => handleOpenReceipt(transaction.receipt_file)}
                                                                                 className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg border border-blue-100 w-fit transition cursor-pointer"
@@ -940,7 +987,7 @@ const TransactionHistoryPage = () => {
                                                     {/* Total Amount */}
                                                     <div className="text-right">
                                                         <p className="text-sm text-gray-500">Total</p>
-                                                        <p className="text-lg font-bold text-gray-900">{formatCurrency(transaction.total)}</p>
+                                                        <p className={`text-lg font-bold text-gray-900 ${transaction.status === 'cancelled' ? 'line-through text-gray-400' : ''}`}>{formatCurrency(transaction.total)}</p>
                                                     </div>
                                                 </div>
                                             </div>

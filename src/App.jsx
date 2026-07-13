@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate 
 import InventoryPage from './pages/InventoryPage';
 import PosPage from './pages/PosPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
+import StockMovementLogPage from './pages/StockMovementLogPage';
 import CatalogPage from './pages/CatalogPage';
 import LoginPage from './pages/LoginPage';
 import logo from './assets/logo_full.png';
@@ -62,6 +63,7 @@ function Layout() {
                     <NavLink to="/inventory">Inventori</NavLink>
                     <NavLink to="/pos">Kasir</NavLink>
                     <NavLink to="/transactions">Riwayat</NavLink>
+                    <NavLink to="/stock-movements">Log Stok</NavLink>
                   </>
                 )}
               </nav>
@@ -102,6 +104,7 @@ function Layout() {
           <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
           <Route path="/pos" element={<ProtectedRoute><PosPage /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><TransactionHistoryPage /></ProtectedRoute>} />
+          <Route path="/stock-movements" element={<ProtectedRoute><StockMovementLogPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

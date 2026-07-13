@@ -1,6 +1,7 @@
 import { db } from "../firebase.config";
 import { collection, doc, serverTimestamp, setDoc, getDocs, query, orderBy, runTransaction } from "firebase/firestore";
 import { getCollectionName } from "../utils/envMode";
+import { inventoryService } from "./inventoryService";
 
 // Helper to get today's date string YYYY-MM-DD
 const getTodayDateString = () => {
@@ -105,17 +106,32 @@ export const purchaseService = {
                     // Change = (newQty - oldQty) * multiplier
                     const changeInBaseUnits = (newQty - oldQty) * multiplier;
                     
+                    let beforeStock = 0;
                     if (invDoc.exists()) {
-                        const currentStock = invDoc.data().current_stock_base || 0;
+                        beforeStock = invDoc.data().current_stock_base || 0;
+                        const newStock = beforeStock + changeInBaseUnits;
                         transaction.update(invRef, {
-                            current_stock_base: currentStock + changeInBaseUnits
+                            current_stock_base: newStock
                         });
                     } else {
+                        const newStock = changeInBaseUnits;
                         transaction.set(invRef, {
                             product_id: updatedItem.product_id,
-                            current_stock_base: changeInBaseUnits
+                            current_stock_base: newStock
                         });
                     }
+                    const afterStock = beforeStock + changeInBaseUnits;
+
+                    // Log stock movement inside transaction
+                    inventoryService.logMovementTx(transaction, {
+                        product_id: updatedItem.product_id,
+                        transaction_id: purchaseId,
+                        transaction_type: 'purchase_updated',
+                        change_qty: changeInBaseUnits,
+                        stock_before: beforeStock,
+                        stock_after: afterStock,
+                        operator: editorEmail || null
+                    });
                 }
                 
                 const newItems = originalItems.map(origItem => {
@@ -169,6 +185,100 @@ export const purchaseService = {
             }));
         } catch (error) {
             console.error("Error fetching purchases:", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Cancel/undo an existing purchase and deduct stock from inventory
+     * @param {string} purchaseId
+     */
+    cancelPurchase: async (purchaseId, operatorEmail = null) => {
+        const COLLECTION_NAME = getCollectionName("purchases");
+        const INVENTORY_COLLECTION = getCollectionName("inventory");
+        const PRODUCTS_COLLECTION = getCollectionName("products");
+        
+        try {
+            await runTransaction(db, async (transaction) => {
+                const purchaseRef = doc(db, COLLECTION_NAME, purchaseId);
+                const purchaseDoc = await transaction.get(purchaseRef);
+                if (!purchaseDoc.exists()) {
+                    throw new Error("Purchase tidak ditemukan");
+                }
+                
+                const purchaseData = purchaseDoc.data();
+                if (purchaseData.status === 'cancelled') {
+                    throw new Error("Purchase sudah dibatalkan");
+                }
+                
+                const items = purchaseData.items || [];
+                
+                // PHASE 1: READ ALL PRODUCTS AND INVENTORY DOCS FIRST
+                const productReads = [];
+                for (const item of items) {
+                    const prodRef = doc(db, PRODUCTS_COLLECTION, item.product_id);
+                    const prodDoc = await transaction.get(prodRef);
+                    productReads.push({ item, prodDoc });
+                }
+                
+                const inventoryReads = [];
+                for (const item of items) {
+                    const invRef = doc(db, INVENTORY_COLLECTION, item.product_id);
+                    const invDoc = await transaction.get(invRef);
+                    inventoryReads.push({ item, invRef, invDoc });
+                }
+                
+                // PHASE 2: DEDUCT STOCK
+                for (let i = 0; i < items.length; i++) {
+                    const { item, invRef, invDoc } = inventoryReads[i];
+                    const { prodDoc } = productReads[i];
+                    
+                    let multiplier = 1;
+                    if (prodDoc.exists()) {
+                        const prodData = prodDoc.data();
+                        if (prodData.bulk_unit_name && item.unit === prodData.bulk_unit_name) {
+                            multiplier = prodData.bulk_unit_conversion || 1;
+                        }
+                    }
+                    
+                    const deductQty = Number(item.qty) * multiplier;
+                    
+                    let beforeStock = 0;
+                    if (invDoc.exists()) {
+                        beforeStock = invDoc.data().current_stock_base || 0;
+                        const newStock = beforeStock - deductQty;
+                        transaction.update(invRef, {
+                            current_stock_base: newStock
+                        });
+                    } else {
+                        const newStock = -deductQty;
+                        transaction.set(invRef, {
+                            product_id: item.product_id,
+                            current_stock_base: newStock
+                        });
+                    }
+                    const afterStock = beforeStock - deductQty;
+
+                    // Log stock movement inside transaction
+                    inventoryService.logMovementTx(transaction, {
+                        product_id: item.product_id,
+                        transaction_id: purchaseId,
+                        transaction_type: 'purchase_cancelled',
+                        change_qty: -deductQty,
+                        stock_before: beforeStock,
+                        stock_after: afterStock,
+                        operator: operatorEmail || null
+                    });
+                }
+                
+                // Update Purchase Status to 'cancelled'
+                transaction.update(purchaseRef, {
+                    status: 'cancelled',
+                    cancelled_at: new Date().toISOString()
+                });
+            });
+        } catch (error) {
+            console.error("Failed to cancel purchase:", error);
             throw error;
         }
     }

@@ -77,6 +77,16 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
+    match /stock_movements/{movementId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    match /stock_movements_test/{movementId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
     match /users/{userId} {
       allow read: if isAuthenticated() && request.auth.uid == userId;
     }

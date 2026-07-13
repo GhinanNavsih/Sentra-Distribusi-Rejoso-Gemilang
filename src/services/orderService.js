@@ -1,6 +1,7 @@
 import { db } from "../firebase.config";
 import { collection, doc, serverTimestamp, runTransaction } from "firebase/firestore";
 import { getCollectionName } from "../utils/envMode";
+import { inventoryService } from "./inventoryService";
 
 // Helper to get today's date string YYYY-MM-DD
 const getTodayDateString = () => {
@@ -95,8 +96,21 @@ export const orderService = {
                 // Write 1: Deduct inventory
                 for (const { item, invRef, invDoc } of inventoryReads) {
                     const currentStock = invDoc.data().current_stock_base || 0;
+                    const changeQty = -item._deductionQty;
+                    const newStock = currentStock + changeQty;
                     transaction.update(invRef, {
-                        current_stock_base: currentStock - item._deductionQty // Use precalculated deduction
+                        current_stock_base: newStock
+                    });
+
+                    // Log stock movement inside transaction
+                    inventoryService.logMovementTx(transaction, {
+                        product_id: item.product_id,
+                        transaction_id: newOrderId,
+                        transaction_type: 'sale_created',
+                        change_qty: changeQty,
+                        stock_before: currentStock,
+                        stock_after: newStock,
+                        operator: orderData.created_by || null
                     });
                 }
 
@@ -225,17 +239,32 @@ export const orderService = {
                     // Change = (oldQty - newQty) * multiplier
                     const changeInBaseUnits = (oldQty - newQty) * multiplier;
                     
+                    let beforeStock = 0;
                     if (invDoc.exists()) {
-                        const currentStock = invDoc.data().current_stock_base || 0;
+                        beforeStock = invDoc.data().current_stock_base || 0;
+                        const newStock = beforeStock + changeInBaseUnits;
                         transaction.update(invRef, {
-                            current_stock_base: currentStock + changeInBaseUnits
+                            current_stock_base: newStock
                         });
                     } else {
+                        const newStock = changeInBaseUnits;
                         transaction.set(invRef, {
                             product_id: updatedItem.product_id,
-                            current_stock_base: changeInBaseUnits
+                            current_stock_base: newStock
                         });
                     }
+                    const afterStock = beforeStock + changeInBaseUnits;
+
+                    // Log stock movement inside transaction
+                    inventoryService.logMovementTx(transaction, {
+                        product_id: updatedItem.product_id,
+                        transaction_id: orderId,
+                        transaction_type: 'sale_updated',
+                        change_qty: changeInBaseUnits,
+                        stock_before: beforeStock,
+                        stock_after: afterStock,
+                        operator: editorEmail || null
+                    });
                 }
                 
                 const newItems = originalItems.map(origItem => {
@@ -290,6 +319,85 @@ export const orderService = {
             }));
         } catch (error) {
             console.error("Error fetching orders:", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Cancel/undo an existing order and restore inventory stock
+     * @param {string} orderId
+     */
+    cancelOrder: async (orderId, operatorEmail = null) => {
+        const COLLECTION_NAME = getCollectionName("orders");
+        const INVENTORY_COLLECTION = getCollectionName("inventory");
+        
+        try {
+            await runTransaction(db, async (transaction) => {
+                const orderRef = doc(db, COLLECTION_NAME, orderId);
+                const orderDoc = await transaction.get(orderRef);
+                if (!orderDoc.exists()) {
+                    throw new Error("Order tidak ditemukan");
+                }
+                
+                const orderData = orderDoc.data();
+                if (orderData.status === 'cancelled') {
+                    throw new Error("Order sudah dibatalkan");
+                }
+                
+                const items = orderData.items || [];
+                
+                // PHASE 1: READ ALL INVENTORY DOCS FIRST
+                const inventoryReads = [];
+                for (const item of items) {
+                    const invRef = doc(db, INVENTORY_COLLECTION, item.product_id);
+                    const invDoc = await transaction.get(invRef);
+                    inventoryReads.push({ item, invRef, invDoc });
+                }
+                
+                // PHASE 2: RESTORE STOCK
+                for (const { item, invRef, invDoc } of inventoryReads) {
+                    let multiplier = 1;
+                    if (item.selected_unit === 'bulk') {
+                        multiplier = item.bulk_unit_conversion || 1;
+                    }
+                    const restoreQty = Number(item.qty) * multiplier;
+                    
+                    let beforeStock = 0;
+                    if (invDoc.exists()) {
+                        beforeStock = invDoc.data().current_stock_base || 0;
+                        const newStock = beforeStock + restoreQty;
+                        transaction.update(invRef, {
+                            current_stock_base: newStock
+                        });
+                    } else {
+                        const newStock = restoreQty;
+                        transaction.set(invRef, {
+                            product_id: item.product_id,
+                            current_stock_base: newStock
+                        });
+                    }
+                    const afterStock = beforeStock + restoreQty;
+
+                    // Log stock movement inside transaction
+                    inventoryService.logMovementTx(transaction, {
+                        product_id: item.product_id,
+                        transaction_id: orderId,
+                        transaction_type: 'sale_cancelled',
+                        change_qty: restoreQty,
+                        stock_before: beforeStock,
+                        stock_after: afterStock,
+                        operator: operatorEmail || null
+                    });
+                }
+                
+                // Update Order Status to 'cancelled'
+                transaction.update(orderRef, {
+                    status: 'cancelled',
+                    cancelled_at: new Date().toISOString()
+                });
+            });
+        } catch (error) {
+            console.error("Failed to cancel order:", error);
             throw error;
         }
     }

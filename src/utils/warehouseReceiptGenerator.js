@@ -207,42 +207,35 @@ export const generateWarehouseReceipt = async (data, isPrint = false) => {
     // First page header
     let yPos = addPageWithHeader(true);
 
-    // Document info box with border
-    doc.setDrawColor(...brandColor);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 25, 3, 3, "S");
+    // Metadata layout (Two Columns, Formal Style)
+    doc.setFontSize(10);
+    const col2X = pageWidth / 2 + 10;
 
-    doc.setFontSize(11);
+    // Row 1
     doc.setFont("helvetica", "bold");
-    doc.text("Nomor Nota:", margin + 5, yPos + 8);
+    doc.text("Nomor Nota:", margin, yPos);
     doc.setFont("helvetica", "normal");
-    doc.text(record.id, margin + 5, yPos + 15);
+    doc.text(record.id, margin + 25, yPos);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Tanggal:", margin + 105, yPos + 8);
+    doc.text("Kepada:", col2X, yPos);
     doc.setFont("helvetica", "normal");
-    doc.text(formatIndonesianDate(record.createdAt), margin + 105, yPos + 15);
+    doc.text(record.customerDetail.customerName, col2X + 25, yPos);
 
-    yPos += 35;
+    yPos += 7;
 
-    // Customer details box
-    doc.setFillColor(...lightBrandColor); // Light coral background
-    doc.setDrawColor(...brandColor);
-    doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 25, 3, 3, "FD");
-
-    doc.setFontSize(12);
+    // Row 2
     doc.setFont("helvetica", "bold");
-    doc.text("Kepada:", margin + 5, yPos + 8);
+    doc.text("Tanggal:", margin, yPos);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.text(record.customerDetail.customerName, margin + 5, yPos + 15);
-    doc.text(
-        `Jenis Usaha: ${record.customerDetail.businessType}`,
-        margin + 5,
-        yPos + 21
-    );
+    doc.text(formatIndonesianDate(record.createdAt), margin + 25, yPos);
 
-    yPos += 35;
+    doc.setFont("helvetica", "bold");
+    doc.text("Jenis Usaha:", col2X, yPos);
+    doc.setFont("helvetica", "normal");
+    doc.text(record.customerDetail.businessType, col2X + 25, yPos);
+
+    yPos += 15;
 
     // Items table header
     doc.setFontSize(12);
