@@ -237,7 +237,10 @@ export const purchaseService = {
                     if (prodDoc.exists()) {
                         const prodData = prodDoc.data();
                         if (prodData.bulk_unit_name && item.unit === prodData.bulk_unit_name) {
-                            multiplier = prodData.bulk_unit_conversion || 1;
+                            const baseUnitLower = (prodData.base_unit || "").toLowerCase().trim();
+                            const bulkUnitLower = (prodData.bulk_unit_name || "").toLowerCase().trim();
+                            const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                            multiplier = isSameUnit ? 1 : (prodData.bulk_unit_conversion || 1);
                         }
                     }
                     

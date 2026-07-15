@@ -202,9 +202,13 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
         setRows((prev) =>
             prev.map((row) => {
                 if (row.id === rowId) {
+                    const baseUnitLower = (product.base_unit || "").toLowerCase().trim();
+                    const bulkUnitLower = (product.bulk_unit_name || "").toLowerCase().trim();
+                    const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+
                     const defaultUnit = product.bulk_unit_name || product.base_unit;
-                    const isBulk = product.bulk_unit_name && defaultUnit === product.bulk_unit_name;
-                    const conversion = product.bulk_unit_conversion || 1;
+                    const isBulk = product.bulk_unit_name && defaultUnit === product.bulk_unit_name && !isSameUnit;
+                    const conversion = isSameUnit ? 1 : (product.bulk_unit_conversion || 1);
                     const dbCost = product.cost_price || 0;
                     const initialCostVal = isBulk ? dbCost * conversion : dbCost;
                     const formattedCost = initialCostVal > 0 ? formatPriceInput(Math.ceil(initialCostVal)) : "";
@@ -251,7 +255,10 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
 
                     // 1. Handle Unit Conversion: Adjust Qty and Cost while keeping Subtotal same
                     if (field === 'unit' && row.product && row.product.bulk_unit_name) {
-                        const conversion = row.product.bulk_unit_conversion || 1;
+                        const baseUnitLower = (row.product.base_unit || "").toLowerCase().trim();
+                        const bulkUnitLower = (row.product.bulk_unit_name || "").toLowerCase().trim();
+                        const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                        const conversion = isSameUnit ? 1 : (row.product.bulk_unit_conversion || 1);
                         const currentQty = parseQtyVal(row.qty);
                         const currentCost = parseLocaleNumber(row.cost);
 
@@ -325,7 +332,10 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
 
                 let multiplier = 1;
                 if (unit === product.bulk_unit_name) {
-                    multiplier = product.bulk_unit_conversion || 1;
+                    const baseUnitLower = (product.base_unit || "").toLowerCase().trim();
+                    const bulkUnitLower = (product.bulk_unit_name || "").toLowerCase().trim();
+                    const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                    multiplier = isSameUnit ? 1 : (product.bulk_unit_conversion || 1);
                 }
 
                 const changeInBaseUnits = parseQtyVal(qty) * multiplier;

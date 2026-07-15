@@ -60,7 +60,10 @@ export const orderService = {
                     // Calculate deduction amount based on unit
                     let deductionQty = item.qty;
                     if (item.selected_unit === 'bulk') {
-                        const conversion = item.bulk_unit_conversion || 1;
+                        const baseUnitLower = (item.base_unit || "").toLowerCase().trim();
+                        const bulkUnitLower = (item.bulk_unit_name || "").toLowerCase().trim();
+                        const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                        const conversion = isSameUnit ? 1 : (item.bulk_unit_conversion || 1);
                         deductionQty = item.qty * conversion;
                     }
 
@@ -232,7 +235,10 @@ export const orderService = {
                 for (const { updatedItem, originalItem, invRef, invDoc } of inventoryReads) {
                     const oldQty = originalItem.qty;
                     const newQty = Number(updatedItem.qty);
-                    const conversion = originalItem.bulk_unit_conversion || 1;
+                    const baseUnitLower = (originalItem.base_unit || "").toLowerCase().trim();
+                    const bulkUnitLower = (originalItem.bulk_unit_name || "").toLowerCase().trim();
+                    const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                    const conversion = isSameUnit ? 1 : (originalItem.bulk_unit_conversion || 1);
                     const isBulk = originalItem.selected_unit === 'bulk';
                     const multiplier = isBulk ? conversion : 1;
                     
@@ -358,7 +364,10 @@ export const orderService = {
                 for (const { item, invRef, invDoc } of inventoryReads) {
                     let multiplier = 1;
                     if (item.selected_unit === 'bulk') {
-                        multiplier = item.bulk_unit_conversion || 1;
+                        const baseUnitLower = (item.base_unit || "").toLowerCase().trim();
+                        const bulkUnitLower = (item.bulk_unit_name || "").toLowerCase().trim();
+                        const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                        multiplier = isSameUnit ? 1 : (item.bulk_unit_conversion || 1);
                     }
                     const restoreQty = Number(item.qty) * multiplier;
                     

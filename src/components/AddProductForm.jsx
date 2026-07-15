@@ -47,6 +47,12 @@ export default function AddProductForm({ onClose, onSuccess }) {
         setLoading(true);
         setError(null);
         try {
+            const baseUnit = (formData.base_unit || '').toLowerCase().trim();
+            const bulkUnit = (formData.bulk_unit_name || '').toLowerCase().trim();
+            if (baseUnit && bulkUnit && baseUnit === bulkUnit) {
+                throw new Error("Satuan dasar dan nama satuan besar tidak boleh sama (contoh: 'pcs' dan 'Pcs').");
+            }
+
             const payload = {
                 ...formData,
                 price_regular: parsePrice(formData.price_regular),

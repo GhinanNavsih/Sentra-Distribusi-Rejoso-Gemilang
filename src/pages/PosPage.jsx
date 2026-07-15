@@ -53,8 +53,12 @@ export default function PosPage() {
                         if (!latestProduct) return null; // Remove deleted products
 
                         const basePrice = productService.calculatePrice(latestProduct, activeCustomerType);
+                        const baseUnitLower = (latestProduct.base_unit || "").toLowerCase().trim();
+                        const bulkUnitLower = (latestProduct.bulk_unit_name || "").toLowerCase().trim();
+                        const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                        const conversion = isSameUnit ? 1 : (latestProduct.bulk_unit_conversion || 1);
                         const unitPrice = item.selected_unit === 'bulk'
-                            ? Math.ceil(basePrice * (latestProduct.bulk_unit_conversion || 1))
+                            ? Math.ceil(basePrice * conversion)
                             : basePrice;
                         
                         const qtyVal = item.qty;
@@ -86,8 +90,12 @@ export default function PosPage() {
     useEffect(() => {
         setCart(prev => prev.map(item => {
             const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
+            const baseUnitLower = (item.product_obj.base_unit || "").toLowerCase().trim();
+            const bulkUnitLower = (item.product_obj.bulk_unit_name || "").toLowerCase().trim();
+            const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+            const conversion = isSameUnit ? 1 : (item.product_obj.bulk_unit_conversion || 1);
             const unitPrice = item.selected_unit === 'bulk'
-                ? Math.ceil(basePrice * (item.product_obj.bulk_unit_conversion || 1))
+                ? Math.ceil(basePrice * conversion)
                 : basePrice;
 
             const cleanQty = item.qty.toString().replace(/,/g, '.');
@@ -149,8 +157,12 @@ export default function PosPage() {
                 const numericQty = newQty === '' ? 0 : Math.max(0, parseFloat(cleanQty) || 0);
                 
                 const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
+                const baseUnitLower = (item.product_obj.base_unit || "").toLowerCase().trim();
+                const bulkUnitLower = (item.product_obj.bulk_unit_name || "").toLowerCase().trim();
+                const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                const conversion = isSameUnit ? 1 : (item.product_obj.bulk_unit_conversion || 1);
                 const currentPrice = item.selected_unit === 'bulk'
-                    ? Math.ceil(basePrice * (item.product_obj.bulk_unit_conversion || 1))
+                    ? Math.ceil(basePrice * conversion)
                     : basePrice;
 
                 return {
@@ -195,7 +207,10 @@ export default function PosPage() {
                 if (item.selected_unit === newUnit) return item;
 
                 const isGoingToBulk = newUnit === 'bulk';
-                const conversion = item.product_obj.bulk_unit_conversion || 1;
+                const baseUnitLower = (item.product_obj.base_unit || "").toLowerCase().trim();
+                const bulkUnitLower = (item.product_obj.bulk_unit_name || "").toLowerCase().trim();
+                const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                const conversion = isSameUnit ? 1 : (item.product_obj.bulk_unit_conversion || 1);
 
                 // Convert Quantity to keep the total amount of "base units" roughly the same
                 // 10 Pcs -> 1 Box (if conversion 10)
@@ -233,8 +248,12 @@ export default function PosPage() {
                 // eslint-disable-next-line no-unused-vars
                 items: validItems.map(({ product_obj, ...rest }) => {
                     const baseBuyPrice = product_obj?.cost_price || 0;
+                    const baseUnitLower = (product_obj?.base_unit || "").toLowerCase().trim();
+                    const bulkUnitLower = (product_obj?.bulk_unit_name || "").toLowerCase().trim();
+                    const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                    const conversion = isSameUnit ? 1 : (product_obj?.bulk_unit_conversion || 1);
                     const finalBuyPrice = rest.selected_unit === 'bulk'
-                        ? baseBuyPrice * (product_obj?.bulk_unit_conversion || 1)
+                        ? baseBuyPrice * conversion
                         : baseBuyPrice;
 
                     return {

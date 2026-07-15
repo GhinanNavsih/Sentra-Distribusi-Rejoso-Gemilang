@@ -1,0 +1,534 @@
+{
+  "products": [
+    {
+      "sku": "001-BakingPowder",
+      "name": "Baking Powder (110g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Bumbu & Bahan Masak"
+    },
+    {
+      "sku": "001-BerasKetan",
+      "name": "Beras Ketan (5kg)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Beras"
+    },
+    {
+      "sku": "001-BerasSerang",
+      "name": "Beras Serang Dua Putri (10kg)",
+      "base_unit": "sack",
+      "bulk_unit_name": "Sack ",
+      "bulk_unit_conversion": 1,
+      "category": "Beras"
+    },
+    {
+      "sku": "001-CukaDapur",
+      "name": "Dua Belibis Cuka Dapur (650ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-CukaDuaBelibis",
+      "name": "Dua Belibis Cuka (150ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-DelmonteBBQ",
+      "name": "Saos Delmonte BBQ",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-FinnaSaosTomat",
+      "name": "Finna Saos Tomat (95g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-GaramSarinah",
+      "name": "Garam Sarinah 250gr",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Bumbu & Bahan Masak"
+    },
+    {
+      "sku": "001-IndofoodSambel",
+      "name": "Indofood Sambal Sachet 8grm",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-Kara",
+      "name": "Sun Kara (200ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 12,
+      "category": "Bumbu & Bahan Masak"
+    },
+    {
+      "sku": "001-KecapAsin",
+      "name": "Kecap ABC Asin (600ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-KecapHitamJamur",
+      "name": "Mushroom Soy (150)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-KecapIkan",
+      "name": "Finna Kecap Ikan (700ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-MinyakWijen",
+      "name": " Minyak Wijen Cap Bunga Matahari (135ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Minyak, Mentega & Lemak"
+    },
+    {
+      "sku": "001-MinyakWijenDahlia",
+      "name": "Minyak Wijen Cap Dahlia (150ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Minyak, Mentega & Lemak"
+    },
+    {
+      "sku": "001-Nutrijel",
+      "name": "Nutrijel Plain",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-Panir",
+      "name": "Tepung Panir (10Kg)",
+      "base_unit": "sack",
+      "bulk_unit_name": "Sack",
+      "bulk_unit_conversion": 1,
+      "category": "Tepung"
+    },
+    {
+      "sku": "001-ProczSpread",
+      "name": "Keju Procz Spread (2kg)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-QuickMelt",
+      "name": "Keju Quick Melt (160)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-RajaRasa",
+      "name": "Saos Raja Rasa Kenari (600ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-RedBellJeruk",
+      "name": "RedBell Jeruk",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-RedBellMelon",
+      "name": "RedBell Melon",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-SambalDelmo",
+      "name": "Saos Delmonte Sambal 8grm",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-SaosKeju",
+      "name": "Saos Keju Gourmet (500g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-SaosMentai",
+      "name": "Saos Mentai PrimaAgung (1kg)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-SaosTeriyaki",
+      "name": "Saos Saori Teriyaki (275)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-Satelit",
+      "name": "Agar-Agar Satelit",
+      "base_unit": "pcs",
+      "bulk_unit_name": "pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-TapiokaMatahari",
+      "name": "Tepung Tapioka RB (500g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 10,
+      "category": "Tepung-Tepungan"
+    },
+    {
+      "sku": "001-sun",
+      "name": "Sun kara (65ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 36,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "002-Beras",
+      "name": "Beras Serang (10kg)",
+      "base_unit": "sack",
+      "bulk_unit_name": "Sack",
+      "bulk_unit_conversion": 1,
+      "category": "Beras"
+    },
+    {
+      "sku": "003-BumbuJamur",
+      "name": "Totole Jamur 80grm",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "ARIMBI-01",
+      "name": "Beras Arimbi Premium (25kg)",
+      "base_unit": "sack",
+      "bulk_unit_name": "Sack",
+      "bulk_unit_conversion": 1,
+      "category": "Beras"
+    },
+    {
+      "sku": "Garam-001",
+      "name": "Garam Cap Kapal (250g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Bumbu & Bahan Masak"
+    }
+  ],
+  "products_test": [
+    {
+      "sku": "001-BakingPowder",
+      "name": "Baking Powder (110g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Bumbu & Bahan Masak"
+    },
+    {
+      "sku": "001-BerasKetan",
+      "name": "Beras Ketan (5kg)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Beras"
+    },
+    {
+      "sku": "001-BerasSerang",
+      "name": "Beras Serang Dua Putri (10kg)",
+      "base_unit": "sack",
+      "bulk_unit_name": "Sack ",
+      "bulk_unit_conversion": 1,
+      "category": "Beras"
+    },
+    {
+      "sku": "001-CukaDapur",
+      "name": "Dua Belibis Cuka Dapur (650ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-CukaDuaBelibis",
+      "name": "Dua Belibis Cuka (150ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-DelmonteBBQ",
+      "name": "Saos Delmonte BBQ",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-FinnaSaosTomat",
+      "name": "Finna Saos Tomat (95g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-GaramSarinah",
+      "name": "Garam Sarinah 250gr",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Bumbu & Bahan Masak"
+    },
+    {
+      "sku": "001-IndofoodSambel",
+      "name": "Indofood Sambal Sachet 8grm",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-Kara",
+      "name": "Sun Kara (200ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 12,
+      "category": "Bumbu & Bahan Masak"
+    },
+    {
+      "sku": "001-KecapAsin",
+      "name": "Kecap ABC Asin (600ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-KecapHitamJamur",
+      "name": "Mushroom Soy (150)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-KecapIkan",
+      "name": "Finna Kecap Ikan (700ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-MinyakWijen",
+      "name": " Minyak Wijen Cap Bunga Matahari (135ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Minyak, Mentega & Lemak"
+    },
+    {
+      "sku": "001-MinyakWijenDahlia",
+      "name": "Minyak Wijen Cap Dahlia (150ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Minyak, Mentega & Lemak"
+    },
+    {
+      "sku": "001-Nutrijel",
+      "name": "Nutrijel Plain",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-Panir",
+      "name": "Tepung Panir (10Kg)",
+      "base_unit": "sack",
+      "bulk_unit_name": "Sack",
+      "bulk_unit_conversion": 1,
+      "category": "Tepung"
+    },
+    {
+      "sku": "001-ProczSpread",
+      "name": "Keju Procz Spread (2kg)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-QuickMelt",
+      "name": "Keju Quick Melt (160)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-RajaRasa",
+      "name": "Saos Raja Rasa Kenari (600ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-RedBellJeruk",
+      "name": "RedBell Jeruk",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-RedBellMelon",
+      "name": "RedBell Melon",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-SambalDelmo",
+      "name": "Saos Delmonte Sambal 8grm",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-SaosKeju",
+      "name": "Saos Keju Gourmet (500g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-SaosMentai",
+      "name": "Saos Mentai PrimaAgung (1kg)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-SaosTeriyaki",
+      "name": "Saos Saori Teriyaki (275)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Saus, Kecap & Sambal"
+    },
+    {
+      "sku": "001-Satelit",
+      "name": "Agar-Agar Satelit",
+      "base_unit": "pcs",
+      "bulk_unit_name": "pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "001-TapiokaMatahari",
+      "name": "Tepung Tapioka RB (500g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 10,
+      "category": "Tepung-Tepungan"
+    },
+    {
+      "sku": "001-sun",
+      "name": "Sun kara (65ml)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 36,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "002-Beras",
+      "name": "Beras Serang (10kg)",
+      "base_unit": "sack",
+      "bulk_unit_name": "Sack",
+      "bulk_unit_conversion": 1,
+      "category": "Beras"
+    },
+    {
+      "sku": "003-BumbuJamur",
+      "name": "Totole Jamur 80grm",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Lainnya"
+    },
+    {
+      "sku": "ARIMBI-01",
+      "name": "Beras Arimbi Premium (25kg)",
+      "base_unit": "sack",
+      "bulk_unit_name": "Sack",
+      "bulk_unit_conversion": 1,
+      "category": "Beras"
+    },
+    {
+      "sku": "Garam-001",
+      "name": "Garam Cap Kapal (250g)",
+      "base_unit": "pcs",
+      "bulk_unit_name": "Pcs",
+      "bulk_unit_conversion": 1,
+      "category": "Bumbu & Bahan Masak"
+    }
+  ]
+}

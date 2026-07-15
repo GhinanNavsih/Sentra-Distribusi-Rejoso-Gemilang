@@ -69,7 +69,10 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
                 if (transaction.type === 'purchase') {
                     const productObj = products.find(p => p.sku === item.product_id);
                     if (productObj && productObj.bulk_unit_name && item.unit === productObj.bulk_unit_name) {
-                        multiplier = productObj.bulk_unit_conversion || 1;
+                        const baseUnitLower = (productObj.base_unit || "").toLowerCase().trim();
+                        const bulkUnitLower = (productObj.bulk_unit_name || "").toLowerCase().trim();
+                        const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                        multiplier = isSameUnit ? 1 : (productObj.bulk_unit_conversion || 1);
                     }
                 }
                 return {
