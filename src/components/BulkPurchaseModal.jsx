@@ -20,7 +20,7 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
+const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialItems = [] }) => {
     // Rows state - load from localStorage if available, otherwise 3 default blank rows
     const [rows, setRows] = useState(() => {
         try {
@@ -110,6 +110,35 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [] }) => {
             setReceiptFile(null);
         }
     }, [isOpen]);
+
+    // Replace the current draft when the modal is opened from the demand planner.
+    useEffect(() => {
+        if (!isOpen || initialItems.length === 0 || products.length === 0) return;
+
+        const importedRows = initialItems.map((initialItem) => {
+            const product = products.find(p =>
+                p.id === initialItem.product_id || p.sku === initialItem.product_id
+            );
+            if (!product) return null;
+
+            const qty = Number(initialItem.qty) || 0;
+            const unitCost = Number(product.cost_price) || 0;
+            return {
+                id: uuidv4(),
+                product,
+                qty,
+                unit: product.base_unit,
+                cost: unitCost > 0 ? formatPriceInput(unitCost) : "",
+                subtotal: unitCost > 0 ? formatPriceInput(Math.ceil(qty * unitCost)) : ""
+            };
+        }).filter(Boolean);
+
+        if (importedRows.length > 0) {
+            setRows(importedRows);
+            setSearchQuery({});
+            setShowDropdown({});
+        }
+    }, [isOpen, initialItems, products]);
 
     // Save rows and supplier name to localStorage when they change
     useEffect(() => {

@@ -95,7 +95,9 @@ export const generateWarehouseReceipt = async (data, isPrint = false) => {
             unitPrice: item.unit_price,
             subtotal: item.total
         })),
-        total: data.grandTotal
+        total: data.grandTotal,
+        isUnpaid: data.payment_status === 'unpaid' || data.status === 'unpaid',
+        targetDate: data.target_date
     };
 
     const doc = new jsPDF();
@@ -194,7 +196,7 @@ export const generateWarehouseReceipt = async (data, isPrint = false) => {
         // KWITANSI title
         doc.setFontSize(24);
         doc.setFont("helvetica", "bold");
-        doc.text("KWITANSI", titleX, isFirstPage ? 38 : 30, {
+        doc.text(record.isUnpaid ? "PRE-ORDER" : "KWITANSI", titleX, isFirstPage ? 38 : 30, {
             align: titleAlign,
         });
 
@@ -235,7 +237,24 @@ export const generateWarehouseReceipt = async (data, isPrint = false) => {
     doc.setFont("helvetica", "normal");
     doc.text(record.customerDetail.businessType, col2X + 25, yPos);
 
-    yPos += 15;
+    yPos += 8;
+
+    if (record.isUnpaid) {
+        doc.setFillColor(255, 243, 205);
+        doc.roundedRect(margin, yPos, pageWidth - (2 * margin), 12, 2, 2, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(180, 83, 9);
+        doc.text(
+            `BELUM LUNAS / PRE-ORDER  |  Target: ${record.targetDate || '-'}`,
+            pageWidth / 2,
+            yPos + 7.5,
+            { align: "center" }
+        );
+        doc.setTextColor(0, 0, 0);
+        yPos += 19;
+    } else {
+        yPos += 7;
+    }
 
     // Items table header
     doc.setFontSize(12);

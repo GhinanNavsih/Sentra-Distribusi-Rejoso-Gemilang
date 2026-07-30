@@ -5,6 +5,14 @@ import { orderService } from '../services/orderService';
 import ReceiptModal from '../components/ReceiptModal';
 import InsufficientStockModal from '../components/InsufficientStockModal';
 
+const getLocalDateString = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 export default function PosPage() {
     const [products, setProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -22,6 +30,9 @@ export default function PosPage() {
     const [showStockErrorModal, setShowStockErrorModal] = useState(false);
     const [stockErrorDetails, setStockErrorDetails] = useState([]);
     const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'cart'
+    const [paymentStatus, setPaymentStatus] = useState('paid');
+    const [targetDate, setTargetDate] = useState(getLocalDateString);
+    const [preOrderCustomerName, setPreOrderCustomerName] = useState('');
 
     // Save cart and customer type to localStorage when they change
     useEffect(() => {
@@ -240,12 +251,25 @@ export default function PosPage() {
         const validItems = cart.filter(item => item.qty !== '' && Number(item.qty) > 0);
         if (validItems.length === 0) return;
 
-        if (!confirm(`Konfirmasi pesanan dengan Total: Rp ${cartTotal.toLocaleString('id-ID')}?`)) return;
+        if (paymentStatus === 'unpaid') {
+            if (!targetDate || targetDate < getLocalDateString()) {
+                alert('Tanggal target pre-order harus hari ini atau setelahnya.');
+                return;
+            }
+            if (!preOrderCustomerName.trim()) {
+                alert('Nama pelanggan / catatan wajib diisi untuk pre-order.');
+                return;
+            }
+        }
+
+        const confirmationLabel = paymentStatus === 'unpaid'
+            ? `Konfirmasi pre-order belum lunas untuk ${preOrderCustomerName.trim()} dengan Total: Rp ${cartTotal.toLocaleString('id-ID')}? Stok belum akan dikurangi.`
+            : `Konfirmasi pesanan lunas dengan Total: Rp ${cartTotal.toLocaleString('id-ID')}?`;
+        if (!confirm(confirmationLabel)) return;
 
         setProcessing(true);
         try {
             const orderPayload = {
-                // eslint-disable-next-line no-unused-vars
                 items: validItems.map(({ product_obj, ...rest }) => {
                     const baseBuyPrice = product_obj?.cost_price || 0;
                     const baseUnitLower = (product_obj?.base_unit || "").toLowerCase().trim();
@@ -262,11 +286,17 @@ export default function PosPage() {
                     };
                 }),
                 grand_total: cartTotal,
-                customer_name: "", // Will be updated in ReceiptModal
+                customer_name: paymentStatus === 'unpaid' ? preOrderCustomerName.trim() : "",
                 customer_type: selectedCustomerType
             };
 
-            const orderId = await orderService.createOrder(orderPayload);
+            if (paymentStatus === 'unpaid') {
+                orderPayload.target_date = targetDate;
+            }
+
+            const orderId = paymentStatus === 'unpaid'
+                ? await orderService.createUnpaidOrder(orderPayload)
+                : await orderService.createOrder(orderPayload);
 
             // Prepare receipt data
             const orderDate = new Date().toLocaleDateString('id-ID', {
@@ -300,10 +330,18 @@ export default function PosPage() {
                 })),
                 grandTotal: cartTotal,
                 selectedCustomerType: selectedCustomerType,
-                customer_name: ""
+                customer_name: orderPayload.customer_name,
+                payment_status: paymentStatus,
+                status: paymentStatus === 'unpaid' ? 'unpaid' : 'completed',
+                target_date: paymentStatus === 'unpaid' ? targetDate : null
             });
 
             setCart([]);
+            if (paymentStatus === 'unpaid') {
+                setPreOrderCustomerName('');
+                setTargetDate(getLocalDateString());
+            }
+            setPaymentStatus('paid');
             setShowReceiptModal(true);
         } catch (err) {
             if (err.name === "InsufficientStockError") {
@@ -499,6 +537,53 @@ export default function PosPage() {
                 </div>
 
                 <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                    <div className="mb-4 space-y-3">
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">
+                                Status Pembayaran
+                            </label>
+                            <select
+                                value={paymentStatus}
+                                onChange={(e) => setPaymentStatus(e.target.value)}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white text-sm font-semibold outline-none focus:ring-2 focus:ring-primary"
+                            >
+                                <option value="paid">Lunas (Paid)</option>
+                                <option value="unpaid">Belum Lunas (Pre-Order)</option>
+                            </select>
+                        </div>
+
+                        {paymentStatus === 'unpaid' && (
+                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-3">
+                                <p className="text-xs text-amber-800">
+                                    Pre-order dicatat sebagai permintaan terencana. Stok baru diperiksa dan dikurangi saat transaksi ditandai lunas.
+                                </p>
+                                <div>
+                                    <label className="block text-xs font-bold text-amber-900 mb-1">
+                                        Tanggal Target / Kirim
+                                    </label>
+                                    <input
+                                        type="date"
+                                        min={getLocalDateString()}
+                                        value={targetDate}
+                                        onChange={(e) => setTargetDate(e.target.value)}
+                                        className="w-full border border-amber-300 rounded-lg px-3 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-amber-900 mb-1">
+                                        Nama Pelanggan / Catatan
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={preOrderCustomerName}
+                                        onChange={(e) => setPreOrderCustomerName(e.target.value)}
+                                        placeholder="Contoh: Toko Makmur / kirim pagi"
+                                        className="w-full border border-amber-300 rounded-lg px-3 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-gray-500 font-medium">Total Keseluruhan</span>
                         <span className="text-2xl font-bold text-gray-900">Rp {cartTotal.toLocaleString('id-ID')}</span>
@@ -508,7 +593,11 @@ export default function PosPage() {
                         onClick={handleSubmitOrder}
                         className="w-full py-3 bg-primary hover:bg-red-700 text-white rounded-lg font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-lg"
                     >
-                        {processing ? 'Memproses...' : 'Selesaikan Pesanan'}
+                        {processing
+                            ? 'Memproses...'
+                            : paymentStatus === 'unpaid'
+                                ? 'Simpan Pre-Order'
+                                : 'Selesaikan Pesanan'}
                     </button>
                 </div>
             </div>

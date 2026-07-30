@@ -33,6 +33,8 @@ export default function PrintReceiptModal({ isOpen, onClose, orderData, products
 
     if (!isOpen || !orderData) return null;
 
+    const isUnpaid = orderData.payment_status === 'unpaid' || orderData.status === 'unpaid';
+
     // Map items to latest products to get correct tier pricing
     const itemsWithProducts = (orderData.items || []).map(item => {
         const productObj = products.find(p => p.id === item.product_id || p.sku === item.product_id);
@@ -113,7 +115,10 @@ export default function PrintReceiptModal({ isOpen, onClose, orderData, products
             customerName,
             businessType,
             paymentMethod,
-            isCreditSale
+            isCreditSale,
+            payment_status: orderData.payment_status,
+            status: orderData.status,
+            target_date: orderData.target_date
         };
 
         if (printRegular) {
@@ -155,7 +160,10 @@ export default function PrintReceiptModal({ isOpen, onClose, orderData, products
             customerName,
             businessType,
             paymentMethod,
-            isCreditSale
+            isCreditSale,
+            payment_status: orderData.payment_status,
+            status: orderData.status,
+            target_date: orderData.target_date
         };
 
         if (printRegular) {
@@ -205,7 +213,7 @@ export default function PrintReceiptModal({ isOpen, onClose, orderData, products
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full max-h-[95vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-red-600 to-orange-500 text-white p-5 rounded-t-xl flex-shrink-0">
+                <div className={`${isUnpaid ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-red-600 to-orange-500'} text-white p-5 rounded-t-xl flex-shrink-0`}>
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-bold flex items-center gap-2">
@@ -214,7 +222,7 @@ export default function PrintReceiptModal({ isOpen, onClose, orderData, products
                                 </svg>
                                 Cetak Nota Penjualan
                             </h2>
-                            <p className="text-red-100 text-xs mt-1 font-medium">No. Nota: {orderData.id}</p>
+                            <p className="text-white/85 text-xs mt-1 font-medium">No. Nota: {orderData.id}</p>
                         </div>
                         <button
                             onClick={onClose}
@@ -229,6 +237,16 @@ export default function PrintReceiptModal({ isOpen, onClose, orderData, products
 
                 {/* Scrollable Body */}
                 <div className="flex-1 overflow-y-auto p-5 space-y-4 dark:text-gray-200">
+                    {isUnpaid && (
+                        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-4 text-center">
+                            <div className="text-base font-black text-amber-900 dark:text-amber-200">
+                                BELUM LUNAS / PRE-ORDER
+                            </div>
+                            <div className="mt-1 text-sm font-semibold text-amber-800 dark:text-amber-300">
+                                Target: {orderData.target_date || '-'}
+                            </div>
+                        </div>
+                    )}
                     <div className="border-b border-gray-100 dark:border-gray-700 pb-4">
                         <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Detail Pelanggan & Pembayaran</h3>
 

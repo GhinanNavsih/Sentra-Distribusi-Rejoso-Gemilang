@@ -89,8 +89,10 @@ export const purchaseService = {
                     
                     const oldQty = originalItem.qty;
                     const newQty = Number(updatedItem.qty);
+                    const oldUnit = originalItem.unit;
+                    const newUnit = updatedItem.unit || oldUnit;
                     
-                    if (oldQty !== newQty) {
+                    if (oldQty !== newQty || oldUnit !== newUnit) {
                         const invRef = doc(db, INVENTORY_COLLECTION, updatedItem.product_id);
                         const invDoc = await transaction.get(invRef);
                         inventoryReads.push({ updatedItem, originalItem, invRef, invDoc });
@@ -101,10 +103,21 @@ export const purchaseService = {
                 for (const { updatedItem, originalItem, invRef, invDoc } of inventoryReads) {
                     const oldQty = originalItem.qty;
                     const newQty = Number(updatedItem.qty);
-                    const multiplier = Number(updatedItem.multiplier || 1);
                     
-                    // Change = (newQty - oldQty) * multiplier
-                    const changeInBaseUnits = (newQty - oldQty) * multiplier;
+                    const baseUnitLower = (originalItem.base_unit || "").toLowerCase().trim();
+                    const bulkUnitLower = (originalItem.bulk_unit_name || "").toLowerCase().trim();
+                    const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                    const conversion = isSameUnit ? 1 : (originalItem.bulk_unit_conversion || 1);
+
+                    const oldIsBulk = originalItem.unit === originalItem.bulk_unit_name;
+                    const oldMultiplier = oldIsBulk ? conversion : 1;
+
+                    const newUnit = updatedItem.unit || originalItem.unit;
+                    const newIsBulk = newUnit === originalItem.bulk_unit_name;
+                    const newMultiplier = newIsBulk ? conversion : 1;
+
+                    // Change = (newQty * newMultiplier) - (oldQty * oldMultiplier)
+                    const changeInBaseUnits = (newQty * newMultiplier) - (oldQty * oldMultiplier);
                     
                     let beforeStock = 0;
                     if (invDoc.exists()) {
@@ -138,10 +151,14 @@ export const purchaseService = {
                     const updated = updatedItems.find(u => u.product_id === origItem.product_id);
                     if (updated) {
                         const newQty = Number(updated.qty);
+                        const newUnit = updated.unit || origItem.unit;
+                        const newCostPerUnit = updated.cost_per_unit !== undefined ? Number(updated.cost_per_unit) : origItem.cost_per_unit;
                         return {
                             ...origItem,
                             qty: newQty,
-                            total: newQty * (origItem.cost_per_unit || 0)
+                            unit: newUnit,
+                            cost_per_unit: newCostPerUnit,
+                            total: newQty * newCostPerUnit
                         };
                     }
                     return origItem;

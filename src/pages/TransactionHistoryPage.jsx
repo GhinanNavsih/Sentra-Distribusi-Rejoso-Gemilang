@@ -8,6 +8,7 @@ import { useUserRole } from '../hooks/useUserRole';
 import { productService } from '../services/productService';
 import * as XLSX from 'xlsx';
 import PrintReceiptModal from '../components/PrintReceiptModal';
+import InsufficientStockModal from '../components/InsufficientStockModal';
 import { useAuth } from '../context/AuthContext';
 
 const getFilenameFromUrl = (url) => {
@@ -23,9 +24,23 @@ const getFilenameFromUrl = (url) => {
     }
 };
 
+const isUnpaidSale = (transaction) => transaction.type === 'sale'
+    && (transaction.payment_status === 'unpaid' || transaction.status === 'unpaid');
+
 const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }) => {
     const [items, setItems] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [localProducts, setLocalProducts] = useState(products || []);
+
+    useEffect(() => {
+        if (products && products.length > 0) {
+            setLocalProducts(products);
+        } else if (isOpen) {
+            productService.getAllProducts().then(allProds => {
+                setLocalProducts(allProds);
+            }).catch(err => console.error("Error fetching products in modal:", err));
+        }
+    }, [products, isOpen]);
 
     useEffect(() => {
         if (isOpen && transaction) {
@@ -50,6 +65,69 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
         }));
     };
 
+    const handleUnitChange = (productId, newUnitValue) => {
+        setItems(prev => prev.map(item => {
+            if (item.product_id === productId) {
+                const productObj = localProducts.find(p => p.sku === productId);
+                if (!productObj) return item;
+
+                const baseUnitLower = (productObj.base_unit || "").toLowerCase().trim();
+                const bulkUnitLower = (productObj.bulk_unit_name || "").toLowerCase().trim();
+                const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                const conversion = isSameUnit ? 1 : (productObj.bulk_unit_conversion || 1);
+
+                if (transaction.type === 'sale') {
+                    if (item.selected_unit === newUnitValue) return item;
+                    const isGoingToBulk = newUnitValue === 'bulk';
+
+                    // Convert Quantity
+                    let newQty = isGoingToBulk
+                        ? Math.max(1, Math.floor(item.qty / conversion))
+                        : item.qty * conversion;
+
+                    // Calculate unit price based on customer type
+                    const basePrice = productService.calculatePrice(productObj, transaction.customer_type || 'regular');
+                    const newUnitPrice = isGoingToBulk ? Math.ceil(basePrice * conversion) : basePrice;
+
+                    // Calculate buy price
+                    const baseBuyPrice = productObj.cost_price || 0;
+                    const newBuyPrice = isGoingToBulk ? baseBuyPrice * conversion : baseBuyPrice;
+
+                    return {
+                        ...item,
+                        selected_unit: newUnitValue,
+                        qty: newQty,
+                        unit_price: newUnitPrice,
+                        buy_price: newBuyPrice,
+                        total: newQty * newUnitPrice
+                    };
+                } else {
+                    if (item.unit === newUnitValue) return item;
+                    const isGoingToBulk = newUnitValue === productObj.bulk_unit_name;
+
+                    // Convert Quantity
+                    let newQty = isGoingToBulk
+                        ? Math.max(1, Math.floor(item.qty / conversion))
+                        : item.qty * conversion;
+
+                    // Convert cost per unit
+                    let newCostPerUnit = isGoingToBulk
+                        ? (item.cost_per_unit * conversion)
+                        : Math.round(item.cost_per_unit / conversion);
+
+                    return {
+                        ...item,
+                        unit: newUnitValue,
+                        qty: newQty,
+                        cost_per_unit: newCostPerUnit,
+                        total: newQty * newCostPerUnit
+                    };
+                }
+            }
+            return item;
+        }));
+    };
+
     const grandTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
 
     const formatCurrency = (value) => {
@@ -65,21 +143,31 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
         setIsSaving(true);
         try {
             const updated = items.map(item => {
-                let multiplier = 1;
                 if (transaction.type === 'purchase') {
-                    const productObj = products.find(p => p.sku === item.product_id);
+                    const productObj = localProducts.find(p => p.sku === item.product_id);
+                    let multiplier = 1;
                     if (productObj && productObj.bulk_unit_name && item.unit === productObj.bulk_unit_name) {
                         const baseUnitLower = (productObj.base_unit || "").toLowerCase().trim();
                         const bulkUnitLower = (productObj.bulk_unit_name || "").toLowerCase().trim();
                         const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
                         multiplier = isSameUnit ? 1 : (productObj.bulk_unit_conversion || 1);
                     }
+                    return {
+                        product_id: item.product_id,
+                        qty: item.qty,
+                        unit: item.unit,
+                        cost_per_unit: item.cost_per_unit,
+                        multiplier
+                    };
+                } else {
+                    return {
+                        product_id: item.product_id,
+                        qty: item.qty,
+                        selected_unit: item.selected_unit,
+                        unit_price: item.unit_price,
+                        buy_price: item.buy_price
+                    };
                 }
-                return {
-                    product_id: item.product_id,
-                    qty: item.qty,
-                    multiplier
-                };
             });
 
             await onSave(transaction.id, updated, transaction.type);
@@ -112,7 +200,10 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
 
                 <div className="flex-1 overflow-auto p-6 space-y-4">
                     <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-3 text-xs text-yellow-800 dark:text-yellow-200">
-                        <span className="font-bold">PENTING:</span> Mengubah jumlah item di sini akan secara otomatis menyesuaikan stok fisik barang di inventori/katalog sesuai selisihnya.
+                        <span className="font-bold">PENTING:</span>{' '}
+                        {isUnpaidSale(transaction)
+                            ? 'Perubahan pada pre-order hanya memperbarui permintaan terencana dan tidak mengubah stok fisik.'
+                            : 'Mengubah jumlah item di sini akan otomatis menyesuaikan stok fisik sesuai selisihnya.'}
                     </div>
 
                     <div className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -121,6 +212,7 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
                                 ? (item.selected_unit === 'bulk' ? (item.bulk_unit_name || 'Unit') : (item.base_unit || 'pcs'))
                                 : (item.unit || item.base_unit || 'pcs');
                             const price = item.unit_price || item.cost_per_unit || 0;
+                            const productObj = localProducts.find(p => p.sku === item.product_id);
 
                             return (
                                 <div key={item.product_id || idx} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -133,6 +225,25 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-4">
+                                        {productObj && productObj.bulk_unit_name && (
+                                            <select
+                                                value={transaction.type === 'sale' ? (item.selected_unit || 'base') : (item.unit || productObj.base_unit)}
+                                                onChange={(e) => handleUnitChange(item.product_id, e.target.value)}
+                                                className="text-xs bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-gray-700 dark:text-gray-200"
+                                            >
+                                                {transaction.type === 'sale' ? (
+                                                    <>
+                                                        <option value="base">{productObj.base_unit || 'pcs'}</option>
+                                                        <option value="bulk">{productObj.bulk_unit_name}</option>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <option value={productObj.base_unit || 'pcs'}>{productObj.base_unit || 'pcs'}</option>
+                                                        <option value={productObj.bulk_unit_name}>{productObj.bulk_unit_name}</option>
+                                                    </>
+                                                )}
+                                            </select>
+                                        )}
                                         <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-700">
                                             <button
                                                 type="button"
@@ -353,6 +464,10 @@ const TransactionHistoryPage = () => {
     const [editingTransaction, setEditingTransaction] = useState(null);
     const [printingTransaction, setPrintingTransaction] = useState(null);
     const [logViewingTransaction, setLogViewingTransaction] = useState(null);
+    const [paymentFilter, setPaymentFilter] = useState('all');
+    const [payingOrderId, setPayingOrderId] = useState(null);
+    const [showStockErrorModal, setShowStockErrorModal] = useState(false);
+    const [stockErrorDetails, setStockErrorDetails] = useState([]);
 
     const handleSaveEdit = async (transactionId, updatedItems, type) => {
         try {
@@ -371,7 +486,10 @@ const TransactionHistoryPage = () => {
     };
 
     const handleUndoTransaction = async (transaction) => {
-        const confirmMsg = `Apakah Anda yakin ingin membatalkan transaksi ${transaction.id}? \nTindakan ini akan mengembalikan stok barang di inventori/katalog dan transaksi ini tidak dapat diaktifkan kembali.`;
+        const inventoryMessage = isUnpaidSale(transaction)
+            ? 'Pre-order ini belum mengurangi stok, sehingga pembatalan hanya menghapusnya dari permintaan terencana.'
+            : 'Tindakan ini akan mengembalikan stok barang di inventori/katalog.';
+        const confirmMsg = `Apakah Anda yakin ingin membatalkan transaksi ${transaction.id}?\n${inventoryMessage}\nTransaksi ini tidak dapat diaktifkan kembali.`;
         if (!window.confirm(confirmMsg)) return;
 
         setLoading(true);
@@ -389,6 +507,29 @@ const TransactionHistoryPage = () => {
             alert("Gagal membatalkan transaksi: " + e.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleMarkPaid = async (transaction) => {
+        if (!window.confirm(`Tandai pre-order ${transaction.id} sebagai lunas? Stok akan diperiksa dan dikurangi saat ini.`)) {
+            return;
+        }
+
+        setPayingOrderId(transaction.id);
+        try {
+            const operatorEmail = currentUser?.email || currentUser?.uid || 'Unknown';
+            await orderService.payUnpaidOrder(transaction.id, operatorEmail);
+            alert('Pre-order berhasil ditandai lunas dan stok telah dikurangi.');
+            await handleSearch();
+        } catch (error) {
+            if (error.name === 'InsufficientStockError') {
+                setStockErrorDetails(error.details || []);
+                setShowStockErrorModal(true);
+            } else {
+                alert('Gagal menandai transaksi sebagai lunas: ' + error.message);
+            }
+        } finally {
+            setPayingOrderId(null);
         }
     };
 
@@ -410,7 +551,12 @@ const TransactionHistoryPage = () => {
 
     const handleExportToExcel = () => {
         try {
-            const filtered = transactions.filter(t => (filter === 'all' || t.type === filter) && t.status !== 'cancelled');
+            const filtered = transactions.filter(t => {
+                const matchesType = filter === 'all' || t.type === filter;
+                const matchesPayment = paymentFilter === 'all'
+                    || (paymentFilter === 'unpaid' ? isUnpaidSale(t) : !isUnpaidSale(t));
+                return matchesType && matchesPayment && t.status !== 'cancelled';
+            });
             if (filtered.length === 0) {
                 alert("Tidak ada data transaksi untuk diexport.");
                 return;
@@ -447,6 +593,8 @@ const TransactionHistoryPage = () => {
                         'Subtotal Item (Rp)': subtotal,
                         'Total Transaksi (Rp)': t.total,
                         'Metode Pembayaran': t.type === 'sale' ? (t.payment_method || 'Cash') : 'Cash',
+                        'Status Pembayaran': isUnpaidSale(t) ? 'Belum Lunas' : 'Lunas',
+                        'Tanggal Target': t.target_date || '-',
                         'Penjualan Kredit': t.type === 'sale' ? (t.is_credit_sale ? 'Ya' : 'Tidak') : '-'
                     });
                 });
@@ -537,6 +685,8 @@ const TransactionHistoryPage = () => {
     // Group transactions by date
     const groupedTransactions = transactions.reduce((groups, transaction) => {
         if (filter !== 'all' && transaction.type !== filter) return groups;
+        if (paymentFilter === 'unpaid' && !isUnpaidSale(transaction)) return groups;
+        if (paymentFilter === 'paid' && isUnpaidSale(transaction)) return groups;
 
         const dateKey = transaction.date.toLocaleDateString('id-ID', {
             year: 'numeric',
@@ -567,8 +717,11 @@ const TransactionHistoryPage = () => {
         transactions.forEach(t => {
             if (t.status === 'cancelled') return;
             if (filter !== 'all' && t.type !== filter) return;
+            if (paymentFilter === 'unpaid' && !isUnpaidSale(t)) return;
+            if (paymentFilter === 'paid' && isUnpaidSale(t)) return;
 
             if (t.type === 'sale') {
+                if (isUnpaidSale(t)) return;
                 totalSales += t.total;
                 if (isSuperAdmin) {
                     const profit = t.items?.reduce((sum, item) => {
@@ -593,7 +746,7 @@ const TransactionHistoryPage = () => {
         });
 
         return { totalSales, totalPurchases, totalProfit };
-    }, [transactions, filter, isSuperAdmin]);
+    }, [transactions, filter, paymentFilter, isSuperAdmin]);
 
     const formatCurrency = (value) => {
         return new Intl.NumberFormat('id-ID', {
@@ -624,36 +777,44 @@ const TransactionHistoryPage = () => {
 
                 {/* Filter Buttons */}
                 {hasSearched && (
-                    <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
-                        <button
-                            onClick={() => setFilter('all')}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition ${filter === 'all'
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                        >
-                            Semua
-                        </button>
-                        <button
-                            onClick={() => setFilter('sale')}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition flex items-center gap-2 ${filter === 'sale'
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                        >
-                            <FaShoppingCart size={14} />
-                            Penjualan
-                        </button>
-                        <button
-                            onClick={() => setFilter('purchase')}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition flex items-center gap-2 ${filter === 'purchase'
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                        >
-                            <FaTruck size={14} />
-                            Pembelian
-                        </button>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+                            {[
+                                { value: 'all', label: 'Semua Jenis', icon: null },
+                                { value: 'sale', label: 'Penjualan', icon: <FaShoppingCart size={14} /> },
+                                { value: 'purchase', label: 'Pembelian', icon: <FaTruck size={14} /> }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => setFilter(option.value)}
+                                    className={`px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-2 ${filter === option.value
+                                        ? 'bg-white text-gray-900 shadow-sm'
+                                        : 'text-gray-600 hover:text-gray-900'
+                                        }`}
+                                >
+                                    {option.icon}
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex gap-2 bg-amber-50 border border-amber-100 p-1 rounded-lg">
+                            {[
+                                { value: 'all', label: 'Semua' },
+                                { value: 'paid', label: 'Lunas' },
+                                { value: 'unpaid', label: 'Belum Lunas (Pre-Order)' }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => setPaymentFilter(option.value)}
+                                    className={`px-3 py-2 rounded-md text-xs font-bold transition ${paymentFilter === option.value
+                                        ? 'bg-white text-amber-900 shadow-sm'
+                                        : 'text-amber-700 hover:text-amber-900'
+                                        }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
@@ -809,6 +970,11 @@ const TransactionHistoryPage = () => {
                                                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${transaction.status === 'cancelled' ? 'bg-gray-100 text-gray-400 border border-gray-200' : transaction.type === 'sale' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
                                                                     {transaction.status === 'cancelled' ? 'Dibatalkan' : transaction.type === 'sale' ? 'Penjualan' : 'Pembelian'}
                                                                 </span>
+                                                                {isUnpaidSale(transaction) && (
+                                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-200">
+                                                                        Belum Lunas · Target: {transaction.target_date || '-'}
+                                                                    </span>
+                                                                )}
                                                                 {/* NEW: Explicitly show Customer/Supplier Name here */}
                                                                 <span className="text-gray-400">|</span>
                                                                 <span className="text-sm font-medium text-gray-700">
@@ -863,7 +1029,7 @@ const TransactionHistoryPage = () => {
                                                             </div>
 
                                                             {/* Profit Summary for SuperAdmin */}
-                                                            {isSuperAdmin && transaction.type === 'sale' && transaction.status !== 'cancelled' && (
+                                                            {isSuperAdmin && transaction.type === 'sale' && transaction.status !== 'cancelled' && !isUnpaidSale(transaction) && (
                                                                 <div className="mt-2 pt-2 border-t border-dashed border-gray-200 flex justify-between items-center bg-green-50/50 p-2 rounded">
                                                                     <span className="text-xs font-bold text-green-700">Total Keuntungan Transaksi Ini</span>
                                                                     <span className="text-sm font-bold text-green-700">
@@ -893,6 +1059,15 @@ const TransactionHistoryPage = () => {
                                                                     <div className="flex flex-wrap gap-2">
                                                                         {transaction.status !== 'cancelled' && (
                                                                             <>
+                                                                                {isUnpaidSale(transaction) && (isSuperAdmin || isShopper) && (
+                                                                                    <button
+                                                                                        onClick={() => handleMarkPaid(transaction)}
+                                                                                        disabled={payingOrderId === transaction.id}
+                                                                                        className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                                                                    >
+                                                                                        {payingOrderId === transaction.id ? 'Memproses...' : 'Tandai Lunas'}
+                                                                                    </button>
+                                                                                )}
                                                                                 <button
                                                                                     onClick={() => setPrintingTransaction(transaction)}
                                                                                     className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition shadow-sm cursor-pointer"
@@ -1058,6 +1233,15 @@ const TransactionHistoryPage = () => {
                 orderData={printingTransaction}
                 products={products}
                 onSaveSuccess={handleSearch}
+            />
+            <InsufficientStockModal
+                isOpen={showStockErrorModal}
+                onClose={() => setShowStockErrorModal(false)}
+                details={stockErrorDetails}
+                title="Stok Belum Cukup untuk Pelunasan"
+                subtitle="Jumlah restock yang dibutuhkan ditampilkan di bawah"
+                description="Pre-order belum dapat ditandai lunas. Restock jumlah yang kurang berikut, lalu coba lagi."
+                actionLabel="Tutup & Restock Stok"
             />
         </div>
     );

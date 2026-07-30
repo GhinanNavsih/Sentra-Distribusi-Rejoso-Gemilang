@@ -55,6 +55,8 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
 
     if (!isOpen || !orderData) return null;
 
+    const isUnpaid = orderData.payment_status === 'unpaid' || orderData.status === 'unpaid';
+
     // Helper to recalculate items with different pricing tier (for receipt display only)
     const recalculateItemsForTier = (tierType) => {
         return orderData.items.map(item => {
@@ -180,12 +182,14 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4">
             <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[95vh] flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-primary to-red-600 text-white p-4 sm:p-5 rounded-t-lg flex-shrink-0">
+                <div className={`${isUnpaid ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-primary to-red-600'} text-white p-4 sm:p-5 rounded-t-lg flex-shrink-0`}>
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-2xl font-bold">✓ Order Berhasil!</h2>
-                            <p className="text-red-100 text-sm mt-1">No. Nota: {orderData.orderId}</p>
-                            <p className="text-red-100 text-xs mt-1 font-medium">
+                            <h2 className="text-2xl font-bold">
+                                {isUnpaid ? 'Pre-Order Berhasil Disimpan' : '✓ Order Berhasil!'}
+                            </h2>
+                            <p className="text-white/85 text-sm mt-1">No. Nota: {orderData.orderId}</p>
+                            <p className="text-white/85 text-xs mt-1 font-medium">
                                 Disimpan sebagai: tingkat {savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)}
                             </p>
                         </div>
@@ -203,17 +207,21 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
 
                 {/* Scrollable Body */}
                 <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-                        <div className="flex items-center gap-2 text-green-800 mb-2">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            <span className="font-semibold">Transaksi Selesai</span>
+                    <div className={`${isUnpaid ? 'bg-amber-50 border-amber-300' : 'bg-green-50 border-green-200'} border rounded-lg p-3 sm:p-4`}>
+                        <div className={`flex items-center gap-2 mb-2 ${isUnpaid ? 'text-amber-900' : 'text-green-800'}`}>
+                            <span className="font-black">
+                                {isUnpaid ? 'BELUM LUNAS / PRE-ORDER' : '✓ Transaksi Selesai'}
+                            </span>
                         </div>
-                        <div className="text-2xl font-bold text-green-900">
+                        {isUnpaid && (
+                            <div className="mb-2 text-sm font-semibold text-amber-800">
+                                Target: {orderData.target_date || '-'} · Stok belum dikurangi
+                            </div>
+                        )}
+                        <div className={`text-2xl font-bold ${isUnpaid ? 'text-amber-950' : 'text-green-900'}`}>
                             Rp {orderData.grandTotal.toLocaleString('id-ID')}
                         </div>
-                        <div className="text-xs text-green-700 mt-1">
+                        <div className={`text-xs mt-1 ${isUnpaid ? 'text-amber-800' : 'text-green-700'}`}>
                             ({savedTier?.charAt(0).toUpperCase() + savedTier?.slice(1)} pricing - disimpan di database)
                         </div>
                     </div>

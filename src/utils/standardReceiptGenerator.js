@@ -63,6 +63,9 @@ export const generateReceipt = (receiptData) => {
         paymentMethod = 'Cash',
         isCreditSale = false,
         isPurchase = false,
+        payment_status,
+        status,
+        target_date,
         companyInfo = {
             name: 'Sentra Distribusi Rejoso Gemilang',
             subheader: 'Unit Usaha Koperasi',
@@ -70,6 +73,7 @@ export const generateReceipt = (receiptData) => {
             contact: '+62 857-3372-0226 (Bapak Izzul)'
         }
     } = receiptData;
+    const isUnpaid = payment_status === 'unpaid' || status === 'unpaid';
 
     const doc = new jsPDF({
         orientation: 'portrait',
@@ -121,7 +125,11 @@ export const generateReceipt = (receiptData) => {
 
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    const title = isPurchase ? 'BUKTI PENERIMAAN' : (isCreditSale ? 'INVOICE' : 'NOTA PENJUALAN');
+    const title = isPurchase
+        ? 'BUKTI PENERIMAAN'
+        : isUnpaid
+            ? 'PRE-ORDER - BELUM LUNAS'
+            : (isCreditSale ? 'INVOICE' : 'NOTA PENJUALAN');
     doc.text(title, rightX, rightY + 3, { align: 'right' });
 
     rightY += 10;
@@ -131,6 +139,14 @@ export const generateReceipt = (receiptData) => {
 
     rightY += 5;
     doc.text(`Tanggal: ${orderDate}`, rightX, rightY, { align: 'right' });
+
+    if (isUnpaid) {
+        rightY += 5;
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(204, 85, 0);
+        doc.text(`Target: ${target_date || '-'}`, rightX, rightY, { align: 'right' });
+        doc.setTextColor(0, 0, 0);
+    }
 
     if (customerName) {
         rightY += 6;
@@ -216,6 +232,14 @@ export const generateReceipt = (receiptData) => {
     // Payment Method
     doc.setFont('helvetica', 'normal');
     doc.text(`Metode Pembayaran: ${paymentMethod}`, margin, yPos);
+
+    if (isUnpaid) {
+        yPos += 6;
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(204, 85, 0);
+        doc.text('STATUS: BELUM LUNAS - STOK BELUM DIKELUARKAN', margin, yPos);
+        doc.setTextColor(0, 0, 0);
+    }
 
     yPos += 8;
 

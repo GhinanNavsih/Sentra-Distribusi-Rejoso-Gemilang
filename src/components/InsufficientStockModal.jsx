@@ -1,6 +1,14 @@
 import React from 'react';
 
-export default function InsufficientStockModal({ isOpen, onClose, details }) {
+export default function InsufficientStockModal({
+    isOpen,
+    onClose,
+    details,
+    title = 'Stok Tidak Mencukupi',
+    subtitle = 'Beberapa produk melebihi stok yang tersedia',
+    description = 'Pesanan tidak dapat diselesaikan karena stok produk berikut kurang dari jumlah yang diminta. Silakan sesuaikan jumlah di keranjang Anda.',
+    actionLabel = 'Pahami & Sesuaikan Keranjang'
+}) {
     if (!isOpen || !details || details.length === 0) return null;
 
     return (
@@ -9,8 +17,8 @@ export default function InsufficientStockModal({ isOpen, onClose, details }) {
                 {/* Header */}
                 <div className="bg-red-600 text-white p-5 flex justify-between items-center">
                     <div>
-                        <h2 className="text-xl font-bold">⚠️ Stok Tidak Mencukupi</h2>
-                        <p className="text-red-100 text-xs mt-1">Beberapa produk di keranjang melebihi stok yang tersedia</p>
+                        <h2 className="text-xl font-bold">⚠️ {title}</h2>
+                        <p className="text-red-100 text-xs mt-1">{subtitle}</p>
                     </div>
                     <button onClick={onClose} className="text-white hover:bg-white/20 rounded-full p-2 transition">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +30,7 @@ export default function InsufficientStockModal({ isOpen, onClose, details }) {
                 {/* Body */}
                 <div className="p-6 space-y-4">
                     <p className="text-sm text-gray-600">
-                        Pesanan tidak dapat diselesaikan karena stok produk berikut kurang dari jumlah yang diminta. Silakan sesuaikan jumlah di keranjang Anda.
+                        {description}
                     </p>
 
                     <div className="divide-y divide-gray-100 max-h-[50vh] overflow-y-auto border border-gray-200 rounded-lg">
@@ -65,7 +73,7 @@ export default function InsufficientStockModal({ isOpen, onClose, details }) {
                         onClick={onClose}
                         className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold shadow-md transition text-sm w-full sm:w-auto"
                     >
-                        Pahami & Sesuaikan Keranjang
+                        {actionLabel}
                     </button>
                 </div>
             </div>

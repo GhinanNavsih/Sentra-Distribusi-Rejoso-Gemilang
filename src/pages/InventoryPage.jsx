@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { productService } from '../services/productService';
 import { inventoryService } from '../services/inventoryService';
 import AddProductForm from '../components/AddProductForm';
@@ -38,6 +38,7 @@ export default function InventoryPage() {
             return false;
         }
     });
+    const [bulkPurchaseInitialItems, setBulkPurchaseInitialItems] = useState([]);
 
     useEffect(() => {
         localStorage.setItem("show_bulk_purchase_modal", showBulkPurchaseModal);
@@ -58,18 +59,11 @@ export default function InventoryPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const productList = await productService.getAllProducts();
-
-            // Only fetch financial data if SuperAdmin
-            let orderList = [];
-            let purchaseList = [];
-
-            if (isSuperAdmin) {
-                [orderList, purchaseList] = await Promise.all([
-                    orderService.getAllOrders(),
-                    purchaseService.getAllPurchases()
-                ]);
-            }
+            const [productList, orderList, purchaseList] = await Promise.all([
+                productService.getAllProducts(),
+                orderService.getAllOrders(),
+                isSuperAdmin ? purchaseService.getAllPurchases() : Promise.resolve([])
+            ]);
 
             // Enhance with stock data
             const enhancedList = await Promise.all(productList.map(async (p) => {
@@ -78,8 +72,8 @@ export default function InventoryPage() {
             }));
 
             setProducts(enhancedList);
+            setOrders(orderList);
             if (isSuperAdmin) {
-                setOrders(orderList);
                 setPurchases(purchaseList);
             }
         } catch (error) {
@@ -266,8 +260,74 @@ export default function InventoryPage() {
     };
 
     const totalBelanja = calculateTotal(purchases, belanjaPeriod);
-    const totalPendapatan = calculateTotal(orders, pendapatanPeriod);
+    const paidOrders = orders.filter(order =>
+        order.status !== 'cancelled'
+        && order.status !== 'unpaid'
+        && order.payment_status !== 'unpaid'
+    );
+    const totalPendapatan = calculateTotal(paidOrders, pendapatanPeriod);
     const totalGudang = products.reduce((sum, p) => sum + ((p.current_stock || 0) * (p.cost_price || 0)), 0);
+
+    const preOrderDemand = useMemo(() => {
+        const demandByProduct = new Map();
+
+        orders
+            .filter(order =>
+                order.status !== 'cancelled'
+                && (order.payment_status === 'unpaid' || order.status === 'unpaid')
+            )
+            .forEach(order => {
+                (order.items || []).forEach(item => {
+                    const product = products.find(p => p.id === item.product_id || p.sku === item.product_id);
+                    const baseUnit = item.base_unit || product?.base_unit || 'unit';
+                    const baseUnitLower = baseUnit.toLowerCase().trim();
+                    const bulkUnitLower = (item.bulk_unit_name || product?.bulk_unit_name || '').toLowerCase().trim();
+                    const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                    const conversion = isSameUnit
+                        ? 1
+                        : (Number(item.bulk_unit_conversion || product?.bulk_unit_conversion) || 1);
+                    const plannedQty = (Number(item.qty) || 0) * (item.selected_unit === 'bulk' ? conversion : 1);
+                    const key = item.product_id;
+                    const existing = demandByProduct.get(key) || {
+                        product_id: key,
+                        product_name: item.product_name || product?.name || key,
+                        base_unit: baseUnit,
+                        planned_demand: 0,
+                        on_hand: Number(product?.current_stock) || 0,
+                        target_dates: new Set(),
+                        order_ids: new Set()
+                    };
+
+                    existing.planned_demand += plannedQty;
+                    if (order.target_date) existing.target_dates.add(order.target_date);
+                    existing.order_ids.add(order.id);
+                    demandByProduct.set(key, existing);
+                });
+            });
+
+        return Array.from(demandByProduct.values())
+            .map(row => ({
+                ...row,
+                target_dates: Array.from(row.target_dates).sort(),
+                order_count: row.order_ids.size,
+                deficit: Math.max(0, row.planned_demand - row.on_hand)
+            }))
+            .sort((a, b) => b.deficit - a.deficit || a.product_name.localeCompare(b.product_name));
+    }, [orders, products]);
+
+    const deficitItems = preOrderDemand
+        .filter(row => row.deficit > 0)
+        .map(row => ({ product_id: row.product_id, qty: row.deficit }));
+
+    const openBulkPurchase = () => {
+        setBulkPurchaseInitialItems([]);
+        setShowBulkPurchaseModal(true);
+    };
+
+    const importDemandToBulkPurchase = () => {
+        setBulkPurchaseInitialItems(deficitItems);
+        setShowBulkPurchaseModal(true);
+    };
 
     const StatCard = ({ title, value, color, period, setPeriod, hidePeriods }) => (
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between min-h-[180px]">
@@ -303,7 +363,7 @@ export default function InventoryPage() {
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={() => setShowBulkPurchaseModal(true)}
+                        onClick={openBulkPurchase}
                         className="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition flex items-center gap-2 text-sm">
                         <span>📥</span> Pembelian Grosir
                     </button>
@@ -345,6 +405,67 @@ export default function InventoryPage() {
                     />
                 </div>
             )}
+
+            <section className="mb-8 rounded-2xl border border-amber-200 bg-white shadow-sm overflow-hidden">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 bg-amber-50 border-b border-amber-200">
+                    <div>
+                        <h2 className="text-lg font-black text-amber-950">Perencanaan Pre-Order & Restock Demand</h2>
+                        <p className="text-sm text-amber-800 mt-1">
+                            Permintaan dari pre-order aktif dibandingkan dengan stok fisik saat ini.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={importDemandToBulkPurchase}
+                        disabled={deficitItems.length === 0}
+                        className="px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold shadow-sm disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition"
+                    >
+                        Impor ke Restock Bulk Purchase ({deficitItems.length})
+                    </button>
+                </div>
+
+                {preOrderDemand.length === 0 ? (
+                    <div className="p-8 text-center text-sm text-gray-500">
+                        Belum ada pre-order aktif yang perlu direncanakan.
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[760px] text-sm">
+                            <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-600">
+                                <tr>
+                                    <th className="px-5 py-3 text-left">Produk</th>
+                                    <th className="px-5 py-3 text-right">Planned Demand</th>
+                                    <th className="px-5 py-3 text-right">On-Hand Stock</th>
+                                    <th className="px-5 py-3 text-right">Defisit Stok</th>
+                                    <th className="px-5 py-3 text-left">Target</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {preOrderDemand.map(row => (
+                                    <tr key={row.product_id} className={row.deficit > 0 ? 'bg-red-50/60' : 'bg-green-50/30'}>
+                                        <td className="px-5 py-4">
+                                            <div className="font-bold text-gray-900">{row.product_name}</div>
+                                            <div className="text-xs text-gray-500">{row.order_count} pre-order aktif</div>
+                                        </td>
+                                        <td className="px-5 py-4 text-right font-semibold text-gray-900">
+                                            {row.planned_demand} {row.base_unit}
+                                        </td>
+                                        <td className="px-5 py-4 text-right text-gray-700">
+                                            {row.on_hand} {row.base_unit}
+                                        </td>
+                                        <td className={`px-5 py-4 text-right font-black ${row.deficit > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                                            {row.deficit} {row.base_unit}
+                                        </td>
+                                        <td className="px-5 py-4 text-gray-600">
+                                            {row.target_dates.length > 0 ? row.target_dates.join(', ') : '-'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
 
             {showAddForm && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -391,9 +512,13 @@ export default function InventoryPage() {
 
             <BulkPurchaseModal
                 isOpen={showBulkPurchaseModal}
-                onClose={() => setShowBulkPurchaseModal(false)}
+                onClose={() => {
+                    setShowBulkPurchaseModal(false);
+                    setBulkPurchaseInitialItems([]);
+                }}
                 onSuccess={() => { fetchData(); }}
                 products={products}
+                initialItems={bulkPurchaseInitialItems}
             />
 
             {/* Search Bar */}
