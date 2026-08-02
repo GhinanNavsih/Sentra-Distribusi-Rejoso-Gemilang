@@ -251,6 +251,39 @@ export default function PosPage() {
         const validItems = cart.filter(item => item.qty !== '' && Number(item.qty) > 0);
         if (validItems.length === 0) return;
 
+        // Check if each item's selling price is higher than or equal to the Star Price (Harga Bintang)
+        const invalidItems = validItems.filter(item => {
+            const baseStarPrice = productService.calculatePrice(item.product_obj, 'star');
+            const baseUnitLower = (item.product_obj?.base_unit || "").toLowerCase().trim();
+            const bulkUnitLower = (item.product_obj?.bulk_unit_name || "").toLowerCase().trim();
+            const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+            const conversion = isSameUnit ? 1 : (item.product_obj?.bulk_unit_conversion || 1);
+            const starPrice = item.selected_unit === 'bulk'
+                ? Math.ceil(baseStarPrice * conversion)
+                : baseStarPrice;
+
+            return item.unit_price < starPrice;
+        });
+
+        if (invalidItems.length > 0) {
+            const itemDetails = invalidItems.map(item => {
+                const baseStarPrice = productService.calculatePrice(item.product_obj, 'star');
+                const baseUnitLower = (item.product_obj?.base_unit || "").toLowerCase().trim();
+                const bulkUnitLower = (item.product_obj?.bulk_unit_name || "").toLowerCase().trim();
+                const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                const conversion = isSameUnit ? 1 : (item.product_obj?.bulk_unit_conversion || 1);
+                const starPrice = item.selected_unit === 'bulk'
+                    ? Math.ceil(baseStarPrice * conversion)
+                    : baseStarPrice;
+                const unitName = item.selected_unit === 'bulk' ? item.bulk_unit_name : item.base_unit;
+
+                return `- ${item.product_name} (${unitName}): Harga Jual (Rp ${item.unit_price.toLocaleString('id-ID')}) < Harga Bintang (Rp ${starPrice.toLocaleString('id-ID')})`;
+            }).join('\n');
+
+            alert(`Pesanan tidak dapat diproses!\n\nHarga jual untuk produk berikut harus lebih besar atau sama dengan Harga Bintang:\n\n${itemDetails}`);
+            return;
+        }
+
         if (paymentStatus === 'unpaid') {
             if (!targetDate || targetDate < getLocalDateString()) {
                 alert('Tanggal target pre-order harus hari ini atau setelahnya.');
