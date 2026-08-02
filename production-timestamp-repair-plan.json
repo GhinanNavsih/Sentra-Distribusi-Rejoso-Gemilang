@@ -1,0 +1,231 @@
+{
+  "mode": "dry-run",
+  "project_id": "warehouse-375",
+  "environments": [
+    {
+      "environment": "production",
+      "summary": {
+        "documents": 1031,
+        "documents_with_timestamp_maps": 768,
+        "timestamp_maps": 768,
+        "stock_before": 3837,
+        "stock_after": 3837
+      },
+      "errors": [],
+      "collections": {
+        "products": {
+          "documents": 136,
+          "documents_with_timestamp_maps": 0,
+          "timestamp_maps": 0
+        },
+        "inventory": {
+          "documents": 127,
+          "documents_with_timestamp_maps": 0,
+          "timestamp_maps": 0
+        },
+        "orders": {
+          "documents": 207,
+          "documents_with_timestamp_maps": 207,
+          "timestamp_maps": 207
+        },
+        "purchases": {
+          "documents": 278,
+          "documents_with_timestamp_maps": 278,
+          "timestamp_maps": 278
+        },
+        "stock_losses": {
+          "documents": 45,
+          "documents_with_timestamp_maps": 45,
+          "timestamp_maps": 45
+        },
+        "stock_movements": {
+          "documents": 238,
+          "documents_with_timestamp_maps": 238,
+          "timestamp_maps": 238
+        },
+        "inventory_operations": {
+          "documents": 0,
+          "documents_with_timestamp_maps": 0,
+          "timestamp_maps": 0
+        }
+      },
+      "sample_matches": [
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0001",
+          "path": "created_at",
+          "seconds": 1770175033,
+          "nanoseconds": 755000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0002",
+          "path": "created_at",
+          "seconds": 1770179432,
+          "nanoseconds": 88000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0003",
+          "path": "created_at",
+          "seconds": 1770183531,
+          "nanoseconds": 702000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0004",
+          "path": "created_at",
+          "seconds": 1770194889,
+          "nanoseconds": 469000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0005",
+          "path": "created_at",
+          "seconds": 1770197588,
+          "nanoseconds": 741000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0006",
+          "path": "created_at",
+          "seconds": 1770197620,
+          "nanoseconds": 476000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0007",
+          "path": "created_at",
+          "seconds": 1770199380,
+          "nanoseconds": 230000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0008",
+          "path": "created_at",
+          "seconds": 1770199650,
+          "nanoseconds": 582000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0009",
+          "path": "created_at",
+          "seconds": 1770200337,
+          "nanoseconds": 872000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0010",
+          "path": "created_at",
+          "seconds": 1770200460,
+          "nanoseconds": 153000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0011",
+          "path": "created_at",
+          "seconds": 1770200687,
+          "nanoseconds": 365000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0012",
+          "path": "created_at",
+          "seconds": 1770200857,
+          "nanoseconds": 480000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "05-02-26-0001",
+          "path": "created_at",
+          "seconds": 1770307573,
+          "nanoseconds": 50000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "05-02-26-0002",
+          "path": "created_at",
+          "seconds": 1770307792,
+          "nanoseconds": 76000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "06-02-26-0001",
+          "path": "created_at",
+          "seconds": 1770370161,
+          "nanoseconds": 236000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0001",
+          "path": "created_at",
+          "seconds": 1770433260,
+          "nanoseconds": 715000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0002",
+          "path": "created_at",
+          "seconds": 1770433357,
+          "nanoseconds": 278000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0003",
+          "path": "created_at",
+          "seconds": 1770435262,
+          "nanoseconds": 463000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0004",
+          "path": "created_at",
+          "seconds": 1770435301,
+          "nanoseconds": 81000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0005",
+          "path": "created_at",
+          "seconds": 1770435378,
+          "nanoseconds": 231000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0006",
+          "path": "created_at",
+          "seconds": 1770439480,
+          "nanoseconds": 995000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0007",
+          "path": "created_at",
+          "seconds": 1770439611,
+          "nanoseconds": 193000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0008",
+          "path": "created_at",
+          "seconds": 1770470208,
+          "nanoseconds": 15000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0001",
+          "path": "created_at",
+          "seconds": 1770512432,
+          "nanoseconds": 692000000
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0002",
+          "path": "created_at",
+          "seconds": 1770512651,
+          "nanoseconds": 154000000
+        }
+      ]
+    }
+  ]
+}

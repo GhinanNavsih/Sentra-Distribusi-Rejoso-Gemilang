@@ -1,0 +1,3325 @@
+{
+  "mode": "dry-run",
+  "project_id": "warehouse-375",
+  "environments": [
+    {
+      "environment": "production",
+      "summary": {
+        "products": 128,
+        "inventory": 127,
+        "historical_documents": 768,
+        "archived_products": 8,
+        "products_after": 136,
+        "stock_before": 3837,
+        "stock_after": 3837
+      },
+      "errors": [],
+      "mappings": [
+        {
+          "old_id": "001-BakingPowder",
+          "new_id": "BP_0AP5",
+          "name": "Baking Powder (110g)",
+          "aliases": [
+            "001-BakingPowder"
+          ]
+        },
+        {
+          "old_id": "001-BalckTeaSosro",
+          "new_id": "TCSBT_R67L",
+          "name": "Teh Celup Sosro Balck Tea (200grm)",
+          "aliases": [
+            "001-BalckTeaSosro"
+          ]
+        },
+        {
+          "old_id": "001-Beras25KG",
+          "new_id": "BS_BFHS",
+          "name": "Beras Serang (25Kg)",
+          "aliases": [
+            "001-Beras25KG"
+          ]
+        },
+        {
+          "old_id": "001-BerasKetan",
+          "new_id": "BK_3IP0",
+          "name": "Beras Ketan (5kg)",
+          "aliases": [
+            "001-BerasKetan"
+          ]
+        },
+        {
+          "old_id": "001-BerasSerang",
+          "new_id": "BSDP_5APX",
+          "name": "Beras Serang Dua Putri (10kg)",
+          "aliases": [
+            "001-BerasSerang"
+          ]
+        },
+        {
+          "old_id": "001-BerasSphp",
+          "new_id": "BS_1FET",
+          "name": "Beras SPHP (5kg)",
+          "aliases": [
+            "001-BerasSphp"
+          ]
+        },
+        {
+          "old_id": "001-BubukKremer",
+          "new_id": "BK_CV07",
+          "name": "Bubuk Kremer",
+          "aliases": [
+            "001-BubukKremer"
+          ]
+        },
+        {
+          "old_id": "001-BulaBatok",
+          "new_id": "GBM_59V4",
+          "name": "Gula Batok Merah (1Kg)",
+          "aliases": [
+            "001-BulaBatok"
+          ]
+        },
+        {
+          "old_id": "001-BumbuJamur",
+          "new_id": "KRJT_1YZG",
+          "name": "Kaldu Rasa Jamur Totole (40g)",
+          "aliases": [
+            "001-BumbuJamur"
+          ]
+        },
+        {
+          "old_id": "001-Creme",
+          "new_id": "FC_MZXJ",
+          "name": "Fiber Creme (100g)",
+          "aliases": [
+            "001-Creme"
+          ]
+        },
+        {
+          "old_id": "001-CukaDapur",
+          "new_id": "DBCD_1NWL",
+          "name": "Dua Belibis Cuka Dapur (650ml)",
+          "aliases": [
+            "001-CukaDapur"
+          ]
+        },
+        {
+          "old_id": "001-CukaDuaBelibis",
+          "new_id": "DBC_U4B2",
+          "name": "Dua Belibis Cuka (150ml)",
+          "aliases": [
+            "001-CukaDuaBelibis"
+          ]
+        },
+        {
+          "old_id": "001-DelmonteBBQ",
+          "new_id": "SDB_402K",
+          "name": "Saos Delmonte BBQ",
+          "aliases": [
+            "001-DelmonteBBQ"
+          ]
+        },
+        {
+          "old_id": "001-FinnaSaosTomat",
+          "new_id": "FST_KJDH",
+          "name": "Finna Saos Tomat (95g)",
+          "aliases": [
+            "001-FinnaSaosTomat"
+          ]
+        },
+        {
+          "old_id": "001-GaramSarinah",
+          "new_id": "GCS_QB0Y",
+          "name": "Garam Cap Sarinah 250gr",
+          "aliases": [
+            "001-GaramSarinah"
+          ]
+        },
+        {
+          "old_id": "001-Gula",
+          "new_id": "GP_R7N3",
+          "name": "Gula Putih (1kg)",
+          "aliases": [
+            "001-Gula"
+          ]
+        },
+        {
+          "old_id": "001-GulaMerahBubuk",
+          "new_id": "GMB_D5SK",
+          "name": "Gula Merah Bubuk (25kg)",
+          "aliases": [
+            "001-GulaMerahBubuk"
+          ]
+        },
+        {
+          "old_id": "001-IndofoodSambel",
+          "new_id": "ISS_LSJF",
+          "name": "Indofood Sambal Sachet 8grm",
+          "aliases": [
+            "001-IndofoodSambel"
+          ]
+        },
+        {
+          "old_id": "001-Kecap",
+          "new_id": "KB_I4EO",
+          "name": "Kecap Bango (700g)",
+          "aliases": [
+            "001-Kecap"
+          ]
+        },
+        {
+          "old_id": "001-KecapAsin",
+          "new_id": "KAA_MATD",
+          "name": "Kecap ABC Asin (600ml)",
+          "aliases": [
+            "001-KecapAsin"
+          ]
+        },
+        {
+          "old_id": "001-KecapHitamJamur",
+          "new_id": "MS_5C6A",
+          "name": "Mushroom Soy (150)",
+          "aliases": [
+            "001-KecapHitamJamur"
+          ]
+        },
+        {
+          "old_id": "001-KecapIkan",
+          "new_id": "FKI_NR9N",
+          "name": "Finna Kecap Ikan (700ml)",
+          "aliases": [
+            "001-KecapIkan"
+          ]
+        },
+        {
+          "old_id": "001-Mayonise",
+          "new_id": "MM_9MM1",
+          "name": "Mayonise Mamayo (1kg)",
+          "aliases": [
+            "001-Mayonise"
+          ]
+        },
+        {
+          "old_id": "001-Mentega",
+          "new_id": "MBB_XNQ0",
+          "name": "Mentega Blue Band (190g)",
+          "aliases": [
+            "001-Mentega"
+          ]
+        },
+        {
+          "old_id": "001-MinyakBimoli",
+          "new_id": "MB_6RSZ",
+          "name": "Minyak Bimoli (2L)",
+          "aliases": [
+            "001-MinyakBimoli"
+          ]
+        },
+        {
+          "old_id": "001-MinyakFortune",
+          "new_id": "MF_8E3B",
+          "name": "Minyak Fortune (2L)",
+          "aliases": [
+            "001-MinyakFortune"
+          ]
+        },
+        {
+          "old_id": "001-MinyakSania",
+          "new_id": "MS_TAH6",
+          "name": "Minyak Sania (2L)",
+          "aliases": [
+            "001-MinyakSania"
+          ]
+        },
+        {
+          "old_id": "001-MinyakSunco",
+          "new_id": "MS_29ET",
+          "name": "Minyak Sunco (2L)",
+          "aliases": [
+            "001-MinyakSunco"
+          ]
+        },
+        {
+          "old_id": "001-MinyakWijen",
+          "new_id": "MWCBM_AJU4",
+          "name": " Minyak Wijen Cap Bunga Matahari (135ml)",
+          "aliases": [
+            "001-MinyakWijen"
+          ]
+        },
+        {
+          "old_id": "001-MinyakWijenDahlia",
+          "new_id": "MWCD_96QF",
+          "name": "Minyak Wijen Cap Dahlia (150ml)",
+          "aliases": [
+            "001-MinyakWijenDahlia"
+          ]
+        },
+        {
+          "old_id": "001-Nutrijel",
+          "new_id": "NP_F0AN",
+          "name": "Nutrijel Plain",
+          "aliases": [
+            "001-Nutrijel"
+          ]
+        },
+        {
+          "old_id": "001-Panir",
+          "new_id": "TP_9HVU",
+          "name": "Tepung Panir (10Kg)",
+          "aliases": [
+            "001-Panir"
+          ]
+        },
+        {
+          "old_id": "001-Paprika",
+          "new_id": "PB_ZUHE",
+          "name": "Paprika Bubuk (70g)",
+          "aliases": [
+            "001-Paprika"
+          ]
+        },
+        {
+          "old_id": "001-ProczSpread",
+          "new_id": "KPS_8ZY1",
+          "name": "Keju Procz Spread (2kg)",
+          "aliases": [
+            "001-ProczSpread"
+          ]
+        },
+        {
+          "old_id": "001-QuickMelt",
+          "new_id": "KQM_M3CV",
+          "name": "Keju Quick Melt (160)",
+          "aliases": [
+            "001-QuickMelt"
+          ]
+        },
+        {
+          "old_id": "001-RajaRasa",
+          "new_id": "SRRK_BMIN",
+          "name": "Saos Raja Rasa Kenari (600ml)",
+          "aliases": [
+            "001-RajaRasa"
+          ]
+        },
+        {
+          "old_id": "001-RedBellJeruk",
+          "new_id": "RJ_P5EE",
+          "name": "RedBell Jeruk",
+          "aliases": [
+            "001-RedBellJeruk"
+          ]
+        },
+        {
+          "old_id": "001-RedBellMelon",
+          "new_id": "RM_NEW2",
+          "name": "RedBell Melon",
+          "aliases": [
+            "001-RedBellMelon"
+          ]
+        },
+        {
+          "old_id": "001-SabunPiring",
+          "new_id": "SPE_6MTH",
+          "name": "Sabun Piring Ekonomi",
+          "aliases": [
+            "001-SabunPiring"
+          ]
+        },
+        {
+          "old_id": "001-SambalDelmo",
+          "new_id": "SDS_JH4R",
+          "name": "Saos Delmonte Sambal 8grm",
+          "aliases": [
+            "001-SambalDelmo"
+          ]
+        },
+        {
+          "old_id": "001-SambalDelmonte",
+          "new_id": "STD_P0B7",
+          "name": "Saos Tomat Delmonte (8grm)",
+          "aliases": [
+            "001-SambalDelmonte"
+          ]
+        },
+        {
+          "old_id": "001-Santan",
+          "new_id": "SK_S3GQ",
+          "name": "Santan Kara (200ml)",
+          "aliases": [
+            "001-Santan"
+          ]
+        },
+        {
+          "old_id": "001-SaoriSaosTiram",
+          "new_id": "SST_AVCV",
+          "name": "Saori Saos Tiram 1lt",
+          "aliases": [
+            "001-SaoriSaosTiram"
+          ]
+        },
+        {
+          "old_id": "001-SaoriTiram",
+          "new_id": "SST_VSA0",
+          "name": "Saori Saos Tiram 270ml",
+          "aliases": [
+            "001-SaoriTiram"
+          ]
+        },
+        {
+          "old_id": "001-SaosKeju",
+          "new_id": "SKG_WB8H",
+          "name": "Saos Keju Gourmet (500g)",
+          "aliases": [
+            "001-SaosKeju"
+          ]
+        },
+        {
+          "old_id": "001-SaosMentai",
+          "new_id": "SMP_TX5N",
+          "name": "Saos Mentai PrimaAgung (1kg)",
+          "aliases": [
+            "001-SaosMentai"
+          ]
+        },
+        {
+          "old_id": "001-SaosSambal",
+          "new_id": "SSD_0W7J",
+          "name": "Saos Sambal Delmonte (1kg)",
+          "aliases": [
+            "001-SaosSambal"
+          ]
+        },
+        {
+          "old_id": "001-SaosTeriyaki",
+          "new_id": "SST_V0K3",
+          "name": "Saos Saori Teriyaki (275)",
+          "aliases": [
+            "001-SaosTeriyaki"
+          ]
+        },
+        {
+          "old_id": "001-SaosTomat",
+          "new_id": "STD_EJHV",
+          "name": "Saos Tomat Delmonte (1kg)",
+          "aliases": [
+            "001-SaosTomat"
+          ]
+        },
+        {
+          "old_id": "001-Satelit",
+          "new_id": "AS_YVSH",
+          "name": "Agar-Agar Satelit",
+          "aliases": [
+            "001-Satelit"
+          ]
+        },
+        {
+          "old_id": "001-SunKara",
+          "new_id": "SKL_71LG",
+          "name": "Sun Kara 1 Ltr",
+          "aliases": [
+            "001-SunKara"
+          ]
+        },
+        {
+          "old_id": "001-SusuIndomilk",
+          "new_id": "SUIP_Q53A",
+          "name": "Susu UHT Indomilk Plain (1ltr)",
+          "aliases": [
+            "001-SusuIndomilk"
+          ]
+        },
+        {
+          "old_id": "001-Tapioka",
+          "new_id": "TTR_T7O5",
+          "name": "Tepung Tapioka Rosebrand (200g)",
+          "aliases": [
+            "001-Tapioka"
+          ]
+        },
+        {
+          "old_id": "001-TapiokaMatahari",
+          "new_id": "TTR_XGVX",
+          "name": "Tepung Tapioka RoseBrand (500g)",
+          "aliases": [
+            "001-TapiokaMatahari"
+          ]
+        },
+        {
+          "old_id": "001-TepungBeras",
+          "new_id": "TBR_CSQ3",
+          "name": "Tepung Beras Rosebrand (500g)",
+          "aliases": [
+            "001-TepungBeras"
+          ]
+        },
+        {
+          "old_id": "001-TepungKanji",
+          "new_id": "TT_4MT7",
+          "name": "Tepung Tapioka (2Kg)",
+          "aliases": [
+            "001-TepungKanji"
+          ]
+        },
+        {
+          "old_id": "001-TepungSajiku",
+          "new_id": "TSB_Q5C3",
+          "name": "Tepung Sajiku Bumbu",
+          "aliases": [
+            "001-TepungSajiku"
+          ]
+        },
+        {
+          "old_id": "001-Tissue",
+          "new_id": "TJ_EM4A",
+          "name": "Tissue Jolly (250sheets 2ply)",
+          "aliases": [
+            "001-Tissue"
+          ]
+        },
+        {
+          "old_id": "001-TongTji",
+          "new_id": "TTC_MIP5",
+          "name": "Teh TongTji Celup",
+          "aliases": [
+            "001-TongTji"
+          ]
+        },
+        {
+          "old_id": "001-Wijen",
+          "new_id": "TW_HZTA",
+          "name": "Tepung Wijen 500grm",
+          "aliases": [
+            "001-Wijen"
+          ]
+        },
+        {
+          "old_id": "001-sun",
+          "new_id": "SK_8MS2",
+          "name": "Sun kara (65ml)",
+          "aliases": [
+            "001-sun"
+          ]
+        },
+        {
+          "old_id": "002-Beras",
+          "new_id": "BSL_953N",
+          "name": "Beras Serang LAMA (10kg)",
+          "aliases": [
+            "002-Beras"
+          ]
+        },
+        {
+          "old_id": "002-BumbuJamur",
+          "new_id": "KRJT_RMBB",
+          "name": "Kaldu Rasa Jamur Totole (200g)",
+          "aliases": [
+            "002-BumbuJamur"
+          ]
+        },
+        {
+          "old_id": "002-GulaMerahBubuk",
+          "new_id": "GMB_87DO",
+          "name": "Gula Merah Bubuk (1kg)",
+          "aliases": [
+            "002-GulaMerahBubuk"
+          ]
+        },
+        {
+          "old_id": "002-Micin",
+          "new_id": "MSBM_5OOF",
+          "name": "Micin Sasa Bumbu Masak (1kg)",
+          "aliases": [
+            "002-Micin"
+          ]
+        },
+        {
+          "old_id": "002-Panir",
+          "new_id": "TP_FKJN",
+          "name": "Tepung Panir (1kg)",
+          "aliases": [
+            "002-Panir"
+          ]
+        },
+        {
+          "old_id": "002-Santan",
+          "new_id": "SS_V5DM",
+          "name": "Santan Sasa (65ml)",
+          "aliases": [
+            "002-Santan"
+          ]
+        },
+        {
+          "old_id": "002-SaosSambal",
+          "new_id": "SSBF_WZK9",
+          "name": "Saos Sambal Bangkok Finna (9g)",
+          "aliases": [
+            "002-SaosSambal"
+          ]
+        },
+        {
+          "old_id": "003-BumbuJamur",
+          "new_id": "TJ_N2PN",
+          "name": "Totole Jamur 80grm",
+          "aliases": [
+            "003-BumbuJamur"
+          ]
+        },
+        {
+          "old_id": "003-TepungBeras",
+          "new_id": "TBR_X0GB",
+          "name": "Tepung Beras RoseBrand (1kg)",
+          "aliases": [
+            "003-TepungBeras"
+          ]
+        },
+        {
+          "old_id": "004-BumbuJamur",
+          "new_id": "KRJT_XPH6",
+          "name": "Kaldu Rasa Jamur Totole (400g)",
+          "aliases": [
+            "004-BumbuJamur"
+          ]
+        },
+        {
+          "old_id": "ARIMBI-01",
+          "new_id": "BAP_I9CD",
+          "name": "Beras Arimbi Premium (25kg)",
+          "aliases": [
+            "ARIMBI-01"
+          ]
+        },
+        {
+          "old_id": "AirMineral-001",
+          "new_id": "AMLM_XWBV",
+          "name": "Air Mineral Le Mineral (600ml)",
+          "aliases": [
+            "AirMineral-001"
+          ]
+        },
+        {
+          "old_id": "BENGBENG-001",
+          "new_id": "BD_Y5J8",
+          "name": "Beng-Beng Drink (27g)",
+          "aliases": [
+            "BENGBENG-001"
+          ]
+        },
+        {
+          "old_id": "BERAS-2P",
+          "new_id": "BSDP_WGWK",
+          "name": "Beras Serang Dua Putri (25kg)",
+          "aliases": [
+            "BERAS-2P"
+          ]
+        },
+        {
+          "old_id": "BumbuNasGor-001",
+          "new_id": "BRNG_DK7P",
+          "name": "Bumbu Racik Nasi Goreng",
+          "aliases": [
+            "BumbuNasGor-001"
+          ]
+        },
+        {
+          "old_id": "GARAM-002",
+          "new_id": "GCK_0XZU",
+          "name": "Garam Cap Kapal (500g)",
+          "aliases": [
+            "GARAM-002"
+          ]
+        },
+        {
+          "old_id": "GCK-250-20",
+          "new_id": "GCK_JEHM",
+          "name": "Garam Cap Kapal 250gr",
+          "aliases": [
+            "GCK-250-20"
+          ]
+        },
+        {
+          "old_id": "GULA-002",
+          "new_id": "GPKA_KZLR",
+          "name": "Gula Putih Kebon Agung (1kg)",
+          "aliases": [
+            "GULA-002"
+          ]
+        },
+        {
+          "old_id": "GULA-003",
+          "new_id": "GPPRB_Q99K",
+          "name": "Gula Putih Pasir Rose Brand (1kg)",
+          "aliases": [
+            "GULA-003"
+          ]
+        },
+        {
+          "old_id": "Garam-001",
+          "new_id": "GCK_APUQ",
+          "name": "Garam Cap Kapal (250g)",
+          "aliases": [
+            "Garam-001"
+          ]
+        },
+        {
+          "old_id": "KNA1KG",
+          "new_id": "KA_223B",
+          "name": "Knorr Ayam (1kg)",
+          "aliases": [
+            "KNA1KG"
+          ]
+        },
+        {
+          "old_id": "KNORRAYAM-001",
+          "new_id": "KA_9QCD",
+          "name": "Knorr Ayam (200g)",
+          "aliases": [
+            "KNORRAYAM-001"
+          ]
+        },
+        {
+          "old_id": "KOPI-001",
+          "new_id": "GDC_DJTO",
+          "name": "Good Day Cappuccino (25g)",
+          "aliases": [
+            "KOPI-001"
+          ]
+        },
+        {
+          "old_id": "KetumbarBubuk-001",
+          "new_id": "KBD_CNI1",
+          "name": "Ketumbar Bubuk Desaku (12.5g)",
+          "aliases": [
+            "KetumbarBubuk-001"
+          ]
+        },
+        {
+          "old_id": "Kopi-002",
+          "new_id": "GDFM_QFT9",
+          "name": "Good Day Freeze Mocafrio (30g)",
+          "aliases": [
+            "Kopi-002"
+          ]
+        },
+        {
+          "old_id": "LADA-001",
+          "new_id": "L_HZEE",
+          "name": "Ladaku (90g)",
+          "aliases": [
+            "LADA-001"
+          ]
+        },
+        {
+          "old_id": "MAGIC-001",
+          "new_id": "MML_4CJN",
+          "name": "Maggi Magic Lezat (7gram)",
+          "aliases": [
+            "MAGIC-001"
+          ]
+        },
+        {
+          "old_id": "MGRPAL-01",
+          "new_id": "MP_88NB",
+          "name": "Margarin Palmia",
+          "aliases": [
+            "MGRPAL-01"
+          ]
+        },
+        {
+          "old_id": "MICIN-001",
+          "new_id": "MS_JUYC",
+          "name": "Micin Sasa (50g)",
+          "aliases": [
+            "MICIN-001"
+          ]
+        },
+        {
+          "old_id": "MaizenaRB",
+          "new_id": "MRB_BIJZ",
+          "name": "Maizena Rose Brand (250Gr)",
+          "aliases": [
+            "MaizenaRB"
+          ]
+        },
+        {
+          "old_id": "MasakoSapi-001",
+          "new_id": "MS_N6SK",
+          "name": "Masako Sapi (8.5g)",
+          "aliases": [
+            "MasakoSapi-001"
+          ]
+        },
+        {
+          "old_id": "MieInstan-001",
+          "new_id": "MSCB_DEA9",
+          "name": "Mie Sedaap Cheese Buldak (86g)",
+          "aliases": [
+            "MieInstan-001"
+          ]
+        },
+        {
+          "old_id": "MieInstan-002",
+          "new_id": "MSKS_KLND",
+          "name": "Mie Sedaap Kari Spesial (75g)",
+          "aliases": [
+            "MieInstan-002"
+          ]
+        },
+        {
+          "old_id": "MieInstan-003",
+          "new_id": "MIG_B1SN",
+          "name": "Mie Indomie Geprek (85g)",
+          "aliases": [
+            "MieInstan-003"
+          ]
+        },
+        {
+          "old_id": "MieInstan-004",
+          "new_id": "MSS_3DPO",
+          "name": "Mie Sedaap Soto (76g)",
+          "aliases": [
+            "MieInstan-004"
+          ]
+        },
+        {
+          "old_id": "MieInstan-005",
+          "new_id": "MIGS_30M9",
+          "name": "Mie Indomie Goreng Spesial (80g)",
+          "aliases": [
+            "MieInstan-005"
+          ]
+        },
+        {
+          "old_id": "MieInstan-006",
+          "new_id": "MIAB_AS8S",
+          "name": "Mie Indomie Ayam Bawang (85g)",
+          "aliases": [
+            "MieInstan-006"
+          ]
+        },
+        {
+          "old_id": "MieInstan-007",
+          "new_id": "MSG_BMMG",
+          "name": "Mie Sedaap Goreng (91g)",
+          "aliases": [
+            "MieInstan-007"
+          ]
+        },
+        {
+          "old_id": "MieInstan-008",
+          "new_id": "MIS_URCX",
+          "name": "Mie Indomie Seblak (75g)",
+          "aliases": [
+            "MieInstan-008"
+          ]
+        },
+        {
+          "old_id": "MieInstan-009",
+          "new_id": "MIA_AL7W",
+          "name": "Mie Indomie Aceh (90g)",
+          "aliases": [
+            "MieInstan-009"
+          ]
+        },
+        {
+          "old_id": "MieInstan-010",
+          "new_id": "MIR_K2CZ",
+          "name": "Mie Indomie Rendang (91g)",
+          "aliases": [
+            "MieInstan-010"
+          ]
+        },
+        {
+          "old_id": "Milo-001",
+          "new_id": "MS_HDTP",
+          "name": "Milo Saset (22g)",
+          "aliases": [
+            "Milo-001"
+          ]
+        },
+        {
+          "old_id": "NORI-001",
+          "new_id": "NTO_1AS1",
+          "name": "Nori Tabur Original (60gr)",
+          "aliases": [
+            "NORI-001"
+          ]
+        },
+        {
+          "old_id": "NORI-002",
+          "new_id": "NTRS_A4PI",
+          "name": "Nori Tabur Rasa Sapi (60gr)",
+          "aliases": [
+            "NORI-002"
+          ]
+        },
+        {
+          "old_id": "NORI-003",
+          "new_id": "NTS_GNIM",
+          "name": "Nori Tabur Seafood (60gr)",
+          "aliases": [
+            "NORI-003"
+          ]
+        },
+        {
+          "old_id": "RW",
+          "new_id": "RPM_Z14B",
+          "name": "R&W Perwarna Makanan",
+          "aliases": [
+            "RW"
+          ]
+        },
+        {
+          "old_id": "Rosemary-01",
+          "new_id": "R_6FD6",
+          "name": "Rosemary ",
+          "aliases": [
+            "Rosemary-01"
+          ]
+        },
+        {
+          "old_id": "SAYURSOP-001",
+          "new_id": "IRBSS_TFA7",
+          "name": "Indofood Racik Bumbu Sayur Sop (20g)",
+          "aliases": [
+            "SAYURSOP-001"
+          ]
+        },
+        {
+          "old_id": "SGH",
+          "new_id": "MW_LKNQ",
+          "name": "Minyak Wijen (600ml)",
+          "aliases": [
+            "SGH"
+          ]
+        },
+        {
+          "old_id": "SKM-001",
+          "new_id": "SKMIC_M9YV",
+          "name": "Susu Kental Manis Indomilk Coklat (37g)",
+          "aliases": [
+            "SKM-001"
+          ]
+        },
+        {
+          "old_id": "SKM-002",
+          "new_id": "SKMIP_HIF6",
+          "name": "Susu Kental Manis Indomilk Putih",
+          "aliases": [
+            "SKM-002"
+          ]
+        },
+        {
+          "old_id": "SUNKARA200",
+          "new_id": "SK_966L",
+          "name": "Sun Kara (200ml)",
+          "aliases": [
+            "SUNKARA200"
+          ]
+        },
+        {
+          "old_id": "TEH-001",
+          "new_id": "TTS_QERF",
+          "name": "TongTji Teh Super (40g)",
+          "aliases": [
+            "TEH-001"
+          ]
+        },
+        {
+          "old_id": "TERIGU-001",
+          "new_id": "TTLM_MCKN",
+          "name": "Tepung Terigu Lencana Merah (1Kg)",
+          "aliases": [
+            "TERIGU-001"
+          ]
+        },
+        {
+          "old_id": "TERIGU-002",
+          "new_id": "TTS_UXMI",
+          "name": "Tepung Terigu Segitiga (1kg)",
+          "aliases": [
+            "TERIGU-002"
+          ]
+        },
+        {
+          "old_id": "TERIGU-003",
+          "new_id": "TTP_80G6",
+          "name": "Tepung Terigu Payung (1kg)",
+          "aliases": [
+            "TERIGU-003"
+          ]
+        },
+        {
+          "old_id": "TERIGU-007",
+          "new_id": "TTC_RPRD",
+          "name": "Tepung Terigu Cakra (1kg)",
+          "aliases": [
+            "TERIGU-007"
+          ]
+        },
+        {
+          "old_id": "WIJEN-007",
+          "new_id": "MWM_KMRZ",
+          "name": "Minyak Wijen Mahkota (275ml)",
+          "aliases": [
+            "WIJEN-007"
+          ]
+        },
+        {
+          "old_id": "bay-leaves",
+          "new_id": "BL_JNJJ",
+          "name": "Bay Leaves",
+          "aliases": [
+            "bay-leaves"
+          ]
+        },
+        {
+          "old_id": "kayumanis75",
+          "new_id": "KM_U0RR",
+          "name": "Kayu Manis (75ml)",
+          "aliases": [
+            "kayumanis75"
+          ]
+        },
+        {
+          "old_id": "lm25",
+          "new_id": "TTLT_GHNZ",
+          "name": "Tepung Terigu LM Timbangan (1Kg)",
+          "aliases": [
+            "lm25"
+          ]
+        },
+        {
+          "old_id": "madu-01",
+          "new_id": "M_CWSR",
+          "name": "Madu (500ml)",
+          "aliases": [
+            "madu-01"
+          ]
+        },
+        {
+          "old_id": "mamayo01",
+          "new_id": "M_O0Q9",
+          "name": "Mayonaise (1lt)",
+          "aliases": [
+            "mamayo01"
+          ]
+        },
+        {
+          "old_id": "palabubuk75",
+          "new_id": "PB_7SU3",
+          "name": "Pala Bubuk (60gr)",
+          "aliases": [
+            "palabubuk75"
+          ]
+        },
+        {
+          "old_id": "sania01",
+          "new_id": "MGS_B94X",
+          "name": "Minyak Goreng Sunia (1lt)",
+          "aliases": [
+            "sania01"
+          ]
+        },
+        {
+          "old_id": "saorit",
+          "new_id": "SST_WPYC",
+          "name": "Saos Saori Teriyaki (1Ltr)",
+          "aliases": [
+            "saorit"
+          ]
+        },
+        {
+          "old_id": "serangbaru01",
+          "new_id": "BS_RUYE",
+          "name": "Beras Serang (10kg)",
+          "aliases": [
+            "serangbaru01"
+          ]
+        }
+      ],
+      "archived_products": [
+        {
+          "id": "G_R0SK",
+          "legacy_id": "001-Garam",
+          "name": "Garam (250g)",
+          "data": {
+            "name": "Garam (250g)",
+            "base_unit": "pcs",
+            "bulk_unit_name": "",
+            "bulk_unit_conversion": 1,
+            "cost_price": 0,
+            "price_regular": 0,
+            "price_premium": 0,
+            "price_star": 0,
+            "sku": "G_R0SK",
+            "active": false,
+            "migration_archived": true,
+            "archive_reason": "legacy_product_reference",
+            "legacy_sku": "001-Garam",
+            "legacy_product_id": "001-Garam",
+            "id_migration_version": 1
+          }
+        },
+        {
+          "id": "T_856F",
+          "legacy_id": "101",
+          "name": "TestingItem",
+          "data": {
+            "name": "TestingItem",
+            "base_unit": "ltr",
+            "bulk_unit_name": "",
+            "bulk_unit_conversion": 1,
+            "cost_price": 0,
+            "price_regular": 0,
+            "price_premium": 0,
+            "price_star": 0,
+            "sku": "T_856F",
+            "active": false,
+            "migration_archived": true,
+            "archive_reason": "legacy_product_reference",
+            "legacy_sku": "101",
+            "legacy_product_id": "101",
+            "id_migration_version": 1
+          }
+        },
+        {
+          "id": "GCK_8AJE",
+          "legacy_id": "001-GaramCapKontainer",
+          "name": "Garam cap Kontainer (200grm)",
+          "data": {
+            "name": "Garam cap Kontainer (200grm)",
+            "base_unit": "pcs",
+            "bulk_unit_name": "Ball",
+            "bulk_unit_conversion": 20,
+            "cost_price": 0,
+            "price_regular": 0,
+            "price_premium": 0,
+            "price_star": 0,
+            "sku": "GCK_8AJE",
+            "active": false,
+            "migration_archived": true,
+            "archive_reason": "legacy_product_reference",
+            "legacy_sku": "001-GaramCapKontainer",
+            "legacy_product_id": "001-GaramCapKontainer",
+            "id_migration_version": 1
+          }
+        },
+        {
+          "id": "M_3QST",
+          "legacy_id": "001-Margarin",
+          "name": "Margarine",
+          "data": {
+            "name": "Margarine",
+            "base_unit": "pcs",
+            "bulk_unit_name": "Pcs",
+            "bulk_unit_conversion": 1,
+            "cost_price": 0,
+            "price_regular": 0,
+            "price_premium": 0,
+            "price_star": 0,
+            "sku": "M_3QST",
+            "active": false,
+            "migration_archived": true,
+            "archive_reason": "legacy_product_reference",
+            "legacy_sku": "001-Margarin",
+            "legacy_product_id": "001-Margarin",
+            "id_migration_version": 1
+          }
+        },
+        {
+          "id": "S_NSFU",
+          "legacy_id": "001-Selasih",
+          "name": "Selasih (1Kg)",
+          "data": {
+            "name": "Selasih (1Kg)",
+            "base_unit": "kg",
+            "bulk_unit_name": "Pcs",
+            "bulk_unit_conversion": 1,
+            "cost_price": 0,
+            "price_regular": 0,
+            "price_premium": 0,
+            "price_star": 0,
+            "sku": "S_NSFU",
+            "active": false,
+            "migration_archived": true,
+            "archive_reason": "legacy_product_reference",
+            "legacy_sku": "001-Selasih",
+            "legacy_product_id": "001-Selasih",
+            "id_migration_version": 1
+          }
+        },
+        {
+          "id": "SB_GOON",
+          "legacy_id": "001-SusuBubuk",
+          "name": "Susu Bubuk (500grm)",
+          "data": {
+            "name": "Susu Bubuk (500grm)",
+            "base_unit": "pcs",
+            "bulk_unit_name": "Pcs",
+            "bulk_unit_conversion": 1,
+            "cost_price": 0,
+            "price_regular": 0,
+            "price_premium": 0,
+            "price_star": 0,
+            "sku": "SB_GOON",
+            "active": false,
+            "migration_archived": true,
+            "archive_reason": "legacy_product_reference",
+            "legacy_sku": "001-SusuBubuk",
+            "legacy_product_id": "001-SusuBubuk",
+            "id_migration_version": 1
+          }
+        },
+        {
+          "id": "BL_SECF",
+          "legacy_id": "003-Beras",
+          "name": "Beras Lain (5kg)",
+          "data": {
+            "name": "Beras Lain (5kg)",
+            "base_unit": "unknown",
+            "bulk_unit_name": "",
+            "bulk_unit_conversion": 1,
+            "cost_price": 0,
+            "price_regular": 0,
+            "price_premium": 0,
+            "price_star": 0,
+            "sku": "BL_SECF",
+            "active": false,
+            "migration_archived": true,
+            "archive_reason": "legacy_product_reference",
+            "legacy_sku": "003-Beras",
+            "legacy_product_id": "003-Beras",
+            "id_migration_version": 1
+          }
+        },
+        {
+          "id": "M_A4ZO",
+          "legacy_id": "001-Madu",
+          "name": "Madu",
+          "data": {
+            "name": "Madu",
+            "base_unit": "unknown",
+            "bulk_unit_name": "",
+            "bulk_unit_conversion": 1,
+            "cost_price": 0,
+            "price_regular": 0,
+            "price_premium": 0,
+            "price_star": 0,
+            "sku": "M_A4ZO",
+            "active": false,
+            "migration_archived": true,
+            "archive_reason": "legacy_product_reference",
+            "legacy_sku": "001-Madu",
+            "legacy_product_id": "001-Madu",
+            "id_migration_version": 1
+          }
+        }
+      ],
+      "reconciliations": [
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0003",
+          "document_path": "orders/04-02-26-0003",
+          "path": "items[5].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0003",
+          "document_path": "orders/04-02-26-0003",
+          "path": "items[5].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "06-02-26-0001",
+          "document_path": "orders/06-02-26-0001",
+          "path": "items[1].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "06-02-26-0001",
+          "document_path": "orders/06-02-26-0001",
+          "path": "items[1].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0008",
+          "document_path": "orders/07-02-26-0008",
+          "path": "items[5].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0008",
+          "document_path": "orders/07-02-26-0008",
+          "path": "items[5].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0001",
+          "document_path": "orders/2026-02-08-0001",
+          "path": "items[0].product_id",
+          "old_id": "001-MinyakSanco",
+          "new_id": "MS_29ET",
+          "product_name": "Minyak Sunco (2L)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0001",
+          "document_path": "orders/2026-02-08-0001",
+          "path": "items[0].sku",
+          "old_id": "001-MinyakSanco",
+          "new_id": "MS_29ET",
+          "product_name": "Minyak Sunco (2L)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0001",
+          "document_path": "orders/2026-02-08-0001",
+          "path": "items[2].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BS_RUYE",
+          "product_name": "Beras Serang (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0001",
+          "document_path": "orders/2026-02-08-0001",
+          "path": "items[2].sku",
+          "old_id": "001-Beras",
+          "new_id": "BS_RUYE",
+          "product_name": "Beras Serang (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0002",
+          "document_path": "orders/2026-02-08-0002",
+          "path": "items[0].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BS_RUYE",
+          "product_name": "Beras Serang (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0002",
+          "document_path": "orders/2026-02-08-0002",
+          "path": "items[0].sku",
+          "old_id": "001-Beras",
+          "new_id": "BS_RUYE",
+          "product_name": "Beras Serang (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[0].sku",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[2].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[2].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[7].product_id",
+          "old_id": "001-Tiram",
+          "new_id": "SST_VSA0",
+          "product_name": "Saos Tiram Saori (270ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[7].sku",
+          "old_id": "001-Tiram",
+          "new_id": "SST_VSA0",
+          "product_name": "Saos Tiram Saori (270ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[8].product_id",
+          "old_id": "001-MinyakSanco",
+          "new_id": "MS_29ET",
+          "product_name": "Minyak Sunco (2L)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[8].sku",
+          "old_id": "001-MinyakSanco",
+          "new_id": "MS_29ET",
+          "product_name": "Minyak Sunco (2L)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[9].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-08-0003",
+          "document_path": "orders/2026-02-08-0003",
+          "path": "items[9].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-09-0001",
+          "document_path": "orders/2026-02-09-0001",
+          "path": "items[0].product_id",
+          "old_id": "001-MinyakSanco",
+          "new_id": "MS_29ET",
+          "product_name": "Minyak Sunco (2L)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-09-0001",
+          "document_path": "orders/2026-02-09-0001",
+          "path": "items[0].sku",
+          "old_id": "001-MinyakSanco",
+          "new_id": "MS_29ET",
+          "product_name": "Minyak Sunco (2L)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-09-0003",
+          "document_path": "orders/2026-02-09-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-09-0003",
+          "document_path": "orders/2026-02-09-0003",
+          "path": "items[0].sku",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-09-0003",
+          "document_path": "orders/2026-02-09-0003",
+          "path": "items[2].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-09-0003",
+          "document_path": "orders/2026-02-09-0003",
+          "path": "items[2].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-10-0002",
+          "document_path": "orders/2026-02-10-0002",
+          "path": "items[0].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-10-0002",
+          "document_path": "orders/2026-02-10-0002",
+          "path": "items[0].sku",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-10-0002",
+          "document_path": "orders/2026-02-10-0002",
+          "path": "items[2].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-10-0002",
+          "document_path": "orders/2026-02-10-0002",
+          "path": "items[2].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-10-0002",
+          "document_path": "orders/2026-02-10-0002",
+          "path": "items[5].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-10-0002",
+          "document_path": "orders/2026-02-10-0002",
+          "path": "items[5].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-10-0002",
+          "document_path": "orders/2026-02-10-0002",
+          "path": "items[8].product_id",
+          "old_id": "001-Tiram",
+          "new_id": "SST_VSA0",
+          "product_name": "Saos Tiram Saori (270ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-10-0002",
+          "document_path": "orders/2026-02-10-0002",
+          "path": "items[8].sku",
+          "old_id": "001-Tiram",
+          "new_id": "SST_VSA0",
+          "product_name": "Saos Tiram Saori (270ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-11-0002",
+          "document_path": "orders/2026-02-11-0002",
+          "path": "items[0].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-11-0002",
+          "document_path": "orders/2026-02-11-0002",
+          "path": "items[0].sku",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-14-0002",
+          "document_path": "orders/2026-02-14-0002",
+          "path": "items[0].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-14-0002",
+          "document_path": "orders/2026-02-14-0002",
+          "path": "items[0].sku",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-14-0002",
+          "document_path": "orders/2026-02-14-0002",
+          "path": "items[4].product_id",
+          "old_id": "001-Tiram",
+          "new_id": "SST_VSA0",
+          "product_name": "Saos Tiram Saori (270ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-14-0002",
+          "document_path": "orders/2026-02-14-0002",
+          "path": "items[4].sku",
+          "old_id": "001-Tiram",
+          "new_id": "SST_VSA0",
+          "product_name": "Saos Tiram Saori (270ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-14-0002",
+          "document_path": "orders/2026-02-14-0002",
+          "path": "items[6].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-14-0002",
+          "document_path": "orders/2026-02-14-0002",
+          "path": "items[6].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-25-0001",
+          "document_path": "orders/2026-02-25-0001",
+          "path": "items[0].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-25-0001",
+          "document_path": "orders/2026-02-25-0001",
+          "path": "items[0].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-01-0001",
+          "document_path": "orders/2026-03-01-0001",
+          "path": "items[1].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-01-0001",
+          "document_path": "orders/2026-03-01-0001",
+          "path": "items[1].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-02-0001",
+          "document_path": "orders/2026-03-02-0001",
+          "path": "items[1].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-02-0001",
+          "document_path": "orders/2026-03-02-0001",
+          "path": "items[1].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-02-0001",
+          "document_path": "orders/2026-03-02-0001",
+          "path": "items[2].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-02-0001",
+          "document_path": "orders/2026-03-02-0001",
+          "path": "items[2].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-03-0001",
+          "document_path": "orders/2026-03-03-0001",
+          "path": "items[1].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-03-0001",
+          "document_path": "orders/2026-03-03-0001",
+          "path": "items[1].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-03-0001",
+          "document_path": "orders/2026-03-03-0001",
+          "path": "items[2].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-03-0001",
+          "document_path": "orders/2026-03-03-0001",
+          "path": "items[2].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-03-0002",
+          "document_path": "orders/2026-03-03-0002",
+          "path": "items[1].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-03-0002",
+          "document_path": "orders/2026-03-03-0002",
+          "path": "items[1].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-07-0001",
+          "document_path": "orders/2026-03-07-0001",
+          "path": "items[0].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-07-0001",
+          "document_path": "orders/2026-03-07-0001",
+          "path": "items[0].sku",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-05-0004",
+          "document_path": "orders/2026-04-05-0004",
+          "path": "items[0].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-05-0008",
+          "document_path": "orders/2026-04-05-0008",
+          "path": "items[3].product_id",
+          "old_id": "001-Tiram",
+          "new_id": "SST_VSA0",
+          "product_name": "Saos Tiram Saori (270ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-05-0008",
+          "document_path": "orders/2026-04-05-0008",
+          "path": "items[3].sku",
+          "old_id": "001-Tiram",
+          "new_id": "SST_VSA0",
+          "product_name": "Saos Tiram Saori (270ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-06-0001",
+          "document_path": "orders/2026-04-06-0001",
+          "path": "items[2].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-06-0001",
+          "document_path": "orders/2026-04-06-0001",
+          "path": "items[2].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-07-0002",
+          "document_path": "orders/2026-04-07-0002",
+          "path": "items[8].product_id",
+          "old_id": "001-Totole",
+          "new_id": "TJ_N2PN",
+          "product_name": "Totole Jamur 80grm",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-07-0002",
+          "document_path": "orders/2026-04-07-0002",
+          "path": "items[8].sku",
+          "old_id": "001-Totole",
+          "new_id": "TJ_N2PN",
+          "product_name": "Totole Jamur 80grm",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-12-0002",
+          "document_path": "orders/2026-04-12-0002",
+          "path": "items[5].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-12-0002",
+          "document_path": "orders/2026-04-12-0002",
+          "path": "items[5].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-12-0002",
+          "document_path": "orders/2026-04-12-0002",
+          "path": "items[6].product_id",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-12-0002",
+          "document_path": "orders/2026-04-12-0002",
+          "path": "items[6].sku",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-13-0001",
+          "document_path": "orders/2026-04-13-0001",
+          "path": "items[9].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-13-0001",
+          "document_path": "orders/2026-04-13-0001",
+          "path": "items[9].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-15-0003",
+          "document_path": "orders/2026-04-15-0003",
+          "path": "items[3].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-15-0003",
+          "document_path": "orders/2026-04-15-0003",
+          "path": "items[3].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-18-0002",
+          "document_path": "orders/2026-04-18-0002",
+          "path": "items[1].product_id",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-18-0002",
+          "document_path": "orders/2026-04-18-0002",
+          "path": "items[1].sku",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-18-0002",
+          "document_path": "orders/2026-04-18-0002",
+          "path": "items[8].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-18-0002",
+          "document_path": "orders/2026-04-18-0002",
+          "path": "items[8].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-18-0002",
+          "document_path": "orders/2026-04-18-0002",
+          "path": "items[9].product_id",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-18-0002",
+          "document_path": "orders/2026-04-18-0002",
+          "path": "items[9].sku",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-19-0001",
+          "document_path": "orders/2026-04-19-0001",
+          "path": "items[2].product_id",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-19-0001",
+          "document_path": "orders/2026-04-19-0001",
+          "path": "items[2].sku",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-19-0001",
+          "document_path": "orders/2026-04-19-0001",
+          "path": "items[9].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-19-0001",
+          "document_path": "orders/2026-04-19-0001",
+          "path": "items[9].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-21-0001",
+          "document_path": "orders/2026-04-21-0001",
+          "path": "items[7].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-21-0001",
+          "document_path": "orders/2026-04-21-0001",
+          "path": "items[7].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-21-0001",
+          "document_path": "orders/2026-04-21-0001",
+          "path": "items[10].product_id",
+          "old_id": "001-Totole",
+          "new_id": "TJ_N2PN",
+          "product_name": "Totole Jamur 80grm",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-21-0001",
+          "document_path": "orders/2026-04-21-0001",
+          "path": "items[10].sku",
+          "old_id": "001-Totole",
+          "new_id": "TJ_N2PN",
+          "product_name": "Totole Jamur 80grm",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-22-0001",
+          "document_path": "orders/2026-04-22-0001",
+          "path": "items[1].product_id",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-22-0001",
+          "document_path": "orders/2026-04-22-0001",
+          "path": "items[1].sku",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-22-0001",
+          "document_path": "orders/2026-04-22-0001",
+          "path": "items[7].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-22-0001",
+          "document_path": "orders/2026-04-22-0001",
+          "path": "items[7].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-26-0002",
+          "document_path": "orders/2026-04-26-0002",
+          "path": "items[3].product_id",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-26-0002",
+          "document_path": "orders/2026-04-26-0002",
+          "path": "items[3].sku",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-26-0002",
+          "document_path": "orders/2026-04-26-0002",
+          "path": "items[5].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-26-0002",
+          "document_path": "orders/2026-04-26-0002",
+          "path": "items[5].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-26-0002",
+          "document_path": "orders/2026-04-26-0002",
+          "path": "items[9].product_id",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-26-0002",
+          "document_path": "orders/2026-04-26-0002",
+          "path": "items[9].sku",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-27-0002",
+          "document_path": "orders/2026-04-27-0002",
+          "path": "items[3].product_id",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-27-0002",
+          "document_path": "orders/2026-04-27-0002",
+          "path": "items[3].sku",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-27-0002",
+          "document_path": "orders/2026-04-27-0002",
+          "path": "items[7].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-27-0002",
+          "document_path": "orders/2026-04-27-0002",
+          "path": "items[7].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-28-0002",
+          "document_path": "orders/2026-04-28-0002",
+          "path": "items[3].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-28-0002",
+          "document_path": "orders/2026-04-28-0002",
+          "path": "items[3].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-28-0002",
+          "document_path": "orders/2026-04-28-0002",
+          "path": "items[5].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-28-0002",
+          "document_path": "orders/2026-04-28-0002",
+          "path": "items[5].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-28-0002",
+          "document_path": "orders/2026-04-28-0002",
+          "path": "items[6].product_id",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-28-0002",
+          "document_path": "orders/2026-04-28-0002",
+          "path": "items[6].sku",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-29-0001",
+          "document_path": "orders/2026-04-29-0001",
+          "path": "items[5].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-29-0001",
+          "document_path": "orders/2026-04-29-0001",
+          "path": "items[5].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-03-0001",
+          "document_path": "orders/2026-05-03-0001",
+          "path": "items[4].product_id",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-03-0001",
+          "document_path": "orders/2026-05-03-0001",
+          "path": "items[4].sku",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-03-0001",
+          "document_path": "orders/2026-05-03-0001",
+          "path": "items[5].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-03-0001",
+          "document_path": "orders/2026-05-03-0001",
+          "path": "items[5].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-03-0001",
+          "document_path": "orders/2026-05-03-0001",
+          "path": "items[11].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-03-0001",
+          "document_path": "orders/2026-05-03-0001",
+          "path": "items[11].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-04-0003",
+          "document_path": "orders/2026-05-04-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-04-0003",
+          "document_path": "orders/2026-05-04-0003",
+          "path": "items[0].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-05-0001",
+          "document_path": "orders/2026-05-05-0001",
+          "path": "items[3].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-05-0001",
+          "document_path": "orders/2026-05-05-0001",
+          "path": "items[3].sku",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-05-0001",
+          "document_path": "orders/2026-05-05-0001",
+          "path": "items[9].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-05-0001",
+          "document_path": "orders/2026-05-05-0001",
+          "path": "items[9].sku",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-20-0001",
+          "document_path": "orders/2026-05-20-0001",
+          "path": "items[4].product_id",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-05-20-0001",
+          "document_path": "orders/2026-05-20-0001",
+          "path": "items[4].sku",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-04-02-26-0003",
+          "document_path": "purchases/PUR-04-02-26-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BS_RUYE",
+          "product_name": "Beras Serang (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-02-08-0001",
+          "document_path": "purchases/PUR-2026-02-08-0001",
+          "path": "items[1].product_id",
+          "old_id": "001-MinyakSanco",
+          "new_id": "MS_29ET",
+          "product_name": "Minyak Sunco (2L)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-02-08-0001",
+          "document_path": "purchases/PUR-2026-02-08-0001",
+          "path": "items[2].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-02-08-0003",
+          "document_path": "purchases/PUR-2026-02-08-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-02-09-0001",
+          "document_path": "purchases/PUR-2026-02-09-0001",
+          "path": "items[0].product_id",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-02-09-0004",
+          "document_path": "purchases/PUR-2026-02-09-0004",
+          "path": "items[0].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-02-09-0008",
+          "document_path": "purchases/PUR-2026-02-09-0008",
+          "path": "items[1].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-02-09-0008",
+          "document_path": "purchases/PUR-2026-02-09-0008",
+          "path": "items[2].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-02-25-0001",
+          "document_path": "purchases/PUR-2026-02-25-0001",
+          "path": "items[0].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-03-01-0001",
+          "document_path": "purchases/PUR-2026-03-01-0001",
+          "path": "items[1].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-03-03-0002",
+          "document_path": "purchases/PUR-2026-03-03-0002",
+          "path": "items[0].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-03-03-0003",
+          "document_path": "purchases/PUR-2026-03-03-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-06-0001",
+          "document_path": "purchases/PUR-2026-04-06-0001",
+          "path": "items[1].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-07-0003",
+          "document_path": "purchases/PUR-2026-04-07-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-Totole",
+          "new_id": "TJ_N2PN",
+          "product_name": "Totole Jamur 80grm",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-08-0003",
+          "document_path": "purchases/PUR-2026-04-08-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-11-0003",
+          "document_path": "purchases/PUR-2026-04-11-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-LencanaMerah",
+          "new_id": "TTLM_MCKN",
+          "product_name": "Tepung Terigu Lencana Merah (1Kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-13-0001",
+          "document_path": "purchases/PUR-2026-04-13-0001",
+          "path": "items[2].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-21-0006",
+          "document_path": "purchases/PUR-2026-04-21-0006",
+          "path": "items[0].product_id",
+          "old_id": "001-Totole",
+          "new_id": "TJ_N2PN",
+          "product_name": "Totole Jamur 80grm",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-28-0001",
+          "document_path": "purchases/PUR-2026-04-28-0001",
+          "path": "items[0].product_id",
+          "old_id": "001-Terigu",
+          "new_id": "TTS_UXMI",
+          "product_name": "Tepung Terigu Segitiga (1kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-05-05-0006",
+          "document_path": "purchases/PUR-2026-05-05-0006",
+          "path": "items[0].product_id",
+          "old_id": "001-Garam",
+          "new_id": "GCK_APUQ",
+          "product_name": "Garam Cap Kapal (250g)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-05-20-0002",
+          "document_path": "purchases/PUR-2026-05-20-0002",
+          "path": "items[0].product_id",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": "Sun Kara (200ml)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "stock_losses",
+          "document_id": "LOSS-2026-02-09-105451-001-Beras",
+          "document_path": "stock_losses/LOSS-2026-02-09-105451-001-Beras",
+          "path": "product_id",
+          "old_id": "001-Beras",
+          "new_id": "BSDP_5APX",
+          "product_name": "Beras Serang Dua Putri (10kg)",
+          "source": "current-product-name"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0003",
+          "document_path": "orders/04-02-26-0003",
+          "path": "items[2].product_id",
+          "old_id": "001-Garam",
+          "new_id": "G_R0SK",
+          "product_name": "Garam (250g)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0003",
+          "document_path": "orders/04-02-26-0003",
+          "path": "items[2].sku",
+          "old_id": "001-Garam",
+          "new_id": "G_R0SK",
+          "product_name": "Garam (250g)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0004",
+          "document_path": "orders/04-02-26-0004",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0004",
+          "document_path": "orders/04-02-26-0004",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0005",
+          "document_path": "orders/04-02-26-0005",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0005",
+          "document_path": "orders/04-02-26-0005",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0006",
+          "document_path": "orders/04-02-26-0006",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0006",
+          "document_path": "orders/04-02-26-0006",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0007",
+          "document_path": "orders/04-02-26-0007",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0007",
+          "document_path": "orders/04-02-26-0007",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0008",
+          "document_path": "orders/04-02-26-0008",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0008",
+          "document_path": "orders/04-02-26-0008",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0009",
+          "document_path": "orders/04-02-26-0009",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0009",
+          "document_path": "orders/04-02-26-0009",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0010",
+          "document_path": "orders/04-02-26-0010",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0010",
+          "document_path": "orders/04-02-26-0010",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0011",
+          "document_path": "orders/04-02-26-0011",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0011",
+          "document_path": "orders/04-02-26-0011",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0012",
+          "document_path": "orders/04-02-26-0012",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "04-02-26-0012",
+          "document_path": "orders/04-02-26-0012",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "05-02-26-0001",
+          "document_path": "orders/05-02-26-0001",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "05-02-26-0001",
+          "document_path": "orders/05-02-26-0001",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "05-02-26-0002",
+          "document_path": "orders/05-02-26-0002",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "05-02-26-0002",
+          "document_path": "orders/05-02-26-0002",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0001",
+          "document_path": "orders/07-02-26-0001",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0001",
+          "document_path": "orders/07-02-26-0001",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0002",
+          "document_path": "orders/07-02-26-0002",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0002",
+          "document_path": "orders/07-02-26-0002",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0003",
+          "document_path": "orders/07-02-26-0003",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0003",
+          "document_path": "orders/07-02-26-0003",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0004",
+          "document_path": "orders/07-02-26-0004",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0004",
+          "document_path": "orders/07-02-26-0004",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0005",
+          "document_path": "orders/07-02-26-0005",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0005",
+          "document_path": "orders/07-02-26-0005",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0006",
+          "document_path": "orders/07-02-26-0006",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0006",
+          "document_path": "orders/07-02-26-0006",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0007",
+          "document_path": "orders/07-02-26-0007",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0007",
+          "document_path": "orders/07-02-26-0007",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0008",
+          "document_path": "orders/07-02-26-0008",
+          "path": "items[4].product_id",
+          "old_id": "001-Garam",
+          "new_id": "G_R0SK",
+          "product_name": "Garam (250g)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "07-02-26-0008",
+          "document_path": "orders/07-02-26-0008",
+          "path": "items[4].sku",
+          "old_id": "001-Garam",
+          "new_id": "G_R0SK",
+          "product_name": "Garam (250g)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-13-0001",
+          "document_path": "orders/2026-02-13-0001",
+          "path": "items[0].product_id",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-02-13-0001",
+          "document_path": "orders/2026-02-13-0001",
+          "path": "items[0].sku",
+          "old_id": "101",
+          "new_id": "T_856F",
+          "product_name": "TestingItem",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-06-0001",
+          "document_path": "orders/2026-03-06-0001",
+          "path": "items[5].product_id",
+          "old_id": "001-GaramCapKontainer",
+          "new_id": "GCK_8AJE",
+          "product_name": "Garam cap Kontainer (200grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-03-06-0001",
+          "document_path": "orders/2026-03-06-0001",
+          "path": "items[5].sku",
+          "old_id": "001-GaramCapKontainer",
+          "new_id": "GCK_8AJE",
+          "product_name": "Garam cap Kontainer (200grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-07-0002",
+          "document_path": "orders/2026-04-07-0002",
+          "path": "items[2].product_id",
+          "old_id": "001-Margarin",
+          "new_id": "M_3QST",
+          "product_name": "Margarine",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-07-0002",
+          "document_path": "orders/2026-04-07-0002",
+          "path": "items[2].sku",
+          "old_id": "001-Margarin",
+          "new_id": "M_3QST",
+          "product_name": "Margarine",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-08-0002",
+          "document_path": "orders/2026-04-08-0002",
+          "path": "items[1].product_id",
+          "old_id": "001-GaramCapKontainer",
+          "new_id": "GCK_8AJE",
+          "product_name": "Garam cap Kontainer (200grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-08-0002",
+          "document_path": "orders/2026-04-08-0002",
+          "path": "items[1].sku",
+          "old_id": "001-GaramCapKontainer",
+          "new_id": "GCK_8AJE",
+          "product_name": "Garam cap Kontainer (200grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-12-0002",
+          "document_path": "orders/2026-04-12-0002",
+          "path": "items[12].product_id",
+          "old_id": "001-GaramCapKontainer",
+          "new_id": "GCK_8AJE",
+          "product_name": "Garam cap Kontainer (200grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-12-0002",
+          "document_path": "orders/2026-04-12-0002",
+          "path": "items[12].sku",
+          "old_id": "001-GaramCapKontainer",
+          "new_id": "GCK_8AJE",
+          "product_name": "Garam cap Kontainer (200grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-14-0002",
+          "document_path": "orders/2026-04-14-0002",
+          "path": "items[6].product_id",
+          "old_id": "001-Selasih",
+          "new_id": "S_NSFU",
+          "product_name": "Selasih (1Kg)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-14-0002",
+          "document_path": "orders/2026-04-14-0002",
+          "path": "items[6].sku",
+          "old_id": "001-Selasih",
+          "new_id": "S_NSFU",
+          "product_name": "Selasih (1Kg)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-19-0001",
+          "document_path": "orders/2026-04-19-0001",
+          "path": "items[1].product_id",
+          "old_id": "001-SusuBubuk",
+          "new_id": "SB_GOON",
+          "product_name": "Susu Bubuk (500grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "orders",
+          "document_id": "2026-04-19-0001",
+          "document_path": "orders/2026-04-19-0001",
+          "path": "items[1].sku",
+          "old_id": "001-SusuBubuk",
+          "new_id": "SB_GOON",
+          "product_name": "Susu Bubuk (500grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-02-09-0003",
+          "document_path": "purchases/PUR-2026-02-09-0003",
+          "path": "items[0].product_id",
+          "old_id": "003-Beras",
+          "new_id": "BL_SECF",
+          "product_name": "Beras Lain (5kg)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-03-05-0004",
+          "document_path": "purchases/PUR-2026-03-05-0004",
+          "path": "items[0].product_id",
+          "old_id": "001-GaramCapKontainer",
+          "new_id": "GCK_8AJE",
+          "product_name": "Garam cap Kontainer (200grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-07-0007",
+          "document_path": "purchases/PUR-2026-04-07-0007",
+          "path": "items[0].product_id",
+          "old_id": "001-Madu",
+          "new_id": "M_A4ZO",
+          "product_name": "Madu",
+          "source": "archived-product"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-07-0008",
+          "document_path": "purchases/PUR-2026-04-07-0008",
+          "path": "items[0].product_id",
+          "old_id": "001-Margarin",
+          "new_id": "M_3QST",
+          "product_name": "Margarine",
+          "source": "archived-product"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-09-0010",
+          "document_path": "purchases/PUR-2026-04-09-0010",
+          "path": "items[0].product_id",
+          "old_id": "001-Selasih",
+          "new_id": "S_NSFU",
+          "product_name": "Selasih (1Kg)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-12-0004",
+          "document_path": "purchases/PUR-2026-04-12-0004",
+          "path": "items[0].product_id",
+          "old_id": "001-GaramCapKontainer",
+          "new_id": "GCK_8AJE",
+          "product_name": "Garam cap Kontainer (200grm)",
+          "source": "archived-product"
+        },
+        {
+          "collection": "purchases",
+          "document_id": "PUR-2026-04-19-0003",
+          "document_path": "purchases/PUR-2026-04-19-0003",
+          "path": "items[0].product_id",
+          "old_id": "001-SusuBubuk",
+          "new_id": "SB_GOON",
+          "product_name": "Susu Bubuk (500grm)_",
+          "source": "archived-product"
+        },
+        {
+          "collection": "stock_losses",
+          "document_id": "LOSS-2026-05-04-165800-001-Madu",
+          "document_path": "stock_losses/LOSS-2026-05-04-165800-001-Madu",
+          "path": "product_id",
+          "old_id": "001-Madu",
+          "new_id": "M_A4ZO",
+          "product_name": "Madu",
+          "source": "archived-product"
+        },
+        {
+          "collection": "stock_movements",
+          "document_id": "LOG-1784136191028-001-Kara-8296",
+          "document_path": "stock_movements/LOG-1784136191028-001-Kara-8296",
+          "path": "product_id",
+          "old_id": "001-Kara",
+          "new_id": "SK_966L",
+          "product_name": null,
+          "source": "existing-alias"
+        }
+      ]
+    }
+  ]
+}

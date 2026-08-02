@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 import { inventoryService } from '../services/inventoryService';
-import { orderService } from '../services/orderService';
-import { purchaseService } from '../services/purchaseService';
-import { stockLossService } from '../services/stockLossService';
-import { productService } from '../services/productService';
 import { formatPriceInput, parsePrice, parseLocaleNumber } from '../utils/decimalHelper';
 
 const formatCurrency = (value) => {
@@ -104,40 +100,20 @@ function StepStockDecrease({ product, currentStock, newStock, onCancel, onDone }
         setLoading(true);
         setError(null);
         try {
-            if (mode === 'sold') {
-                const unitPrice = getUnitPrice();
-                // Create order record (bypass inventory deduction — we set stock directly)
-                const orderData = {
-                    items: [{
-                        product_id: product.sku,
-                        product_name: product.name,
-                        qty: diff,
-                        unit_price: unitPrice,
-                        total: diff * unitPrice
-                    }],
-                    grand_total: diff * unitPrice,
-                    customer_type: priceTier,
-                    order_date: orderDate,
-                    source: 'stock_adjustment'
-                };
-                await orderService.createOrderRecord(orderData);
-            } else {
-                // Stock loss — record in stock_losses collection
-                await stockLossService.createLoss({
-                    product_id: product.sku,
-                    product_name: product.name,
-                    qty: diff,
-                    reason: lossReason,
-                    cost_price: product.cost_price || 0,
-                    estimated_loss: diff * (product.cost_price || 0),
-                });
-            }
-
-            // Set the new stock level
-            await inventoryService.setStock(product.sku, newStock);
+            await inventoryService.adjustStock({
+                productId: product.id || product.sku,
+                expectedCurrentStock: currentStock,
+                newStock,
+                adjustmentKind: mode === 'sold' ? 'manual_sale' : 'stock_loss',
+                reason: mode === 'sold' ? null : lossReason,
+                priceTier: mode === 'sold' ? priceTier : null,
+                orderDate: mode === 'sold' ? orderDate : null
+            });
             onDone();
         } catch (err) {
-            setError(err.message);
+            setError(err.name === 'StaleStockError'
+                ? `${err.message} Stok terbaru: ${err.currentStock} ${product.base_unit}.`
+                : err.message);
             setLoading(false);
         }
     };
@@ -326,37 +302,21 @@ function StepStockIncrease({ product, currentStock, newStock, onCancel, onDone }
 
     const handleSubmit = async () => {
         const numericUnitCostVal = parsePrice(unitCost);
-        const numericSubtotal = Math.ceil(diff * numericUnitCostVal);
         setLoading(true);
         setError(null);
         try {
-            // Prepare purchase record
-            const purchaseData = {
-                items: [{
-                    product_id: product.sku,
-                    product_name: product.name,
-                    qty: diff,
-                    unit_price: numericUnitCostVal,
-                    total: numericSubtotal
-                }],
-                grand_total: numericSubtotal,
-                source: 'stock_adjustment'
-            };
-            await purchaseService.createPurchase(purchaseData);
-
-            // Set new stock
-            await inventoryService.setStock(product.sku, newStock);
-
-            // Update product catalog cost and star price
-            await productService.saveProduct({
-                sku: product.sku,
-                cost_price: numericUnitCostVal,
-                price_star: numericUnitCostVal
+            await inventoryService.adjustStock({
+                productId: product.id || product.sku,
+                expectedCurrentStock: currentStock,
+                newStock,
+                adjustmentKind: 'manual_purchase',
+                costPerUnit: numericUnitCostVal
             });
-
             onDone();
         } catch (err) {
-            setError(err.message);
+            setError(err.name === 'StaleStockError'
+                ? `${err.message} Stok terbaru: ${err.currentStock} ${product.base_unit}.`
+                : err.message);
             setLoading(false);
         }
     };

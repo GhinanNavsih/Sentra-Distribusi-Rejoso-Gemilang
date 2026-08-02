@@ -108,7 +108,6 @@ export const generateWarehouseReceipt = async (data, isPrint = false) => {
 
     // Brand color - coral/red theme from WarehouseExit.js
     const brandColor = [230, 106, 106];
-    const lightBrandColor = [255, 235, 235]; // Very light coral for backgrounds
     const mediumBrandColor = [250, 200, 200]; // Medium coral for alternating rows
 
     // Load logo image
@@ -120,7 +119,7 @@ export const generateWarehouseReceipt = async (data, isPrint = false) => {
         // Assuming we need to load it to canvas to get data URL
         const img = new Image();
         img.src = logoImage; // Use imported image
-        await new Promise((resolve, reject) => {
+        await new Promise((resolve) => {
             img.onload = () => {
                 const canvas = document.createElement("canvas");
                 canvas.width = img.width;

@@ -1,19 +1,32 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { db } from '../firebase.config';
 import { collection, query, orderBy, limit, getDocs, startAfter } from 'firebase/firestore';
 import { getCollectionName } from '../utils/envMode';
 import { productService } from '../services/productService';
+import { purchaseService } from '../services/purchaseService';
+import { inventoryService } from '../services/inventoryService';
+import { useUserRole } from '../hooks/useUserRole';
 import { FaHistory, FaSearch, FaFilter, FaCalendarAlt, FaChevronDown } from 'react-icons/fa';
+import { resolveMovementDisplayType } from '../utils/inventoryMovementLabels';
 
 const LIMIT_SIZE = 50;
 
+const movementDate = (data) => {
+    const parsed = data.created_at?.toDate?.() || new Date(data.created_at || 0);
+    return Number.isNaN(parsed.getTime()) ? new Date(0) : parsed;
+};
+
 export default function StockMovementLogPage() {
+    const { isSuperAdmin } = useUserRole();
     const [movements, setMovements] = useState([]);
     const [products, setProducts] = useState([]);
+    const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [lastDoc, setLastDoc] = useState(null);
     const [hasMore, setHasMore] = useState(false);
+    const [auditing, setAuditing] = useState(false);
+    const [auditResult, setAuditResult] = useState(null);
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
@@ -21,17 +34,21 @@ export default function StockMovementLogPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
-    // Fetch products to map SKU to Product Name
+    // Fetch product and purchase context so legacy ADJ movements can be classified.
     useEffect(() => {
-        const loadProducts = async () => {
+        const loadContext = async () => {
             try {
-                const list = await productService.getAllProducts();
-                setProducts(list);
+                const [productList, purchaseList] = await Promise.all([
+                    productService.getAllProducts(),
+                    purchaseService.getAllPurchases()
+                ]);
+                setProducts(productList);
+                setPurchases(purchaseList);
             } catch (err) {
-                console.error("Failed to load products:", err);
+                console.error("Failed to load inventory movement context:", err);
             }
         };
-        loadProducts();
+        loadContext();
     }, []);
 
     // Load initial logs
@@ -55,7 +72,7 @@ export default function StockMovementLogPage() {
                 return {
                     id: doc.id,
                     ...data,
-                    date: data.created_at?.toDate?.() || new Date(data.created_at) || new Date()
+                    date: movementDate(data)
                 };
             });
 
@@ -88,7 +105,7 @@ export default function StockMovementLogPage() {
                 return {
                     id: doc.id,
                     ...data,
-                    date: data.created_at?.toDate?.() || new Date(data.created_at) || new Date()
+                    date: movementDate(data)
                 };
             });
 
@@ -102,22 +119,40 @@ export default function StockMovementLogPage() {
         }
     };
 
+    const runInventoryAudit = async () => {
+        setAuditing(true);
+        try {
+            setAuditResult(await inventoryService.getHealth());
+        } catch (error) {
+            alert(`Audit inventori gagal: ${error.message}`);
+        } finally {
+            setAuditing(false);
+        }
+    };
+
     // Helper: Map SKU to product name
     const getProductName = (sku) => {
         const prod = products.find(p => p.sku === sku);
         return prod ? prod.name : sku;
     };
 
+    const getMovementProductName = (movement) => movement.product_name || getProductName(movement.product_id);
+    const getMovementType = useCallback((movement) => movement.display_type
+        || resolveMovementDisplayType(movement, purchases, products), [purchases, products]);
+
     // Helper: Format Action Badges
     const getBadgeStyle = (type) => {
         switch (type) {
             case 'sale_created':
+            case 'sale_paid':
+            case 'manual_sale':
                 return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200';
             case 'sale_updated':
                 return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 border-yellow-200';
             case 'sale_cancelled':
                 return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-red-200';
             case 'purchase_created':
+            case 'manual_purchase':
                 return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200';
             case 'purchase_updated':
                 return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 border-yellow-200';
@@ -128,7 +163,10 @@ export default function StockMovementLogPage() {
             case 'repack_target':
                 return 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300 border-pink-200';
             case 'stock_adjusted':
+            case 'stock_count':
                 return 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-300 border-slate-200';
+            case 'stock_loss':
+                return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200';
             case 'stock_deleted':
                 return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300 border-gray-200';
             default:
@@ -139,14 +177,19 @@ export default function StockMovementLogPage() {
     const getBadgeLabel = (type) => {
         switch (type) {
             case 'sale_created': return 'Penjualan Baru';
+            case 'sale_paid': return 'Pelunasan Pre-Order';
+            case 'manual_sale': return 'Penjualan Manual';
             case 'sale_updated': return 'Edit Penjualan';
             case 'sale_cancelled': return 'Batal Penjualan';
             case 'purchase_created': return 'Pembelian Baru';
+            case 'manual_purchase': return 'Pembelian Manual';
             case 'purchase_updated': return 'Edit Pembelian';
             case 'purchase_cancelled': return 'Batal Pembelian';
             case 'repack_source': return 'Repack (Bahan)';
             case 'repack_target': return 'Repack (Hasil)';
             case 'stock_adjusted': return 'Edit Stok Manual';
+            case 'stock_count': return 'Koreksi Stock Opname';
+            case 'stock_loss': return 'Stok Hilang / Rusak';
             case 'stock_deleted': return 'Hapus Stok';
             default: return type || 'Log Stok';
         }
@@ -155,8 +198,10 @@ export default function StockMovementLogPage() {
     // Client-side filtering & formatting
     const filteredMovements = useMemo(() => {
         return movements.filter(m => {
+            const movementType = getMovementType(m);
             // 1. Search filter
-            const pName = getProductName(m.product_id).toLowerCase();
+            const productName = m.product_name || products.find(product => product.sku === m.product_id)?.name || m.product_id || '';
+            const pName = productName.toLowerCase();
             const sku = (m.product_id || '').toLowerCase();
             const txId = (m.transaction_id || '').toLowerCase();
             const cleanSearch = searchTerm.toLowerCase();
@@ -166,13 +211,13 @@ export default function StockMovementLogPage() {
             let matchesType = true;
             if (typeFilter !== 'all') {
                 if (typeFilter === 'sales') {
-                    matchesType = m.transaction_type?.startsWith('sale');
+                    matchesType = movementType?.startsWith('sale');
                 } else if (typeFilter === 'purchases') {
-                    matchesType = m.transaction_type?.startsWith('purchase');
+                    matchesType = movementType?.startsWith('purchase') || movementType === 'manual_purchase';
                 } else if (typeFilter === 'repack') {
-                    matchesType = m.transaction_type?.startsWith('repack');
+                    matchesType = movementType?.startsWith('repack');
                 } else if (typeFilter === 'manual') {
-                    matchesType = m.transaction_type === 'stock_adjusted' || m.transaction_type === 'stock_deleted';
+                    matchesType = ['stock_adjusted', 'stock_deleted', 'stock_count', 'stock_loss', 'manual_sale'].includes(movementType);
                 }
             }
 
@@ -191,17 +236,51 @@ export default function StockMovementLogPage() {
 
             return matchesSearch && matchesType && matchesDate;
         });
-    }, [movements, products, searchTerm, typeFilter, startDate, endDate]);
+    }, [getMovementType, movements, products, searchTerm, typeFilter, startDate, endDate]);
 
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                    <FaHistory className="text-primary text-2xl sm:text-3xl" /> Log Pergerakan Stok
-                </h1>
-                <p className="text-sm text-gray-500 mt-1">Audit log otomatis untuk setiap perubahan jumlah stok barang</p>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                        <FaHistory className="text-primary text-2xl sm:text-3xl" /> Log Pergerakan Stok
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">Audit log otomatis untuk setiap perubahan jumlah stok barang</p>
+                </div>
+                {isSuperAdmin && (
+                    <button
+                        type="button"
+                        onClick={runInventoryAudit}
+                        disabled={auditing}
+                        className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold hover:bg-slate-700 disabled:opacity-50"
+                    >
+                        {auditing ? 'Mengaudit...' : 'Audit Konsistensi'}
+                    </button>
+                )}
             </div>
+
+            {auditResult && (
+                <div className={`rounded-lg border p-4 text-sm ${auditResult.anomalies.length === 0 ? 'bg-green-50 border-green-200 text-green-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+                    <p className="font-bold">
+                        {auditResult.anomalies.length === 0
+                            ? 'Audit selesai: tidak ada inkonsistensi yang terdeteksi.'
+                            : `Audit menemukan ${auditResult.anomalies.length} inkonsistensi yang perlu ditinjau.`}
+                    </p>
+                    <p className="mt-1 text-xs opacity-80">
+                        {auditResult.checked_inventory} stok dan {auditResult.checked_movements} pergerakan diperiksa.
+                    </p>
+                    {auditResult.anomalies.length > 0 && (
+                        <ul className="mt-3 max-h-40 overflow-y-auto space-y-1 font-mono text-xs">
+                            {auditResult.anomalies.slice(0, 50).map((anomaly, index) => (
+                                <li key={`${anomaly.kind}-${anomaly.product_id}-${anomaly.movement_id || index}`}>
+                                    {anomaly.kind}: {anomaly.product_id}{anomaly.movement_id ? ` / ${anomaly.movement_id}` : ''}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
 
             {/* Filter controls */}
             <div className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
@@ -297,6 +376,7 @@ export default function StockMovementLogPage() {
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-sm text-gray-700 dark:text-gray-300">
                                     {filteredMovements.map((m) => {
+                                        const movementType = getMovementType(m);
                                         const dateStr = m.date.toLocaleDateString('id-ID', {
                                             day: '2-digit', month: 'short', year: 'numeric'
                                         }) + ' ' + m.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -309,12 +389,12 @@ export default function StockMovementLogPage() {
                                                     {dateStr}
                                                 </td>
                                                 <td className="px-6 py-4 max-w-[200px] truncate">
-                                                    <p className="font-semibold text-gray-900 dark:text-white truncate">{getProductName(m.product_id)}</p>
+                                                    <p className="font-semibold text-gray-900 dark:text-white truncate">{getMovementProductName(m)}</p>
                                                     <p className="text-xs text-gray-400 font-mono mt-0.5">{m.product_id}</p>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border ${getBadgeStyle(m.transaction_type)}`}>
-                                                        {getBadgeLabel(m.transaction_type)}
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border ${getBadgeStyle(movementType)}`}>
+                                                        {getBadgeLabel(movementType)}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 font-mono text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">

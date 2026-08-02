@@ -2,6 +2,10 @@
 
 This walkthrough explains how operators create unpaid pre-orders, plan restocking from upcoming demand, receive purchased stock, and convert a pre-order into a completed paid sale.
 
+## Automatic product IDs
+
+New products receive an ID automatically in the format `{word initials}_{4 uppercase alphanumeric characters}`. Words containing numbers are ignored, so `Beras Serang Dua Putri (25kg)` produces an ID beginning with `BSDP_`. Operators no longer type SKUs, and an existing product's generated ID cannot be changed because it is used by inventory and historical transactions.
+
 ## Core behavior
 
 - A paid sale validates and deducts inventory immediately.
@@ -135,7 +139,44 @@ These indicators are included in both receipt modals and generated PDF formats.
 
 Before publishing:
 
-1. Run the production build.
-2. Confirm the build completes without syntax or compilation errors.
-3. Confirm the deployment uses SPA routing so direct navigation to application routes returns the app shell.
-4. After deployment, authenticate and repeat the verification checklist in the intended staging environment before using the workflow with production orders.
+1. Install both dependency sets with `npm install` and `npm --prefix functions install`.
+2. Run `npm run lint`, `npm test`, `npm run test:inventory`, and `npm run build`.
+3. Deploy the callable inventory functions first with `firebase deploy --only functions`.
+4. Redeploy the web application, authenticate in staging, and smoke-test purchase, paid sale, manual adjustment, payment, cancellation, and repack flows.
+5. Open **Log Pergerakan Stok** as a superadmin and run **Audit Konsistensi**. Investigate every reported anomaly before continuing.
+6. Deploy the restrictive rules only after the function-backed application is live with `firebase deploy --only firestore:rules`. Deploying these rules first disables the legacy browser-side inventory writes.
+7. Repeat the smoke test and consistency audit in production.
+
+To refresh staging data before validation, authenticate Application Default Credentials and run `npm run migrate:staging`. The script requires typing the configured Firebase project ID and copies production operational collections into their `*_test` equivalents without deleting production data.
+
+## Product ID migration
+
+The product ID migration is intentionally dry-run by default. It scans production and staging, validates product aliases and every historical reference, and reports the proposed mapping without changing data:
+
+```bash
+GOOGLE_CLOUD_PROJECT=warehouse-375 npm run migrate:product-ids -- --environment=all --report=product-id-plan.json
+```
+
+The dry run reconciles historical references using the stored product name. Reused IDs are resolved per transaction, and genuinely missing products are represented by archived, zero-stock product records. Review the `errors`, `archived_products`, `reconciliations`, and stock totals in the report before continuing.
+
+Create a Firestore backup/export and run apply mode only during a maintenance window, using the exact reviewed report as the plan:
+
+```bash
+GOOGLE_CLOUD_PROJECT=warehouse-375 npm run migrate:product-ids -- --environment=all --apply --confirm --plan=product-id-plan.json --report=product-id-apply-report.json
+```
+
+Apply mode requires the reviewed `--plan` so randomly generated IDs and reference resolutions cannot change between dry run and production. The migration preserves old identifiers as `legacy_sku`/`legacy_product_id`, keeps stock quantities unchanged, rewrites historical references, creates an audit manifest, and deletes old product/inventory document IDs only after the new records are written.
+
+If an older migration converted Firestore timestamps into plain `_seconds`/`_nanoseconds` maps, repair them with a dry run first:
+
+```bash
+GOOGLE_CLOUD_PROJECT=warehouse-375 npm run repair:migration-timestamps -- --environment=production --report=production-timestamp-repair-plan.json
+```
+
+Review the affected collection counts, then run the repair during a maintenance window:
+
+```bash
+GOOGLE_CLOUD_PROJECT=warehouse-375 npm run repair:migration-timestamps -- --environment=production --apply --confirm --report=production-timestamp-repair-apply.json
+```
+
+The repair changes only timestamp-shaped maps back into Firestore `Timestamp` values, preserves document IDs and other fields, verifies the document count and stock total, and records a repair manifest.

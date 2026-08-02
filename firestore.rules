@@ -1,94 +1,106 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Default rule: Deny everything NOT explicitly allowed
-    match /{document=**} {
-      allow read, write: if false; 
+    function isReceiptMetadataUpdate() {
+      return isAuthenticated()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'customer_name',
+          'payment_method',
+          'is_credit_sale'
+        ]);
     }
 
-    // Allow authenticated users to read and write to all collections
-    // This is suitable for a single-tenant internal tool where all staff are trusted.
-    // Ideally, you'd want role-based access control (RBAC) here.
-    
-    match /inventory/{productId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
-    }
-    
-    match /inventory_test/{productId} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+    match /{document=**} {
+      allow read, write: if false;
     }
 
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow create, update: if false;
+      allow delete: if false;
     }
 
     match /products_test/{productId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow create, update: if false;
+      allow delete: if false;
     }
-    
+
+    match /inventory/{productId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /inventory_test/{productId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
     match /orders/{orderId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if false; 
+      allow create, delete: if false;
+      allow update: if isReceiptMetadataUpdate();
     }
 
     match /orders_test/{orderId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if false; 
+      allow create, delete: if false;
+      allow update: if isReceiptMetadataUpdate();
     }
-    
+
     match /purchases/{purchaseId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if false;
     }
 
     match /purchases_test/{purchaseId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /counters/{counterId} {
-      allow read, write: if isAuthenticated();
-    }
-
-    match /counters_test/{counterId} {
-      allow read, write: if isAuthenticated();
+      allow write: if false;
     }
 
     match /stock_losses/{lossId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if false;
     }
 
     match /stock_losses_test/{lossId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if false;
     }
 
     match /stock_movements/{movementId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if false;
     }
 
     match /stock_movements_test/{movementId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /inventory_operations/{operationId} {
+      allow read, write: if false;
+    }
+
+    match /inventory_operations_test/{operationId} {
+      allow read, write: if false;
+    }
+
+    match /counters/{counterId} {
+      allow read, write: if false;
+    }
+
+    match /counters_test/{counterId} {
+      allow read, write: if false;
     }
 
     match /users/{userId} {
       allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if false;
     }
   }
 }

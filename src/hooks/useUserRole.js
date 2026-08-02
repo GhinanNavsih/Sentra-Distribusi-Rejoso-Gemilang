@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,8 +10,6 @@ export function useUserRole() {
 
     useEffect(() => {
         if (!currentUser) {
-            setRole(null);
-            setLoading(false);
             return;
         }
 
@@ -41,10 +39,13 @@ export function useUserRole() {
         return () => unsubscribe();
     }, [currentUser]);
 
+    const effectiveRole = currentUser ? role : null;
+    const effectiveLoading = currentUser ? loading : false;
+
     return {
-        role,
-        loading,
-        isSuperAdmin: role === 'superadmin',
-        isShopper: role === 'shopper'
+        role: effectiveRole,
+        loading: effectiveLoading,
+        isSuperAdmin: effectiveRole === 'superadmin',
+        isShopper: effectiveRole === 'shopper'
     };
 }

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { productService } from '../services/productService';
 import { inventoryService } from '../services/inventoryService';
 import { orderService } from '../services/orderService';
 import ReceiptModal from '../components/ReceiptModal';
 import InsufficientStockModal from '../components/InsufficientStockModal';
+import { clearPosEditDraft, readPosEditDraft } from '../utils/posEditDraft';
 
 const getLocalDateString = () => {
     const now = new Date();
@@ -14,25 +16,43 @@ const getLocalDateString = () => {
 };
 
 export default function PosPage() {
+    const navigate = useNavigate();
+    const [editingPreOrder, setEditingPreOrder] = useState(() => readPosEditDraft());
     const [products, setProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [cart, setCart] = useState(() => {
+        const draft = readPosEditDraft();
+        if (draft) {
+            return draft.items.map(item => ({
+                ...item,
+                sku: item.sku || item.product_id,
+                selected_unit: item.selected_unit || item.unit_kind || 'base',
+                _fromPreorder: true
+            }));
+        }
         const saved = localStorage.getItem('pos_cart');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
     });
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [completedOrderData, setCompletedOrderData] = useState(null);
     const [selectedCustomerType, setSelectedCustomerType] = useState(() => {
+        const draft = readPosEditDraft();
+        if (draft) return draft.customer_type || 'regular';
         return localStorage.getItem('pos_customer_type') || 'regular';
     }); // Single selection - what gets saved
     const [showStockErrorModal, setShowStockErrorModal] = useState(false);
     const [stockErrorDetails, setStockErrorDetails] = useState([]);
     const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'cart'
-    const [paymentStatus, setPaymentStatus] = useState('paid');
-    const [targetDate, setTargetDate] = useState(getLocalDateString);
-    const [preOrderCustomerName, setPreOrderCustomerName] = useState('');
+    const [showOrderDetails, setShowOrderDetails] = useState(false);
+    const [paymentStatus, setPaymentStatus] = useState(() => readPosEditDraft() ? 'unpaid' : 'paid');
+    const [targetDate, setTargetDate] = useState(() => readPosEditDraft()?.target_date || getLocalDateString());
+    const [preOrderCustomerName, setPreOrderCustomerName] = useState(() => readPosEditDraft()?.customer_name || '');
 
     // Save cart and customer type to localStorage when they change
     useEffect(() => {
@@ -46,8 +66,10 @@ export default function PosPage() {
     // Load Catalog
     useEffect(() => {
         const load = async () => {
-            const activeCustomerType = localStorage.getItem('pos_customer_type') || 'regular';
-            const list = await productService.getAllProducts();
+            const activeCustomerType = editingPreOrder?.customer_type
+                || localStorage.getItem('pos_customer_type')
+                || 'regular';
+            const list = await productService.getAllProducts({ includeArchived: Boolean(editingPreOrder) });
             // Get stock for each to prevent overselling (optional visual cue)
             const listWithStock = await Promise.all(list.map(async p => {
                 const stock = await inventoryService.getStock(p.id);
@@ -68,9 +90,12 @@ export default function PosPage() {
                         const bulkUnitLower = (latestProduct.bulk_unit_name || "").toLowerCase().trim();
                         const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
                         const conversion = isSameUnit ? 1 : (latestProduct.bulk_unit_conversion || 1);
-                        const unitPrice = item.selected_unit === 'bulk'
+                        const calculatedUnitPrice = item.selected_unit === 'bulk'
                             ? Math.ceil(basePrice * conversion)
                             : basePrice;
+                        const unitPrice = editingPreOrder && item._fromPreorder && item.unit_price !== undefined
+                            ? Number(item.unit_price)
+                            : calculatedUnitPrice;
                         
                         const qtyVal = item.qty;
                         const cleanQty = qtyVal.toString().replace(/,/g, '.');
@@ -95,11 +120,12 @@ export default function PosPage() {
             setLoading(false);
         };
         load();
-    }, []);
+    }, [editingPreOrder]);
 
     // Recalculate prices when customer type changes
     useEffect(() => {
         setCart(prev => prev.map(item => {
+            if (!item.product_obj || (editingPreOrder && item._fromPreorder)) return item;
             const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
             const baseUnitLower = (item.product_obj.base_unit || "").toLowerCase().trim();
             const bulkUnitLower = (item.product_obj.bulk_unit_name || "").toLowerCase().trim();
@@ -118,15 +144,16 @@ export default function PosPage() {
                 total: Math.ceil(unitPrice * numericQty)
             };
         }));
-    }, [selectedCustomerType]);
+    }, [editingPreOrder, selectedCustomerType]);
 
     // Filter products using word-by-word keyword matching (order-insensitive)
     const filteredProducts = useMemo(() => {
-        if (!searchQuery) return products; // Return all if no query
+        const catalogProducts = products.filter(product => product.active !== false);
+        if (!searchQuery) return catalogProducts; // Return all if no query
         const queryWords = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
-        if (queryWords.length === 0) return products;
+        if (queryWords.length === 0) return catalogProducts;
 
-        return products.filter(p => {
+        return catalogProducts.filter(p => {
             const nameLower = (p.name || '').toLowerCase();
             const skuLower = (p.sku || '').toLowerCase();
             return queryWords.every(word => nameLower.includes(word) || skuLower.includes(word));
@@ -135,6 +162,7 @@ export default function PosPage() {
 
     // Add to cart
     const addToCart = (product) => {
+        if (product.active === false) return;
         setCart(prev => {
             const existing = prev.find(item => item.product_id === product.id);
             if (existing) {
@@ -167,13 +195,15 @@ export default function PosPage() {
                 const cleanQty = newQty.toString().replace(/,/g, '.');
                 const numericQty = newQty === '' ? 0 : Math.max(0, parseFloat(cleanQty) || 0);
                 
-                const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
-                const baseUnitLower = (item.product_obj.base_unit || "").toLowerCase().trim();
-                const bulkUnitLower = (item.product_obj.bulk_unit_name || "").toLowerCase().trim();
+                const basePrice = item._fromPreorder
+                    ? Number(item.unit_price || 0)
+                    : productService.calculatePrice(item.product_obj, selectedCustomerType);
+                const baseUnitLower = (item.product_obj?.base_unit || "").toLowerCase().trim();
+                const bulkUnitLower = (item.product_obj?.bulk_unit_name || "").toLowerCase().trim();
                 const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
-                const conversion = isSameUnit ? 1 : (item.product_obj.bulk_unit_conversion || 1);
+                const conversion = isSameUnit ? 1 : (item.product_obj?.bulk_unit_conversion || 1);
                 const currentPrice = item.selected_unit === 'bulk'
-                    ? Math.ceil(basePrice * conversion)
+                    ? (item._fromPreorder ? Math.ceil(basePrice) : Math.ceil(basePrice * conversion))
                     : basePrice;
 
                 return {
@@ -218,10 +248,10 @@ export default function PosPage() {
                 if (item.selected_unit === newUnit) return item;
 
                 const isGoingToBulk = newUnit === 'bulk';
-                const baseUnitLower = (item.product_obj.base_unit || "").toLowerCase().trim();
-                const bulkUnitLower = (item.product_obj.bulk_unit_name || "").toLowerCase().trim();
+                const baseUnitLower = (item.product_obj?.base_unit || "").toLowerCase().trim();
+                const bulkUnitLower = (item.product_obj?.bulk_unit_name || "").toLowerCase().trim();
                 const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
-                const conversion = isSameUnit ? 1 : (item.product_obj.bulk_unit_conversion || 1);
+                const conversion = isSameUnit ? 1 : (item.product_obj?.bulk_unit_conversion || 1);
 
                 // Convert Quantity to keep the total amount of "base units" roughly the same
                 // 10 Pcs -> 1 Box (if conversion 10)
@@ -230,7 +260,10 @@ export default function PosPage() {
                     ? Math.max(1, Math.floor(item.qty / conversion))
                     : item.qty * conversion;
 
-                const basePrice = productService.calculatePrice(item.product_obj, selectedCustomerType);
+                const oldMultiplier = item.selected_unit === 'bulk' ? conversion : 1;
+                const basePrice = item._fromPreorder
+                    ? Number(item.unit_price || 0) / oldMultiplier
+                    : productService.calculatePrice(item.product_obj, selectedCustomerType);
                 const newUnitPrice = isGoingToBulk ? Math.ceil(basePrice * conversion) : basePrice;
 
                 return {
@@ -245,14 +278,21 @@ export default function PosPage() {
         }));
     };
 
-    const cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
+    const cartTotal = cart.reduce((sum, item) => sum + Number(item.total || 0), 0);
 
     const handleSubmitOrder = async () => {
         const validItems = cart.filter(item => item.qty !== '' && Number(item.qty) > 0);
-        if (validItems.length === 0) return;
+        if (validItems.length === 0) {
+            alert('Pesanan harus memiliki minimal satu item.');
+            return;
+        }
+        if (validItems.some(item => !item.product_obj)) {
+            alert('Data produk masih dimuat. Silakan coba lagi.');
+            return;
+        }
 
         // Check if each item's selling price is higher than or equal to the Star Price (Harga Bintang)
-        const invalidItems = validItems.filter(item => {
+        const invalidItems = validItems.filter(item => !editingPreOrder || !item._fromPreorder).filter(item => {
             const baseStarPrice = productService.calculatePrice(item.product_obj, 'star');
             const baseUnitLower = (item.product_obj?.base_unit || "").toLowerCase().trim();
             const bulkUnitLower = (item.product_obj?.bulk_unit_name || "").toLowerCase().trim();
@@ -303,7 +343,7 @@ export default function PosPage() {
         setProcessing(true);
         try {
             const orderPayload = {
-                items: validItems.map(({ product_obj, ...rest }) => {
+                items: validItems.map(({ product_obj, _fromPreorder, ...rest }) => {
                     const baseBuyPrice = product_obj?.cost_price || 0;
                     const baseUnitLower = (product_obj?.base_unit || "").toLowerCase().trim();
                     const bulkUnitLower = (product_obj?.bulk_unit_name || "").toLowerCase().trim();
@@ -325,6 +365,30 @@ export default function PosPage() {
 
             if (paymentStatus === 'unpaid') {
                 orderPayload.target_date = targetDate;
+            }
+
+            if (editingPreOrder) {
+                await orderService.updateOrder(
+                    editingPreOrder.transaction_id,
+                    orderPayload.items,
+                    null,
+                    null,
+                    {
+                        customer_name: orderPayload.customer_name,
+                        customer_type: orderPayload.customer_type,
+                        target_date: orderPayload.target_date
+                    }
+                );
+                clearPosEditDraft();
+                localStorage.removeItem('pos_cart');
+                setEditingPreOrder(null);
+                setCart([]);
+                setPreOrderCustomerName('');
+                setTargetDate(getLocalDateString());
+                setPaymentStatus('paid');
+                alert('Pre-order berhasil diperbarui.');
+                navigate('/transactions');
+                return;
             }
 
             const orderId = paymentStatus === 'unpaid'
@@ -386,6 +450,17 @@ export default function PosPage() {
         } finally {
             setProcessing(false);
         }
+    };
+
+    const handleCancelEdit = () => {
+        clearPosEditDraft();
+        localStorage.removeItem('pos_cart');
+        setEditingPreOrder(null);
+        setCart([]);
+        setPreOrderCustomerName('');
+        setTargetDate(getLocalDateString());
+        setPaymentStatus('paid');
+        navigate('/transactions');
     };
 
     return (
@@ -464,9 +539,27 @@ export default function PosPage() {
             </div>
 
             {/* Right: Cart */}
-            <div className={`w-full lg:w-1/3 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col ${activeTab === 'cart' ? 'flex' : 'hidden lg:flex'}`}>
-                <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+            <div className={`w-full lg:w-1/3 min-h-0 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col ${activeTab === 'cart' ? 'flex' : 'hidden lg:flex'}`}>
+                <div className="shrink-0 p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
                     <h2 className="text-lg font-bold text-gray-900 mb-4">Pesanan Saat Ini</h2>
+
+                    {editingPreOrder && (
+                        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="font-bold">Mengedit Pre-Order</p>
+                                    <p className="text-xs mt-1">{editingPreOrder.transaction_id} · ubah item, hapus item, atau tambahkan produk baru.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleCancelEdit}
+                                    className="shrink-0 rounded-md border border-blue-300 bg-white px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100"
+                                >
+                                    Batal Edit
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Customer Type Selector - Single Select (for pricing & database) */}
                     <div className="space-y-2">
@@ -484,6 +577,7 @@ export default function PosPage() {
                                     <button
                                         key={type}
                                         onClick={() => setSelectedCustomerType(type)}
+                                        disabled={Boolean(editingPreOrder)}
                                         className={`flex-1 py-2 px-3 text-sm font-medium rounded-md border-2 transition-all ${isSelected
                                             ? type === 'star'
                                                 ? 'bg-purple-500 text-white border-purple-600 shadow-md'
@@ -507,7 +601,7 @@ export default function PosPage() {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-3">
                     {cart.length === 0 ? (
                         <div className="text-center text-gray-400 py-10 italic">Keranjang kosong</div>
                     ) : (
@@ -517,15 +611,16 @@ export default function PosPage() {
                                     <div className="font-bold text-gray-900">{item.product_name}</div>
                                     <div className="flex items-center gap-2 mt-1">
                                         <div className="text-xs text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-100 italic">
-                                            @ Rp {item.unit_price.toLocaleString('id-ID')} / {item.selected_unit === 'bulk' ? item.bulk_unit_name : item.base_unit}
+                                            @ Rp {Number(item.unit_price || 0).toLocaleString('id-ID')} / {item.selected_unit === 'bulk' ? item.bulk_unit_name : item.base_unit}
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-1">
-                                    {item.product_obj.bulk_unit_name && (
+                                    {item.product_obj?.bulk_unit_name && (
                                         <select
                                             value={item.selected_unit}
                                             onChange={(e) => handleUnitChange(item.product_id, e.target.value)}
+                                            disabled={!item.product_obj}
                                             className="text-[10px] bg-gray-50 border border-gray-200 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-primary w-24 cursor-pointer"
                                         >
                                             <option value="base">{item.base_unit} (Dasar)</option>
@@ -569,7 +664,7 @@ export default function PosPage() {
                     )}
                 </div>
 
-                <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                <div className="shrink-0 p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
                     <div className="mb-4 space-y-3">
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">
@@ -578,6 +673,7 @@ export default function PosPage() {
                             <select
                                 value={paymentStatus}
                                 onChange={(e) => setPaymentStatus(e.target.value)}
+                                disabled={Boolean(editingPreOrder)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white text-sm font-semibold outline-none focus:ring-2 focus:ring-primary"
                             >
                                 <option value="paid">Lunas (Paid)</option>
@@ -586,7 +682,16 @@ export default function PosPage() {
                         </div>
 
                         {paymentStatus === 'unpaid' && (
-                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-3">
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowOrderDetails(prev => !prev)}
+                                    className="flex w-full items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs font-bold text-amber-900"
+                                >
+                                    <span>{showOrderDetails ? 'Sembunyikan detail pre-order' : 'Tampilkan detail pre-order'}</span>
+                                    <span aria-hidden="true">{showOrderDetails ? '⌃' : '⌄'}</span>
+                                </button>
+                                <div className={`${showOrderDetails ? 'block' : 'hidden'} rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-3`}>
                                 <p className="text-xs text-amber-800">
                                     Pre-order dicatat sebagai permintaan terencana. Stok baru diperiksa dan dikurangi saat transaksi ditandai lunas.
                                 </p>
@@ -614,7 +719,8 @@ export default function PosPage() {
                                         className="w-full border border-amber-300 rounded-lg px-3 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
                                     />
                                 </div>
-                            </div>
+                                </div>
+                            </>
                         )}
                     </div>
                     <div className="flex justify-between items-center mb-4">

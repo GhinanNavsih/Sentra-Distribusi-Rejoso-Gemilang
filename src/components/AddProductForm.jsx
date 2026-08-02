@@ -5,7 +5,6 @@ import { formatPriceInput, parsePrice } from '../utils/decimalHelper';
 export default function AddProductForm({ onClose, onSuccess }) {
     const [formData, setFormData] = useState({
         name: '',
-        sku: '',
         base_unit: 'kg',
         bulk_unit_name: 'Sack',
         bulk_unit_conversion: 50,
@@ -52,6 +51,9 @@ export default function AddProductForm({ onClose, onSuccess }) {
             if (baseUnit && bulkUnit && baseUnit === bulkUnit) {
                 throw new Error("Satuan dasar dan nama satuan besar tidak boleh sama (contoh: 'pcs' dan 'Pcs').");
             }
+            if (bulkUnit && (!Number.isFinite(Number(formData.bulk_unit_conversion)) || Number(formData.bulk_unit_conversion) <= 0)) {
+                throw new Error("Konversi satuan besar harus lebih dari 0.");
+            }
 
             const payload = {
                 ...formData,
@@ -61,8 +63,8 @@ export default function AddProductForm({ onClose, onSuccess }) {
                 cost_price: parsePrice(formData.cost_price),
                 bulk_unit_conversion: Number(formData.bulk_unit_conversion || 0)
             };
-            await productService.saveProduct(payload);
-            if (onSuccess) onSuccess(payload);
+            const productId = await productService.saveProduct(payload);
+            if (onSuccess) onSuccess({ ...payload, id: productId, sku: productId });
             if (onClose) onClose();
         } catch (err) {
             setError(err.message);
@@ -101,10 +103,8 @@ export default function AddProductForm({ onClose, onSuccess }) {
                         <input required type="text" name="name" value={formData.name} onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="Contoh: Gula Pasir" />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">SKU (Kode Unik)</label>
-                        <input required type="text" name="sku" value={formData.sku} onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="Contoh: GULA-001" />
+                    <div className="flex items-center rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+                        ID produk akan dibuat otomatis setelah produk disimpan.
                     </div>
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">URL Gambar Produk</label>
@@ -135,7 +135,7 @@ export default function AddProductForm({ onClose, onSuccess }) {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Konversi Satuan Besar</label>
                         <div className="flex items-center">
                             <span className="mr-2 text-sm text-gray-500">1 {formData.bulk_unit_name || 'Besar'} = </span>
-                            <input type="number" name="bulk_unit_conversion" value={formData.bulk_unit_conversion} onChange={handleChange}
+                            <input type="number" min="1" step="any" name="bulk_unit_conversion" value={formData.bulk_unit_conversion} onChange={handleChange}
                                 className="w-24 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
                             <span className="ml-2 text-sm text-gray-500">{formData.base_unit}</span>
                         </div>

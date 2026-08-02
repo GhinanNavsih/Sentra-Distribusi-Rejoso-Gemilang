@@ -11,7 +11,7 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(Boolean(auth));
 
     function login(email, password) {
         if (!auth) {
@@ -27,7 +27,6 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         if (!auth) {
-            setLoading(false);
             return;
         }
         const unsubscribe = onAuthStateChanged(auth, (user) => {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { productService, PRODUCT_CATEGORIES } from '../services/productService';
-import { inventoryService } from '../services/inventoryService';
 import { formatPriceInput, parsePrice } from '../utils/decimalHelper';
 
 export default function EditProductForm({ product, onClose, onSuccess }) {
@@ -70,10 +69,13 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
             if (baseUnit && bulkUnit && baseUnit === bulkUnit) {
                 throw new Error("Satuan dasar dan nama satuan besar tidak boleh sama (contoh: 'pcs' dan 'Pcs').");
             }
+            if (bulkUnit && (!Number.isFinite(Number(formData.bulk_unit_conversion)) || Number(formData.bulk_unit_conversion) <= 0)) {
+                throw new Error("Konversi satuan besar harus lebih dari 0.");
+            }
 
             const payload = {
+                product_id: product.id,
                 name: formData.name,
-                sku: formData.sku,
                 base_unit: formData.base_unit,
                 bulk_unit_name: formData.bulk_unit_name,
                 bulk_unit_conversion: Number(formData.bulk_unit_conversion || 0),
@@ -85,22 +87,7 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                 category: formData.category
             };
 
-            // Check for Rename (SKU change)
-            if (product.sku !== formData.sku) {
-                // Create NEW product record, then move stock to new SKU
-                await productService.saveProduct(payload);
-                const currentStock = product.current_stock || 0;
-                await inventoryService.setStock(formData.sku, currentStock);
-
-                // Delete OLD records
-                await Promise.all([
-                    productService.deleteProduct(product.sku),
-                    inventoryService.deleteStock(product.sku)
-                ]);
-            } else {
-                // Normal Update — only product data, NOT stock
-                await productService.saveProduct(payload);
-            }
+            await productService.saveProduct(payload);
 
             if (onSuccess) onSuccess();
         } catch (err) {
@@ -111,20 +98,15 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
     };
 
     const handleDelete = async () => {
-        const confirmMessage = `Apakah Anda yakin ingin MENGHAPUS "${product.name}" (${product.sku})?\n\nTindakan ini akan menghapus secara permanen:\n- Data produk\n- Data stok\n- Semua informasi terkait\n\nTindakan ini TIDAK DAPAT dibatalkan!`;
+        const confirmMessage = `Arsipkan "${product.name}" (${product.sku})?\n\nProduk tidak lagi tampil pada katalog atau transaksi baru. Data stok dan seluruh riwayat tetap disimpan untuk audit.`;
 
         if (!confirm(confirmMessage)) return;
 
         setLoading(true);
         setError(null);
         try {
-            // Delete both product and inventory records
-            await Promise.all([
-                productService.deleteProduct(product.sku),
-                inventoryService.deleteStock(product.sku)
-            ]);
-
-            alert(`Produk "${product.name}" berhasil dihapus.`);
+            await productService.archiveProduct(product.id);
+            alert(`Produk "${product.name}" berhasil diarsipkan.`);
             if (onSuccess) onSuccess();
         } catch (err) {
             setError(`Gagal menghapus produk: ${err.message}`);
@@ -163,10 +145,10 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                             className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="Contoh: Gula Pasir" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">SKU (Kode Produk)</label>
-                        <input required type="text" name="sku" value={formData.sku} onChange={handleChange}
-                            className="w-full p-2 border border-blue-200 bg-blue-50 rounded text-gray-900 focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
-                        <p className="text-[10px] text-gray-500 mt-1">Mengubah SKU akan mengubah kode produk secara permanen.</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">ID Produk</label>
+                            <input readOnly type="text" value={product?.id || formData.sku || ''}
+                            className="w-full p-2 border border-gray-200 bg-gray-100 rounded text-gray-500 cursor-not-allowed" />
+                        <p className="text-[10px] text-gray-500 mt-1">ID dibuat otomatis dan dikunci agar riwayat stok tetap konsisten.</p>
                     </div>
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">URL Gambar Produk</label>
@@ -211,7 +193,7 @@ export default function EditProductForm({ product, onClose, onSuccess }) {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Konversi Satuan Besar</label>
                         <div className="flex items-center">
                             <span className="mr-2 text-sm text-gray-500">1 {formData.bulk_unit_name || 'Besar'} = </span>
-                            <input type="number" name="bulk_unit_conversion" value={formData.bulk_unit_conversion} onChange={handleChange}
+                            <input type="number" min="1" step="any" name="bulk_unit_conversion" value={formData.bulk_unit_conversion} onChange={handleChange}
                                 className="w-24 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none" />
                             <span className="ml-2 text-sm text-gray-500">{formData.base_unit}</span>
                         </div>

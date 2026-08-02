@@ -1,5 +1,5 @@
 import { db } from "../firebase.config";
-import { collection, doc, serverTimestamp, setDoc, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { getCollectionName } from "../utils/envMode";
 
 export const stockLossService = {
@@ -8,25 +8,8 @@ export const stockLossService = {
      * @param {Object} lossData - { product_id, product_name, qty, reason, cost_price }
      */
     createLoss: async (lossData) => {
-        const COLLECTION_NAME = getCollectionName("stock_losses");
-        try {
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-            const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
-            const lossId = `LOSS-${dateStr}-${timeStr}-${lossData.product_id}`;
-
-            const lossRef = doc(db, COLLECTION_NAME, lossId);
-            await setDoc(lossRef, {
-                ...lossData,
-                id: lossId,
-                created_at: serverTimestamp()
-            });
-
-            return lossId;
-        } catch (error) {
-            console.error("Error recording stock loss:", error);
-            throw error;
-        }
+        void lossData;
+        throw new Error("Pencatatan kehilangan stok langsung dinonaktifkan. Gunakan penyesuaian stok atomik.");
     },
 
     /**

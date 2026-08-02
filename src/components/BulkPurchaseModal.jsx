@@ -2,9 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { FaTimes, FaPlus, FaTrash } from "react-icons/fa";
 import { v4 as uuidv4 } from "uuid";
-import { inventoryService } from "../services/inventoryService";
 import { storage } from "../firebase.config";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { formatPriceInput, parsePrice, parseLocaleNumber } from "../utils/decimalHelper";
 
 
@@ -30,8 +29,8 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialI
                 { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
                 { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
             ];
-        } catch (e) {
-            console.error("Error reading purchase_draft_rows from localStorage:", e);
+        } catch (error) {
+            console.error("Error reading purchase_draft_rows from localStorage:", error);
             return [
                 { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
                 { id: uuidv4(), product: null, qty: "", unit: "", cost: "", subtotal: "" },
@@ -43,7 +42,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialI
     const [supplierName, setSupplierName] = useState(() => {
         try {
             return localStorage.getItem("purchase_draft_supplier") || "";
-        } catch (e) {
+        } catch {
             return "";
         }
     });
@@ -337,6 +336,8 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialI
     // Submit Handler
     const handleSubmit = async () => {
         setIsSubmitting(true);
+        let uploadedReceiptRef = null;
+        let purchaseSaved = false;
         try {
             const validRows = rows.filter((r) => r.product && parseQtyVal(r.qty) > 0);
 
@@ -346,8 +347,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialI
                 return;
             }
 
-            // Import services dynamically
-            const { productService } = await import('../services/productService');
+            // Import service dynamically so the modal stays lightweight until opened
             const { purchaseService } = await import('../services/purchaseService');
 
             // Prepare purchase items
@@ -359,43 +359,24 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialI
                 const { product, qty, unit, cost } = row;
                 const cleanCost = parsePrice(cost);
 
-                let multiplier = 1;
-                if (unit === product.bulk_unit_name) {
-                    const baseUnitLower = (product.base_unit || "").toLowerCase().trim();
-                    const bulkUnitLower = (product.bulk_unit_name || "").toLowerCase().trim();
-                    const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
-                    multiplier = isSameUnit ? 1 : (product.bulk_unit_conversion || 1);
-                }
-
-                const changeInBaseUnits = parseQtyVal(qty) * multiplier;
+                const baseUnitLower = (product.base_unit || "").toLowerCase().trim();
+                const bulkUnitLower = (product.bulk_unit_name || "").toLowerCase().trim();
+                const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+                const isBulkSelection = unit === product.bulk_unit_name && !isSameUnit;
                 const totalCost = Math.ceil(cleanCost * parseQtyVal(qty));
-
-                // Calculate cost per base unit (round UP)
-                const costPerBaseUnit = Math.ceil(cleanCost / multiplier);
-
-                // Update Inventory
-                await inventoryService.updateStock(product.sku, changeInBaseUnits);
-
-                // Update Product with cost_price and price_star
-                await productService.saveProduct({
-                    sku: product.sku,
-                    cost_price: costPerBaseUnit,
-                    price_star: costPerBaseUnit
-                });
 
                 // Add to purchase items
                 purchaseItems.push({
-                    product_id: product.sku,
+                    product_id: product.id || product.sku,
                     product_name: product.name,
                     qty: parseQtyVal(qty),
                     unit: unit,
+                    unit_kind: isBulkSelection ? 'bulk' : 'base',
                     cost_per_unit: cleanCost,
                     total: totalCost
                 });
 
                 grandTotal += totalCost;
-
-                console.log(`Added ${changeInBaseUnits} ${product.base_unit} of ${product.name} at ${costPerBaseUnit} per ${product.base_unit}`);
             }
 
             // Upload receipt file if exists
@@ -405,8 +386,14 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialI
                     const safeName = receiptFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                     const storageRef = ref(storage, `receipts/${Date.now()}_${safeName}`);
                     const uploadResult = await uploadBytes(storageRef, receiptFile);
+                    uploadedReceiptRef = uploadResult.ref;
                     receiptFileUrl = await getDownloadURL(uploadResult.ref);
                 } catch (storageError) {
+                    if (uploadedReceiptRef) {
+                        await deleteObject(uploadedReceiptRef).catch(cleanupError => {
+                            console.error("Error cleaning up failed receipt upload:", cleanupError);
+                        });
+                    }
                     console.error("Error uploading receipt to Firebase Storage:", storageError);
                     alert("Gagal mengupload file nota ke cloud storage. Transaksi dibatalkan. Detail: " + storageError.message);
                     setIsSubmitting(false);
@@ -421,6 +408,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialI
                 supplier_name: supplierName || 'N/A',
                 receipt_file: receiptFileUrl || null
             });
+            purchaseSaved = true;
 
             // Clear draft on successful submit
             localStorage.removeItem("purchase_draft_rows");
@@ -436,8 +424,13 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialI
             onSuccess();
             onClose();
         } catch (error) {
+            if (uploadedReceiptRef && !purchaseSaved) {
+                await deleteObject(uploadedReceiptRef).catch(cleanupError => {
+                    console.error("Error cleaning up orphaned receipt:", cleanupError);
+                });
+            }
             console.error("Error adding stock:", error);
-            alert("Gagal menambah stok.");
+            alert(`Gagal menambah stok. ${error.message || ''}`.trim());
         } finally {
             setIsSubmitting(false);
         }
@@ -528,7 +521,7 @@ const BulkPurchaseModal = ({ isOpen, onClose, onSuccess, products = [], initialI
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {rows.map((row, index) => (
+                            {rows.map((row) => (
                                 <tr key={row.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
 
                                     {/* Product Search */}

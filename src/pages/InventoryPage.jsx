@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { productService } from '../services/productService';
 import { inventoryService } from '../services/inventoryService';
 import AddProductForm from '../components/AddProductForm';
@@ -34,7 +34,7 @@ export default function InventoryPage() {
     const [showBulkPurchaseModal, setShowBulkPurchaseModal] = useState(() => {
         try {
             return localStorage.getItem("show_bulk_purchase_modal") === "true";
-        } catch (e) {
+        } catch {
             return false;
         }
     });
@@ -56,7 +56,7 @@ export default function InventoryPage() {
     const [belanjaPeriod, setBelanjaPeriod] = useState('day');
     const [pendapatanPeriod, setPendapatanPeriod] = useState('day');
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             const [productList, orderList, purchaseList] = await Promise.all([
@@ -81,13 +81,13 @@ export default function InventoryPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [isSuperAdmin]);
 
     useEffect(() => {
         if (!roleLoading) {
             fetchData();
         }
-    }, [roleLoading, isSuperAdmin]); // Re-fetch if role changes/loads
+    }, [roleLoading, isSuperAdmin, fetchData]); // Re-fetch if role changes/loads
 
     // Sorting function
     const handleSort = (key) => {
@@ -259,7 +259,7 @@ export default function InventoryPage() {
         }, 0);
     };
 
-    const totalBelanja = calculateTotal(purchases, belanjaPeriod);
+    const totalBelanja = calculateTotal(purchases.filter(purchase => purchase.status !== 'cancelled'), belanjaPeriod);
     const paidOrders = orders.filter(order =>
         order.status !== 'cancelled'
         && order.status !== 'unpaid'
@@ -293,7 +293,8 @@ export default function InventoryPage() {
                         product_name: item.product_name || product?.name || key,
                         base_unit: baseUnit,
                         planned_demand: 0,
-                        on_hand: Number(product?.current_stock) || 0,
+                        on_hand: product ? (Number(product.current_stock) || 0) : null,
+                        missing_product: !product,
                         target_dates: new Set(),
                         order_ids: new Set()
                     };
@@ -310,13 +311,13 @@ export default function InventoryPage() {
                 ...row,
                 target_dates: Array.from(row.target_dates).sort(),
                 order_count: row.order_ids.size,
-                deficit: Math.max(0, row.planned_demand - row.on_hand)
+                deficit: row.missing_product ? 0 : Math.max(0, row.planned_demand - row.on_hand)
             }))
             .sort((a, b) => b.deficit - a.deficit || a.product_name.localeCompare(b.product_name));
     }, [orders, products]);
 
     const deficitItems = preOrderDemand
-        .filter(row => row.deficit > 0)
+        .filter(row => !row.missing_product && row.deficit > 0)
         .map(row => ({ product_id: row.product_id, qty: row.deficit }));
 
     const openBulkPurchase = () => {
@@ -442,7 +443,7 @@ export default function InventoryPage() {
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {preOrderDemand.map(row => (
-                                    <tr key={row.product_id} className={row.deficit > 0 ? 'bg-red-50/60' : 'bg-green-50/30'}>
+                                    <tr key={row.product_id} className={row.missing_product ? 'bg-amber-50' : row.deficit > 0 ? 'bg-red-50/60' : 'bg-green-50/30'}>
                                         <td className="px-5 py-4">
                                             <div className="font-bold text-gray-900">{row.product_name}</div>
                                             <div className="text-xs text-gray-500">{row.order_count} pre-order aktif</div>
@@ -451,10 +452,12 @@ export default function InventoryPage() {
                                             {row.planned_demand} {row.base_unit}
                                         </td>
                                         <td className="px-5 py-4 text-right text-gray-700">
-                                            {row.on_hand} {row.base_unit}
+                                            {row.missing_product ? (
+                                                <span className="font-semibold text-amber-700">ID produk tidak ditemukan</span>
+                                            ) : `${row.on_hand} ${row.base_unit}`}
                                         </td>
                                         <td className={`px-5 py-4 text-right font-black ${row.deficit > 0 ? 'text-red-700' : 'text-green-700'}`}>
-                                            {row.deficit} {row.base_unit}
+                                            {row.missing_product ? '-' : `${row.deficit} ${row.base_unit}`}
                                         </td>
                                         <td className="px-5 py-4 text-gray-600">
                                             {row.target_dates.length > 0 ? row.target_dates.join(', ') : '-'}
@@ -649,8 +652,7 @@ export default function InventoryPage() {
                                         setOpenMenuId(null);
                                         try {
                                             await productService.saveProduct({
-                                                id: p.id,
-                                                sku: p.sku,
+                                                product_id: p.id,
                                                 needs_stock_check: !p.needs_stock_check
                                             });
                                             fetchData();

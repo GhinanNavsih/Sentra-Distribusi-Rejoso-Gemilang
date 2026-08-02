@@ -33,12 +33,12 @@ export default function RepackModal({ onClose, onSuccess }) {
         }
     };
 
-    const getSourceProduct = () => products.find(p => p.sku === fromSku);
-    const getTargetProduct = () => products.find(p => p.sku === toSku);
+    const getSourceProduct = () => products.find(p => (p.id || p.sku) === fromSku);
+    const getTargetProduct = () => products.find(p => (p.id || p.sku) === toSku);
 
     // Auto-populate conversion rate if source has standard
     useEffect(() => {
-        const source = getSourceProduct();
+        const source = products.find(p => (p.id || p.sku) === fromSku);
         if (source && source.bulk_unit_conversion) {
             setConversionRate(source.bulk_unit_conversion);
         }
@@ -61,7 +61,7 @@ export default function RepackModal({ onClose, onSuccess }) {
                                     className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-primary focus:border-primary">
                                     <option value="">Pilih Item Massal...</option>
                                     {products.map(p => (
-                                        <option key={p.sku} value={p.sku}>{p.name}</option>
+                                        <option key={p.id || p.sku} value={p.id || p.sku}>{p.name}</option>
                                     ))}
                                 </select>
                                 {fromSku && (
@@ -77,7 +77,7 @@ export default function RepackModal({ onClose, onSuccess }) {
                                     className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-primary focus:border-primary">
                                     <option value="">Pilih Item Eceran...</option>
                                     {products.map(p => (
-                                        <option disabled={p.sku === fromSku} key={p.sku} value={p.sku}>{p.name}</option>
+                                        <option disabled={(p.id || p.sku) === fromSku} key={p.id || p.sku} value={p.id || p.sku}>{p.name}</option>
                                     ))}
                                 </select>
                                 {toSku && (
@@ -105,9 +105,9 @@ export default function RepackModal({ onClose, onSuccess }) {
                                     <label className="block text-sm font-medium text-gray-900">Tingkat Konversi</label>
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className="text-gray-500 text-sm">1 Satuan berisi</span>
-                                        <input type="number" min="1" required value={conversionRate} onChange={e => setConversionRate(e.target.value)}
+                                        <input type="number" min="1" required readOnly value={conversionRate}
                                             onWheel={(e) => e.target.blur()}
-                                            className="w-24 p-2 border border-gray-300 rounded font-bold" />
+                                            className="w-24 p-2 border border-gray-200 bg-gray-100 text-gray-600 rounded font-bold cursor-not-allowed" />
                                         <span className="text-gray-600 font-medium">
                                             {getTargetProduct()?.base_unit} of {getTargetProduct()?.name}
                                         </span>

@@ -2,14 +2,14 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { orderService } from '../services/orderService';
 import { purchaseService } from '../services/purchaseService';
 import { FaShoppingCart, FaTruck, FaChevronDown, FaChevronUp, FaCalendar, FaPrint, FaFileAlt } from 'react-icons/fa';
-import { printReceipt } from '../utils/standardReceiptGenerator';
-import { printWarehouseReceipt } from '../utils/warehouseReceiptGenerator';
 import { useUserRole } from '../hooks/useUserRole';
 import { productService } from '../services/productService';
 import * as XLSX from 'xlsx';
 import PrintReceiptModal from '../components/PrintReceiptModal';
 import InsufficientStockModal from '../components/InsufficientStockModal';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { POS_EDIT_STORAGE_KEY } from '../utils/posEditDraft';
 
 const getFilenameFromUrl = (url) => {
     if (!url) return '';
@@ -19,13 +19,34 @@ const getFilenameFromUrl = (url) => {
         const parts = decoded.split('/');
         const filename = parts[parts.length - 1];
         return filename.replace(/^\d+_/, '');
-    } catch (e) {
+    } catch {
         return 'Lihat Nota';
     }
 };
 
 const isUnpaidSale = (transaction) => transaction.type === 'sale'
+    && transaction.status !== 'cancelled'
     && (transaction.payment_status === 'unpaid' || transaction.status === 'unpaid');
+
+const getTransactionDate = (transaction) => {
+    if (transaction.order_date && /^\d{4}-\d{2}-\d{2}$/.test(transaction.order_date)) {
+        return new Date(`${transaction.order_date}T12:00:00`);
+    }
+    return transaction.created_at?.toDate?.() || new Date();
+};
+
+const getHistoricalUnits = (item, product = {}) => {
+    const baseUnit = item.base_unit || product.base_unit || 'pcs';
+    const bulkUnit = item.bulk_unit_name || product.bulk_unit_name || '';
+    const sameUnit = baseUnit.trim().toLowerCase() === bulkUnit.trim().toLowerCase();
+    const conversion = sameUnit ? 1 : Number(item.bulk_unit_conversion || product.bulk_unit_conversion || 1);
+    const unitKind = item.unit_kind || item.selected_unit || (
+        bulkUnit && String(item.unit || '').trim().toLowerCase() === bulkUnit.trim().toLowerCase()
+            ? 'bulk'
+            : 'base'
+    );
+    return { baseUnit, bulkUnit, conversion, unitKind, hasBulkUnit: Boolean(bulkUnit && !sameUnit && conversion > 0) };
+};
 
 const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }) => {
     const [items, setItems] = useState([]);
@@ -69,55 +90,34 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
         setItems(prev => prev.map(item => {
             if (item.product_id === productId) {
                 const productObj = localProducts.find(p => p.sku === productId);
-                if (!productObj) return item;
+                const { baseUnit, bulkUnit, conversion, unitKind, hasBulkUnit } = getHistoricalUnits(item, productObj);
+                if (newUnitValue === unitKind || (newUnitValue === 'bulk' && !hasBulkUnit)) return item;
 
-                const baseUnitLower = (productObj.base_unit || "").toLowerCase().trim();
-                const bulkUnitLower = (productObj.bulk_unit_name || "").toLowerCase().trim();
-                const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
-                const conversion = isSameUnit ? 1 : (productObj.bulk_unit_conversion || 1);
+                const oldMultiplier = unitKind === 'bulk' ? conversion : 1;
+                const newMultiplier = newUnitValue === 'bulk' ? conversion : 1;
+                const newQty = Number(item.qty) * oldMultiplier / newMultiplier;
 
                 if (transaction.type === 'sale') {
-                    if (item.selected_unit === newUnitValue) return item;
-                    const isGoingToBulk = newUnitValue === 'bulk';
-
-                    // Convert Quantity
-                    let newQty = isGoingToBulk
-                        ? Math.max(1, Math.floor(item.qty / conversion))
-                        : item.qty * conversion;
-
-                    // Calculate unit price based on customer type
-                    const basePrice = productService.calculatePrice(productObj, transaction.customer_type || 'regular');
-                    const newUnitPrice = isGoingToBulk ? Math.ceil(basePrice * conversion) : basePrice;
-
-                    // Calculate buy price
-                    const baseBuyPrice = productObj.cost_price || 0;
-                    const newBuyPrice = isGoingToBulk ? baseBuyPrice * conversion : baseBuyPrice;
+                    const newUnitPrice = Number(item.unit_price || 0) * newMultiplier / oldMultiplier;
+                    const newBuyPrice = Number(item.buy_price || 0) * newMultiplier / oldMultiplier;
 
                     return {
                         ...item,
+                        unit_kind: newUnitValue,
                         selected_unit: newUnitValue,
+                        unit: newUnitValue === 'bulk' ? bulkUnit : baseUnit,
                         qty: newQty,
                         unit_price: newUnitPrice,
                         buy_price: newBuyPrice,
                         total: newQty * newUnitPrice
                     };
                 } else {
-                    if (item.unit === newUnitValue) return item;
-                    const isGoingToBulk = newUnitValue === productObj.bulk_unit_name;
-
-                    // Convert Quantity
-                    let newQty = isGoingToBulk
-                        ? Math.max(1, Math.floor(item.qty / conversion))
-                        : item.qty * conversion;
-
-                    // Convert cost per unit
-                    let newCostPerUnit = isGoingToBulk
-                        ? (item.cost_per_unit * conversion)
-                        : Math.round(item.cost_per_unit / conversion);
+                    const newCostPerUnit = Number(item.cost_per_unit || 0) * newMultiplier / oldMultiplier;
 
                     return {
                         ...item,
-                        unit: newUnitValue,
+                        unit_kind: newUnitValue,
+                        unit: newUnitValue === 'bulk' ? bulkUnit : baseUnit,
                         qty: newQty,
                         cost_per_unit: newCostPerUnit,
                         total: newQty * newCostPerUnit
@@ -144,25 +144,19 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
         try {
             const updated = items.map(item => {
                 if (transaction.type === 'purchase') {
-                    const productObj = localProducts.find(p => p.sku === item.product_id);
-                    let multiplier = 1;
-                    if (productObj && productObj.bulk_unit_name && item.unit === productObj.bulk_unit_name) {
-                        const baseUnitLower = (productObj.base_unit || "").toLowerCase().trim();
-                        const bulkUnitLower = (productObj.bulk_unit_name || "").toLowerCase().trim();
-                        const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
-                        multiplier = isSameUnit ? 1 : (productObj.bulk_unit_conversion || 1);
-                    }
+                    const { unitKind } = getHistoricalUnits(item, localProducts.find(p => p.sku === item.product_id));
                     return {
                         product_id: item.product_id,
                         qty: item.qty,
+                        unit_kind: unitKind,
                         unit: item.unit,
-                        cost_per_unit: item.cost_per_unit,
-                        multiplier
+                        cost_per_unit: item.cost_per_unit
                     };
                 } else {
                     return {
                         product_id: item.product_id,
                         qty: item.qty,
+                        unit_kind: item.unit_kind || item.selected_unit,
                         selected_unit: item.selected_unit,
                         unit_price: item.unit_price,
                         buy_price: item.buy_price
@@ -172,8 +166,8 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
 
             await onSave(transaction.id, updated, transaction.type);
             onClose();
-        } catch (e) {
-            alert("Gagal mengedit transaksi: " + e.message);
+        } catch (error) {
+            alert("Gagal mengedit transaksi: " + error.message);
         } finally {
             setIsSaving(false);
         }
@@ -208,11 +202,12 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
 
                     <div className="divide-y divide-gray-100 dark:divide-gray-800">
                         {items.map((item, idx) => {
-                            const unitLabel = transaction.type === 'sale'
-                                ? (item.selected_unit === 'bulk' ? (item.bulk_unit_name || 'Unit') : (item.base_unit || 'pcs'))
-                                : (item.unit || item.base_unit || 'pcs');
-                            const price = item.unit_price || item.cost_per_unit || 0;
                             const productObj = localProducts.find(p => p.sku === item.product_id);
+                            const historicalUnits = getHistoricalUnits(item, productObj);
+                            const unitLabel = transaction.type === 'sale'
+                                ? (historicalUnits.unitKind === 'bulk' ? historicalUnits.bulkUnit : historicalUnits.baseUnit)
+                                : (historicalUnits.unitKind === 'bulk' ? historicalUnits.bulkUnit : historicalUnits.baseUnit);
+                            const price = item.unit_price || item.cost_per_unit || 0;
 
                             return (
                                 <div key={item.product_id || idx} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -225,23 +220,14 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        {productObj && productObj.bulk_unit_name && (
+                                        {historicalUnits.hasBulkUnit && (
                                             <select
-                                                value={transaction.type === 'sale' ? (item.selected_unit || 'base') : (item.unit || productObj.base_unit)}
+                                                value={historicalUnits.unitKind}
                                                 onChange={(e) => handleUnitChange(item.product_id, e.target.value)}
                                                 className="text-xs bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-gray-700 dark:text-gray-200"
                                             >
-                                                {transaction.type === 'sale' ? (
-                                                    <>
-                                                        <option value="base">{productObj.base_unit || 'pcs'}</option>
-                                                        <option value="bulk">{productObj.bulk_unit_name}</option>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <option value={productObj.base_unit || 'pcs'}>{productObj.base_unit || 'pcs'}</option>
-                                                        <option value={productObj.bulk_unit_name}>{productObj.bulk_unit_name}</option>
-                                                    </>
-                                                )}
+                                                <option value="base">{historicalUnits.baseUnit}</option>
+                                                <option value="bulk">{historicalUnits.bulkUnit}</option>
                                             </select>
                                         )}
                                         <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-700">
@@ -254,7 +240,8 @@ const EditTransactionModal = ({ isOpen, onClose, transaction, products, onSave }
                                             </button>
                                             <input
                                                 type="number"
-                                                min="0"
+                                                min="0.000001"
+                                                step="any"
                                                 value={item.qty}
                                                 onChange={(e) => handleQtyChange(item.product_id, e.target.value)}
                                                 className="w-16 text-center py-1.5 outline-none bg-transparent dark:text-white font-medium text-sm font-semibold"
@@ -332,7 +319,7 @@ const LogEditModal = ({ isOpen, onClose, transaction }) => {
                 month: 'long',
                 day: 'numeric'
             }) + ' ' + date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        } catch (e) {
+        } catch {
             return isoString;
         }
     };
@@ -458,6 +445,7 @@ const LogEditModal = ({ isOpen, onClose, transaction }) => {
 const TransactionHistoryPage = () => {
     const { isSuperAdmin, isShopper } = useUserRole();
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [transactions, setTransactions] = useState([]);
     const [products, setProducts] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
@@ -468,6 +456,25 @@ const TransactionHistoryPage = () => {
     const [payingOrderId, setPayingOrderId] = useState(null);
     const [showStockErrorModal, setShowStockErrorModal] = useState(false);
     const [stockErrorDetails, setStockErrorDetails] = useState([]);
+
+    const handleEditTransaction = (transaction) => {
+        if (isUnpaidSale(transaction)) {
+            localStorage.setItem(POS_EDIT_STORAGE_KEY, JSON.stringify({
+                transaction_id: transaction.id,
+                transaction_type: 'sale',
+                items: transaction.items || [],
+                customer_name: transaction.customer_name || '',
+                customer_type: transaction.customer_type || 'regular',
+                target_date: transaction.target_date || '',
+                payment_status: 'unpaid'
+            }));
+            localStorage.removeItem('pos_cart');
+            navigate('/pos');
+            return;
+        }
+
+        setEditingTransaction(transaction);
+    };
 
     const handleSaveEdit = async (transactionId, updatedItems, type) => {
         try {
@@ -651,13 +658,13 @@ const TransactionHistoryPage = () => {
                 ...orders.map(order => ({
                     ...order,
                     type: 'sale',
-                    date: order.created_at?.toDate?.() || new Date(),
+                    date: getTransactionDate(order),
                     total: order.grand_total || 0
                 })),
                 ...purchases.map(purchase => ({
                     ...purchase,
                     type: 'purchase',
-                    date: purchase.created_at?.toDate?.() || new Date(),
+                    date: getTransactionDate(purchase),
                     total: purchase.grand_total || 0
                 }))
             ];
@@ -755,13 +762,6 @@ const TransactionHistoryPage = () => {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(value);
-    };
-
-    const formatTime = (date) => {
-        return date.toLocaleTimeString('id-ID', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
     };
 
     // Removed initial loading state rendering
@@ -1076,7 +1076,7 @@ const TransactionHistoryPage = () => {
                                                                                 </button>
                                                                                 {(isSuperAdmin || isShopper) && (
                                                                                     <button
-                                                                                        onClick={() => setEditingTransaction(transaction)}
+                                                                                        onClick={() => handleEditTransaction(transaction)}
                                                                                         className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg border border-yellow-200 transition cursor-pointer"
                                                                                     >
                                                                                         Edit Transaksi
@@ -1106,23 +1106,25 @@ const TransactionHistoryPage = () => {
                                                                         <div className="flex flex-wrap gap-2">
                                                                             {transaction.status !== 'cancelled' && (
                                                                                 <>
-                                                                                    <button
-                                                                                        onClick={() => printReceipt({
-                                                                                            orderId: transaction.id,
-                                                                                            orderDate: transaction.date.toLocaleDateString('id-ID'),
-                                                                                            items: transaction.items,
-                                                                                            grandTotal: transaction.total,
-                                                                                            customerName: transaction.supplier_name,
-                                                                                            paymentMethod: 'Cash',
-                                                                                            isPurchase: true
-                                                                                        })}
-                                                                                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition w-fit shadow-sm cursor-pointer"
-                                                                                    >
-                                                                                        <FaPrint /> Cetak Bukti Terima
-                                                                                    </button>
+                                                                                    {transaction.receipt_file ? (
+                                                                                        <button
+                                                                                            onClick={() => handleOpenReceipt(transaction.receipt_file)}
+                                                                                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg border border-blue-100 transition w-fit cursor-pointer"
+                                                                                            title="Buka nota yang diunggah saat pembelian"
+                                                                                        >
+                                                                                            <FaFileAlt /> Lihat Nota
+                                                                                        </button>
+                                                                                    ) : (
+                                                                                        <span
+                                                                                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-bold rounded-lg w-fit"
+                                                                                            title="Tidak ada nota yang diunggah untuk pembelian ini"
+                                                                                        >
+                                                                                            <FaFileAlt /> Nota Tidak Tersedia
+                                                                                        </span>
+                                                                                    )}
                                                                                     {(isSuperAdmin || isShopper) && (
                                                                                         <button
-                                                                                            onClick={() => setEditingTransaction(transaction)}
+                                                                                            onClick={() => handleEditTransaction(transaction)}
                                                                                             className="flex items-center gap-2 px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-bold rounded-lg border border-yellow-200 transition cursor-pointer w-fit"
                                                                                         >
                                                                                             Edit Transaksi
@@ -1147,15 +1149,6 @@ const TransactionHistoryPage = () => {
                                                                                 </button>
                                                                             )}
                                                                         </div>
-                                                                        {transaction.status !== 'cancelled' && transaction.receipt_file && (
-                                                                            <button
-                                                                                onClick={() => handleOpenReceipt(transaction.receipt_file)}
-                                                                                className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg border border-blue-100 w-fit transition cursor-pointer"
-                                                                                title="Klik untuk membuka/melihat nota"
-                                                                            >
-                                                                                <FaFileAlt /> {getFilenameFromUrl(transaction.receipt_file)}
-                                                                            </button>
-                                                                        )}
                                                                     </div>
                                                                 )}
                                                             </div>

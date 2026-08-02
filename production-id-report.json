@@ -1,0 +1,1710 @@
+{
+  "mode": "dry-run",
+  "project_id": "warehouse-375",
+  "environments": [
+    {
+      "environment": "production",
+      "summary": {
+        "products": 128,
+        "inventory": 127,
+        "historical_documents": 768,
+        "stock_before": 3837,
+        "stock_after": 3837
+      },
+      "errors": [
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0003.items[2].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0003.items[2].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0003.items[5].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0003.items[5].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0004.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0004.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0005.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0005.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0006.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0006.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0007.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0007.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0008.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0008.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0009.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0009.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0010.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0010.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0011.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0011.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0012.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/04-02-26-0012.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/05-02-26-0001.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/05-02-26-0001.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/05-02-26-0002.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/05-02-26-0002.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/06-02-26-0001.items[1].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/06-02-26-0001.items[1].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0001.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0001.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0002.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0002.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0003.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0003.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0004.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0004.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0005.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0005.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0006.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0006.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0007.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0007.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0008.items[4].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0008.items[4].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0008.items[5].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/07-02-26-0008.items[5].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0001.items[0].product_id",
+          "value": "001-MinyakSanco"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0001.items[0].sku",
+          "value": "001-MinyakSanco"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0001.items[2].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0001.items[2].sku",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0002.items[0].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0002.items[0].sku",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[0].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[0].sku",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[2].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[2].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[7].product_id",
+          "value": "001-Tiram"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[7].sku",
+          "value": "001-Tiram"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[8].product_id",
+          "value": "001-MinyakSanco"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[8].sku",
+          "value": "001-MinyakSanco"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[9].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-08-0003.items[9].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-09-0001.items[0].product_id",
+          "value": "001-MinyakSanco"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-09-0001.items[0].sku",
+          "value": "001-MinyakSanco"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-09-0003.items[0].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-09-0003.items[0].sku",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-09-0003.items[2].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-09-0003.items[2].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-10-0002.items[0].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-10-0002.items[0].sku",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-10-0002.items[2].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-10-0002.items[2].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-10-0002.items[5].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-10-0002.items[5].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-10-0002.items[8].product_id",
+          "value": "001-Tiram"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-10-0002.items[8].sku",
+          "value": "001-Tiram"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-11-0002.items[0].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-11-0002.items[0].sku",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-13-0001.items[0].product_id",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-13-0001.items[0].sku",
+          "value": "101"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-14-0002.items[0].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-14-0002.items[0].sku",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-14-0002.items[4].product_id",
+          "value": "001-Tiram"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-14-0002.items[4].sku",
+          "value": "001-Tiram"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-14-0002.items[6].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-14-0002.items[6].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-25-0001.items[0].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-02-25-0001.items[0].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-01-0001.items[1].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-01-0001.items[1].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-02-0001.items[1].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-02-0001.items[1].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-02-0001.items[2].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-02-0001.items[2].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-03-0001.items[1].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-03-0001.items[1].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-03-0001.items[2].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-03-0001.items[2].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-03-0002.items[1].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-03-0002.items[1].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-06-0001.items[5].product_id",
+          "value": "001-GaramCapKontainer"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-06-0001.items[5].sku",
+          "value": "001-GaramCapKontainer"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-07-0001.items[0].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-03-07-0001.items[0].sku",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-05-0004.items[0].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-05-0008.items[3].product_id",
+          "value": "001-Tiram"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-05-0008.items[3].sku",
+          "value": "001-Tiram"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-06-0001.items[2].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-06-0001.items[2].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-07-0002.items[2].product_id",
+          "value": "001-Margarin"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-07-0002.items[2].sku",
+          "value": "001-Margarin"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-07-0002.items[8].product_id",
+          "value": "001-Totole"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-07-0002.items[8].sku",
+          "value": "001-Totole"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-08-0002.items[1].product_id",
+          "value": "001-GaramCapKontainer"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-08-0002.items[1].sku",
+          "value": "001-GaramCapKontainer"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-12-0002.items[5].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-12-0002.items[5].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-12-0002.items[6].product_id",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-12-0002.items[6].sku",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-12-0002.items[12].product_id",
+          "value": "001-GaramCapKontainer"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-12-0002.items[12].sku",
+          "value": "001-GaramCapKontainer"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-13-0001.items[9].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-13-0001.items[9].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-14-0002.items[6].product_id",
+          "value": "001-Selasih"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-14-0002.items[6].sku",
+          "value": "001-Selasih"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-15-0003.items[3].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-15-0003.items[3].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-18-0002.items[1].product_id",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-18-0002.items[1].sku",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-18-0002.items[8].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-18-0002.items[8].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-18-0002.items[9].product_id",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-18-0002.items[9].sku",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-19-0001.items[1].product_id",
+          "value": "001-SusuBubuk"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-19-0001.items[1].sku",
+          "value": "001-SusuBubuk"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-19-0001.items[2].product_id",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-19-0001.items[2].sku",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-19-0001.items[9].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-19-0001.items[9].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-21-0001.items[7].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-21-0001.items[7].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-21-0001.items[10].product_id",
+          "value": "001-Totole"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-21-0001.items[10].sku",
+          "value": "001-Totole"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-22-0001.items[1].product_id",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-22-0001.items[1].sku",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-22-0001.items[7].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-22-0001.items[7].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-26-0002.items[3].product_id",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-26-0002.items[3].sku",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-26-0002.items[5].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-26-0002.items[5].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-26-0002.items[9].product_id",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-26-0002.items[9].sku",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-27-0002.items[3].product_id",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-27-0002.items[3].sku",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-27-0002.items[7].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-27-0002.items[7].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-28-0002.items[3].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-28-0002.items[3].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-28-0002.items[5].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-28-0002.items[5].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-28-0002.items[6].product_id",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-28-0002.items[6].sku",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-29-0001.items[5].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-04-29-0001.items[5].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-03-0001.items[4].product_id",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-03-0001.items[4].sku",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-03-0001.items[5].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-03-0001.items[5].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-03-0001.items[11].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-03-0001.items[11].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-04-0003.items[0].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-04-0003.items[0].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-05-0001.items[3].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-05-0001.items[3].sku",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-05-0001.items[9].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-05-0001.items[9].sku",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-20-0001.items[4].product_id",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "orders/2026-05-20-0001.items[4].sku",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-04-02-26-0003.items[0].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-02-08-0001.items[1].product_id",
+          "value": "001-MinyakSanco"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-02-08-0001.items[2].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-02-08-0003.items[0].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-02-09-0001.items[0].product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-02-09-0003.items[0].product_id",
+          "value": "003-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-02-09-0004.items[0].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-02-09-0008.items[1].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-02-09-0008.items[2].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-02-25-0001.items[0].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-03-01-0001.items[1].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-03-03-0002.items[0].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-03-03-0003.items[0].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-03-05-0004.items[0].product_id",
+          "value": "001-GaramCapKontainer"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-06-0001.items[1].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-07-0003.items[0].product_id",
+          "value": "001-Totole"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-07-0007.items[0].product_id",
+          "value": "001-Madu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-07-0008.items[0].product_id",
+          "value": "001-Margarin"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-08-0003.items[0].product_id",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-09-0010.items[0].product_id",
+          "value": "001-Selasih"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-11-0003.items[0].product_id",
+          "value": "001-LencanaMerah"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-12-0004.items[0].product_id",
+          "value": "001-GaramCapKontainer"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-13-0001.items[2].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-19-0003.items[0].product_id",
+          "value": "001-SusuBubuk"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-21-0006.items[0].product_id",
+          "value": "001-Totole"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-04-28-0001.items[0].product_id",
+          "value": "001-Terigu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-05-05-0006.items[0].product_id",
+          "value": "001-Garam"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "purchases/PUR-2026-05-20-0002.items[0].product_id",
+          "value": "001-Kara"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "stock_losses/LOSS-2026-02-09-105451-001-Beras.product_id",
+          "value": "001-Beras"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "stock_losses/LOSS-2026-05-04-165800-001-Madu.product_id",
+          "value": "001-Madu"
+        },
+        {
+          "kind": "unresolved-historical-reference",
+          "path": "stock_movements/LOG-1784136191028-001-Kara-8296.product_id",
+          "value": "001-Kara"
+        }
+      ],
+      "mappings": [
+        {
+          "old_id": "001-BakingPowder",
+          "new_id": "BP_BYAV",
+          "name": "Baking Powder (110g)"
+        },
+        {
+          "old_id": "001-BalckTeaSosro",
+          "new_id": "TCSBT_UENZ",
+          "name": "Teh Celup Sosro Balck Tea (200grm)"
+        },
+        {
+          "old_id": "001-Beras25KG",
+          "new_id": "BS_WW45",
+          "name": "Beras Serang (25Kg)"
+        },
+        {
+          "old_id": "001-BerasKetan",
+          "new_id": "BK_B3DB",
+          "name": "Beras Ketan (5kg)"
+        },
+        {
+          "old_id": "001-BerasSerang",
+          "new_id": "BSDP_5M41",
+          "name": "Beras Serang Dua Putri (10kg)"
+        },
+        {
+          "old_id": "001-BerasSphp",
+          "new_id": "BS_AXT6",
+          "name": "Beras SPHP (5kg)"
+        },
+        {
+          "old_id": "001-BubukKremer",
+          "new_id": "BK_VZ43",
+          "name": "Bubuk Kremer"
+        },
+        {
+          "old_id": "001-BulaBatok",
+          "new_id": "GBM_TESP",
+          "name": "Gula Batok Merah (1Kg)"
+        },
+        {
+          "old_id": "001-BumbuJamur",
+          "new_id": "KRJT_OV2U",
+          "name": "Kaldu Rasa Jamur Totole (40g)"
+        },
+        {
+          "old_id": "001-Creme",
+          "new_id": "FC_WF4S",
+          "name": "Fiber Creme (100g)"
+        },
+        {
+          "old_id": "001-CukaDapur",
+          "new_id": "DBCD_EKDI",
+          "name": "Dua Belibis Cuka Dapur (650ml)"
+        },
+        {
+          "old_id": "001-CukaDuaBelibis",
+          "new_id": "DBC_5HYX",
+          "name": "Dua Belibis Cuka (150ml)"
+        },
+        {
+          "old_id": "001-DelmonteBBQ",
+          "new_id": "SDB_4GE6",
+          "name": "Saos Delmonte BBQ"
+        },
+        {
+          "old_id": "001-FinnaSaosTomat",
+          "new_id": "FST_KHCZ",
+          "name": "Finna Saos Tomat (95g)"
+        },
+        {
+          "old_id": "001-GaramSarinah",
+          "new_id": "GCS_WDXG",
+          "name": "Garam Cap Sarinah 250gr"
+        },
+        {
+          "old_id": "001-Gula",
+          "new_id": "GP_PY3L",
+          "name": "Gula Putih (1kg)"
+        },
+        {
+          "old_id": "001-GulaMerahBubuk",
+          "new_id": "GMB_BUW2",
+          "name": "Gula Merah Bubuk (25kg)"
+        },
+        {
+          "old_id": "001-IndofoodSambel",
+          "new_id": "ISS_3BWG",
+          "name": "Indofood Sambal Sachet 8grm"
+        },
+        {
+          "old_id": "001-Kecap",
+          "new_id": "KB_VKTS",
+          "name": "Kecap Bango (700g)"
+        },
+        {
+          "old_id": "001-KecapAsin",
+          "new_id": "KAA_DUHS",
+          "name": "Kecap ABC Asin (600ml)"
+        },
+        {
+          "old_id": "001-KecapHitamJamur",
+          "new_id": "MS_904L",
+          "name": "Mushroom Soy (150)"
+        },
+        {
+          "old_id": "001-KecapIkan",
+          "new_id": "FKI_S017",
+          "name": "Finna Kecap Ikan (700ml)"
+        },
+        {
+          "old_id": "001-Mayonise",
+          "new_id": "MM_X9B7",
+          "name": "Mayonise Mamayo (1kg)"
+        },
+        {
+          "old_id": "001-Mentega",
+          "new_id": "MBB_LAV9",
+          "name": "Mentega Blue Band (190g)"
+        },
+        {
+          "old_id": "001-MinyakBimoli",
+          "new_id": "MB_HAGQ",
+          "name": "Minyak Bimoli (2L)"
+        },
+        {
+          "old_id": "001-MinyakFortune",
+          "new_id": "MF_BWA7",
+          "name": "Minyak Fortune (2L)"
+        },
+        {
+          "old_id": "001-MinyakSania",
+          "new_id": "MS_RLLS",
+          "name": "Minyak Sania (2L)"
+        },
+        {
+          "old_id": "001-MinyakSunco",
+          "new_id": "MS_63MV",
+          "name": "Minyak Sunco (2L)"
+        },
+        {
+          "old_id": "001-MinyakWijen",
+          "new_id": "MWCBM_GP2W",
+          "name": " Minyak Wijen Cap Bunga Matahari (135ml)"
+        },
+        {
+          "old_id": "001-MinyakWijenDahlia",
+          "new_id": "MWCD_ZI4A",
+          "name": "Minyak Wijen Cap Dahlia (150ml)"
+        },
+        {
+          "old_id": "001-Nutrijel",
+          "new_id": "NP_P0FO",
+          "name": "Nutrijel Plain"
+        },
+        {
+          "old_id": "001-Panir",
+          "new_id": "TP_98OT",
+          "name": "Tepung Panir (10Kg)"
+        },
+        {
+          "old_id": "001-Paprika",
+          "new_id": "PB_LNBH",
+          "name": "Paprika Bubuk (70g)"
+        },
+        {
+          "old_id": "001-ProczSpread",
+          "new_id": "KPS_Y2D3",
+          "name": "Keju Procz Spread (2kg)"
+        },
+        {
+          "old_id": "001-QuickMelt",
+          "new_id": "KQM_LMM0",
+          "name": "Keju Quick Melt (160)"
+        },
+        {
+          "old_id": "001-RajaRasa",
+          "new_id": "SRRK_9Q1C",
+          "name": "Saos Raja Rasa Kenari (600ml)"
+        },
+        {
+          "old_id": "001-RedBellJeruk",
+          "new_id": "RJ_ATTU",
+          "name": "RedBell Jeruk"
+        },
+        {
+          "old_id": "001-RedBellMelon",
+          "new_id": "RM_AE17",
+          "name": "RedBell Melon"
+        },
+        {
+          "old_id": "001-SabunPiring",
+          "new_id": "SPE_FXHO",
+          "name": "Sabun Piring Ekonomi"
+        },
+        {
+          "old_id": "001-SambalDelmo",
+          "new_id": "SDS_2CW4",
+          "name": "Saos Delmonte Sambal 8grm"
+        },
+        {
+          "old_id": "001-SambalDelmonte",
+          "new_id": "STD_ZPLA",
+          "name": "Saos Tomat Delmonte (8grm)"
+        },
+        {
+          "old_id": "001-Santan",
+          "new_id": "SK_ZHNS",
+          "name": "Santan Kara (200ml)"
+        },
+        {
+          "old_id": "001-SaoriSaosTiram",
+          "new_id": "SST_DDB7",
+          "name": "Saori Saos Tiram 1lt"
+        },
+        {
+          "old_id": "001-SaoriTiram",
+          "new_id": "SST_TV97",
+          "name": "Saori Saos Tiram 270ml"
+        },
+        {
+          "old_id": "001-SaosKeju",
+          "new_id": "SKG_01MM",
+          "name": "Saos Keju Gourmet (500g)"
+        },
+        {
+          "old_id": "001-SaosMentai",
+          "new_id": "SMP_R5OV",
+          "name": "Saos Mentai PrimaAgung (1kg)"
+        },
+        {
+          "old_id": "001-SaosSambal",
+          "new_id": "SSD_50CJ",
+          "name": "Saos Sambal Delmonte (1kg)"
+        },
+        {
+          "old_id": "001-SaosTeriyaki",
+          "new_id": "SST_NLZU",
+          "name": "Saos Saori Teriyaki (275)"
+        },
+        {
+          "old_id": "001-SaosTomat",
+          "new_id": "STD_46ED",
+          "name": "Saos Tomat Delmonte (1kg)"
+        },
+        {
+          "old_id": "001-Satelit",
+          "new_id": "AS_L5TT",
+          "name": "Agar-Agar Satelit"
+        },
+        {
+          "old_id": "001-SunKara",
+          "new_id": "SKL_AMQC",
+          "name": "Sun Kara 1 Ltr"
+        },
+        {
+          "old_id": "001-SusuIndomilk",
+          "new_id": "SUIP_OP6W",
+          "name": "Susu UHT Indomilk Plain (1ltr)"
+        },
+        {
+          "old_id": "001-Tapioka",
+          "new_id": "TTR_I43W",
+          "name": "Tepung Tapioka Rosebrand (200g)"
+        },
+        {
+          "old_id": "001-TapiokaMatahari",
+          "new_id": "TTR_D3Z5",
+          "name": "Tepung Tapioka RoseBrand (500g)"
+        },
+        {
+          "old_id": "001-TepungBeras",
+          "new_id": "TBR_LN1E",
+          "name": "Tepung Beras Rosebrand (500g)"
+        },
+        {
+          "old_id": "001-TepungKanji",
+          "new_id": "TT_TXPQ",
+          "name": "Tepung Tapioka (2Kg)"
+        },
+        {
+          "old_id": "001-TepungSajiku",
+          "new_id": "TSB_AXBU",
+          "name": "Tepung Sajiku Bumbu"
+        },
+        {
+          "old_id": "001-Tissue",
+          "new_id": "TJ_ZH8L",
+          "name": "Tissue Jolly (250sheets 2ply)"
+        },
+        {
+          "old_id": "001-TongTji",
+          "new_id": "TTC_TO6G",
+          "name": "Teh TongTji Celup"
+        },
+        {
+          "old_id": "001-Wijen",
+          "new_id": "TW_PKZB",
+          "name": "Tepung Wijen 500grm"
+        },
+        {
+          "old_id": "001-sun",
+          "new_id": "SK_WF5B",
+          "name": "Sun kara (65ml)"
+        },
+        {
+          "old_id": "002-Beras",
+          "new_id": "BSL_UZDK",
+          "name": "Beras Serang LAMA (10kg)"
+        },
+        {
+          "old_id": "002-BumbuJamur",
+          "new_id": "KRJT_ZE8Z",
+          "name": "Kaldu Rasa Jamur Totole (200g)"
+        },
+        {
+          "old_id": "002-GulaMerahBubuk",
+          "new_id": "GMB_WLUL",
+          "name": "Gula Merah Bubuk (1kg)"
+        },
+        {
+          "old_id": "002-Micin",
+          "new_id": "MSBM_4Z4W",
+          "name": "Micin Sasa Bumbu Masak (1kg)"
+        },
+        {
+          "old_id": "002-Panir",
+          "new_id": "TP_O0HM",
+          "name": "Tepung Panir (1kg)"
+        },
+        {
+          "old_id": "002-Santan",
+          "new_id": "SS_F851",
+          "name": "Santan Sasa (65ml)"
+        },
+        {
+          "old_id": "002-SaosSambal",
+          "new_id": "SSBF_1GYB",
+          "name": "Saos Sambal Bangkok Finna (9g)"
+        },
+        {
+          "old_id": "003-BumbuJamur",
+          "new_id": "TJ_F9UB",
+          "name": "Totole Jamur 80grm"
+        },
+        {
+          "old_id": "003-TepungBeras",
+          "new_id": "TBR_3UR6",
+          "name": "Tepung Beras RoseBrand (1kg)"
+        },
+        {
+          "old_id": "004-BumbuJamur",
+          "new_id": "KRJT_WOSS",
+          "name": "Kaldu Rasa Jamur Totole (400g)"
+        },
+        {
+          "old_id": "ARIMBI-01",
+          "new_id": "BAP_PVBG",
+          "name": "Beras Arimbi Premium (25kg)"
+        },
+        {
+          "old_id": "AirMineral-001",
+          "new_id": "AMLM_QOJR",
+          "name": "Air Mineral Le Mineral (600ml)"
+        },
+        {
+          "old_id": "BENGBENG-001",
+          "new_id": "BD_9AGO",
+          "name": "Beng-Beng Drink (27g)"
+        },
+        {
+          "old_id": "BERAS-2P",
+          "new_id": "BSDP_WSFI",
+          "name": "Beras Serang Dua Putri (25kg)"
+        },
+        {
+          "old_id": "BumbuNasGor-001",
+          "new_id": "BRNG_1R4O",
+          "name": "Bumbu Racik Nasi Goreng"
+        },
+        {
+          "old_id": "GARAM-002",
+          "new_id": "GCK_1C9N",
+          "name": "Garam Cap Kapal (500g)"
+        },
+        {
+          "old_id": "GCK-250-20",
+          "new_id": "GCK_M2DR",
+          "name": "Garam Cap Kapal 250gr"
+        },
+        {
+          "old_id": "GULA-002",
+          "new_id": "GPKA_Z60N",
+          "name": "Gula Putih Kebon Agung (1kg)"
+        },
+        {
+          "old_id": "GULA-003",
+          "new_id": "GPPRB_CRM2",
+          "name": "Gula Putih Pasir Rose Brand (1kg)"
+        },
+        {
+          "old_id": "Garam-001",
+          "new_id": "GCK_XJ28",
+          "name": "Garam Cap Kapal (250g)"
+        },
+        {
+          "old_id": "KNA1KG",
+          "new_id": "KA_MRNA",
+          "name": "Knorr Ayam (1kg)"
+        },
+        {
+          "old_id": "KNORRAYAM-001",
+          "new_id": "KA_3F07",
+          "name": "Knorr Ayam (200g)"
+        },
+        {
+          "old_id": "KOPI-001",
+          "new_id": "GDC_LBC4",
+          "name": "Good Day Cappuccino (25g)"
+        },
+        {
+          "old_id": "KetumbarBubuk-001",
+          "new_id": "KBD_7VD4",
+          "name": "Ketumbar Bubuk Desaku (12.5g)"
+        },
+        {
+          "old_id": "Kopi-002",
+          "new_id": "GDFM_HQCK",
+          "name": "Good Day Freeze Mocafrio (30g)"
+        },
+        {
+          "old_id": "LADA-001",
+          "new_id": "L_IFPK",
+          "name": "Ladaku (90g)"
+        },
+        {
+          "old_id": "MAGIC-001",
+          "new_id": "MML_5JJV",
+          "name": "Maggi Magic Lezat (7gram)"
+        },
+        {
+          "old_id": "MGRPAL-01",
+          "new_id": "MP_V3JG",
+          "name": "Margarin Palmia"
+        },
+        {
+          "old_id": "MICIN-001",
+          "new_id": "MS_1N2C",
+          "name": "Micin Sasa (50g)"
+        },
+        {
+          "old_id": "MaizenaRB",
+          "new_id": "MRB_QQ46",
+          "name": "Maizena Rose Brand (250Gr)"
+        },
+        {
+          "old_id": "MasakoSapi-001",
+          "new_id": "MS_LCZK",
+          "name": "Masako Sapi (8.5g)"
+        },
+        {
+          "old_id": "MieInstan-001",
+          "new_id": "MSCB_G02S",
+          "name": "Mie Sedaap Cheese Buldak (86g)"
+        },
+        {
+          "old_id": "MieInstan-002",
+          "new_id": "MSKS_45D8",
+          "name": "Mie Sedaap Kari Spesial (75g)"
+        },
+        {
+          "old_id": "MieInstan-003",
+          "new_id": "MIG_K6QY",
+          "name": "Mie Indomie Geprek (85g)"
+        },
+        {
+          "old_id": "MieInstan-004",
+          "new_id": "MSS_3VP5",
+          "name": "Mie Sedaap Soto (76g)"
+        },
+        {
+          "old_id": "MieInstan-005",
+          "new_id": "MIGS_03BF",
+          "name": "Mie Indomie Goreng Spesial (80g)"
+        },
+        {
+          "old_id": "MieInstan-006",
+          "new_id": "MIAB_1051",
+          "name": "Mie Indomie Ayam Bawang (85g)"
+        },
+        {
+          "old_id": "MieInstan-007",
+          "new_id": "MSG_SGII",
+          "name": "Mie Sedaap Goreng (91g)"
+        },
+        {
+          "old_id": "MieInstan-008",
+          "new_id": "MIS_5WFR",
+          "name": "Mie Indomie Seblak (75g)"
+        },
+        {
+          "old_id": "MieInstan-009",
+          "new_id": "MIA_70H8",
+          "name": "Mie Indomie Aceh (90g)"
+        },
+        {
+          "old_id": "MieInstan-010",
+          "new_id": "MIR_MWFY",
+          "name": "Mie Indomie Rendang (91g)"
+        },
+        {
+          "old_id": "Milo-001",
+          "new_id": "MS_LQ3U",
+          "name": "Milo Saset (22g)"
+        },
+        {
+          "old_id": "NORI-001",
+          "new_id": "NTO_STTF",
+          "name": "Nori Tabur Original (60gr)"
+        },
+        {
+          "old_id": "NORI-002",
+          "new_id": "NTRS_IM0V",
+          "name": "Nori Tabur Rasa Sapi (60gr)"
+        },
+        {
+          "old_id": "NORI-003",
+          "new_id": "NTS_GZN1",
+          "name": "Nori Tabur Seafood (60gr)"
+        },
+        {
+          "old_id": "RW",
+          "new_id": "RPM_OG16",
+          "name": "R&W Perwarna Makanan"
+        },
+        {
+          "old_id": "Rosemary-01",
+          "new_id": "R_9FR7",
+          "name": "Rosemary "
+        },
+        {
+          "old_id": "SAYURSOP-001",
+          "new_id": "IRBSS_FV5D",
+          "name": "Indofood Racik Bumbu Sayur Sop (20g)"
+        },
+        {
+          "old_id": "SGH",
+          "new_id": "MW_67HD",
+          "name": "Minyak Wijen (600ml)"
+        },
+        {
+          "old_id": "SKM-001",
+          "new_id": "SKMIC_9JQN",
+          "name": "Susu Kental Manis Indomilk Coklat (37g)"
+        },
+        {
+          "old_id": "SKM-002",
+          "new_id": "SKMIP_JG86",
+          "name": "Susu Kental Manis Indomilk Putih"
+        },
+        {
+          "old_id": "SUNKARA200",
+          "new_id": "SK_OCGG",
+          "name": "Sun Kara (200ml)"
+        },
+        {
+          "old_id": "TEH-001",
+          "new_id": "TTS_9ESH",
+          "name": "TongTji Teh Super (40g)"
+        },
+        {
+          "old_id": "TERIGU-001",
+          "new_id": "TTLM_GMTZ",
+          "name": "Tepung Terigu Lencana Merah (1Kg)"
+        },
+        {
+          "old_id": "TERIGU-002",
+          "new_id": "TTS_GRAY",
+          "name": "Tepung Terigu Segitiga (1kg)"
+        },
+        {
+          "old_id": "TERIGU-003",
+          "new_id": "TTP_HJK2",
+          "name": "Tepung Terigu Payung (1kg)"
+        },
+        {
+          "old_id": "TERIGU-007",
+          "new_id": "TTC_5MXM",
+          "name": "Tepung Terigu Cakra (1kg)"
+        },
+        {
+          "old_id": "WIJEN-007",
+          "new_id": "MWM_2Z3S",
+          "name": "Minyak Wijen Mahkota (275ml)"
+        },
+        {
+          "old_id": "bay-leaves",
+          "new_id": "BL_YMVC",
+          "name": "Bay Leaves"
+        },
+        {
+          "old_id": "kayumanis75",
+          "new_id": "KM_PAY3",
+          "name": "Kayu Manis (75ml)"
+        },
+        {
+          "old_id": "lm25",
+          "new_id": "TTLT_RN5A",
+          "name": "Tepung Terigu LM Timbangan (1Kg)"
+        },
+        {
+          "old_id": "madu-01",
+          "new_id": "M_9BLQ",
+          "name": "Madu (500ml)"
+        },
+        {
+          "old_id": "mamayo01",
+          "new_id": "M_OWFH",
+          "name": "Mayonaise (1lt)"
+        },
+        {
+          "old_id": "palabubuk75",
+          "new_id": "PB_HJ3H",
+          "name": "Pala Bubuk (60gr)"
+        },
+        {
+          "old_id": "sania01",
+          "new_id": "MGS_KFT4",
+          "name": "Minyak Goreng Sunia (1lt)"
+        },
+        {
+          "old_id": "saorit",
+          "new_id": "SST_12UX",
+          "name": "Saos Saori Teriyaki (1Ltr)"
+        },
+        {
+          "old_id": "serangbaru01",
+          "new_id": "BS_389C",
+          "name": "Beras Serang (10kg)"
+        }
+      ]
+    }
+  ]
+}

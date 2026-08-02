@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { downloadReceipt, printReceipt } from '../utils/standardReceiptGenerator';
 import { generateWarehouseReceipt, printWarehouseReceipt } from '../utils/warehouseReceiptGenerator';
-import { productService } from '../services/productService';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { getCollectionName } from '../utils/envMode';
@@ -21,6 +20,7 @@ export default function ReceiptModal({ isOpen, onClose, orderData }) {
     useEffect(() => {
         if (isOpen && orderData) {
             const tier = orderData.selectedCustomerType;
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setPrintRegular(tier === 'regular');
             setPrintPremium(tier === 'premium');
             setPrintStar(tier === 'star');
