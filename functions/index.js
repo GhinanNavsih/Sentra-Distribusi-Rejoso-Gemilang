@@ -108,8 +108,10 @@ const getOperator = async (request, allowedRoles = null) => {
 };
 
 // Cloud Run must accept the browser's unauthenticated OPTIONS preflight before
-// Firebase callable authentication can be checked inside the handler.
-const callable = (handler, allowedRoles = null) => onCall({ cors: true, invoker: 'public' }, async (request) => {
+// Firebase callable authentication can be checked inside the handler. The
+// current firebase-functions onCall manifest does not emit the Cloud Run IAM
+// invoker binding, so that binding is provisioned separately during deployment.
+const callable = (handler, allowedRoles = null) => onCall({ cors: true }, async (request) => {
   const operator = await getOperator(request, allowedRoles);
   try {
     return await handler(request.data || {}, operator);
