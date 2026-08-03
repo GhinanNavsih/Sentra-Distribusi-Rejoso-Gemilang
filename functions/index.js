@@ -107,7 +107,9 @@ const getOperator = async (request, allowedRoles = null) => {
   };
 };
 
-const callable = (handler, allowedRoles = null) => onCall({ cors: true }, async (request) => {
+// Cloud Run must accept the browser's unauthenticated OPTIONS preflight before
+// Firebase callable authentication can be checked inside the handler.
+const callable = (handler, allowedRoles = null) => onCall({ cors: true, invoker: 'public' }, async (request) => {
   const operator = await getOperator(request, allowedRoles);
   try {
     return await handler(request.data || {}, operator);
