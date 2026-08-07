@@ -31,12 +31,12 @@ service cloud.firestore {
     }
 
     match /inventory/{productId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if false;
     }
 
     match /inventory_test/{productId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if false;
     }
 

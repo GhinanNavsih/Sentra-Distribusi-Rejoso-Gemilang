@@ -1,5 +1,5 @@
 import { db } from '../firebase.config';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import { getCollectionName } from '../utils/envMode';
 import { callInventoryOperation } from './inventoryOperationsService';
 
@@ -18,6 +18,21 @@ export const inventoryService = {
             throw new Error(`Nilai stok ${sku} tidak valid dan perlu direkonsiliasi.`);
         }
         return stock;
+    },
+
+    getAllStock: async () => {
+        const snapshot = await getDocs(collection(db, getCollectionName('inventory')));
+        const stockByProduct = new Map();
+
+        snapshot.docs.forEach(stockDocument => {
+            const stock = Number(stockDocument.data().current_stock_base);
+            if (!Number.isFinite(stock)) {
+                throw new Error(`Nilai stok ${stockDocument.id} tidak valid dan perlu direkonsiliasi.`);
+            }
+            stockByProduct.set(stockDocument.id, stock);
+        });
+
+        return stockByProduct;
     },
 
     adjustStock: async ({

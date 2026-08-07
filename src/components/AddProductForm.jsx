@@ -5,7 +5,7 @@ import { formatPriceInput, parsePrice } from '../utils/decimalHelper';
 export default function AddProductForm({ onClose, onSuccess }) {
     const [formData, setFormData] = useState({
         name: '',
-        base_unit: 'kg',
+        base_unit: 'pcs',
         bulk_unit_name: 'Sack',
         bulk_unit_conversion: 50,
         price_regular: '',
@@ -117,13 +117,13 @@ export default function AddProductForm({ onClose, onSuccess }) {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Satuan Dasar</label>
                         <select name="base_unit" value={formData.base_unit} onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none">
-                            <option value="kg">Kilogram (kg)</option>
-                            <option value="g">Gram (g)</option>
+                            <option value="ball">Ball (ball)</option>
+                            <option value="box">Box (box)</option>
                             <option value="ltr">Liter (ltr)</option>
+                            <option value="pack">Pack (pack)</option>
                             <option value="pcs">Pcs (pcs)</option>
                             <option value="sack">Sak (sack)</option>
-                            <option value="box">Box (box)</option>
-                            <option value="ball">Ball (ball)</option>
+                            <option value="slop">Slop (slop)</option>
                         </select>
                     </div>
                     <div>
