@@ -89,7 +89,11 @@ export const productService = {
         const col = getCollectionName("products");
         const snapshot = await getDocs(collection(db, col));
         return snapshot.docs
-            .map(d => ({ id: d.id, ...d.data() }))
+            // The Firestore document ID is the canonical product ID. Some
+            // migrated records still contain a legacy `id` field in their
+            // data, so spread the document data first and restore the real ID
+            // afterwards.
+            .map(d => ({ ...d.data(), id: d.id }))
             .filter(product => includeArchived || product.active !== false);
     },
 
@@ -101,7 +105,7 @@ export const productService = {
         const docRef = doc(db, col, sku);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() };
+            return { ...docSnap.data(), id: docSnap.id };
         }
         return null;
     },
