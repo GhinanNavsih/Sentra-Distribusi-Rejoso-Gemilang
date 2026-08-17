@@ -4,8 +4,8 @@ import { productService } from '../services/productService';
 import { inventoryService } from '../services/inventoryService';
 import { orderService } from '../services/orderService';
 import { customerService } from '../services/customerService';
-import { posLinkService } from '../services/posLinkService';
 import ReceiptModal from '../components/ReceiptModal';
+import StockSyncPreviewModal from '../components/StockSyncPreviewModal';
 import InsufficientStockModal from '../components/InsufficientStockModal';
 import { clearPosEditDraft, readPosEditDraft } from '../utils/posEditDraft';
 
@@ -42,6 +42,7 @@ export default function PosPage() {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [showReceiptModal, setShowReceiptModal] = useState(false);
+    const [showStockSyncModal, setShowStockSyncModal] = useState(false);
     const [completedOrderData, setCompletedOrderData] = useState(null);
     const [selectedCustomerType, setSelectedCustomerType] = useState(() => {
         const draft = readPosEditDraft();
@@ -78,29 +79,6 @@ export default function PosPage() {
         const customer = customers.find(entry => entry.id === customerId);
         if (customer?.default_customer_type) setSelectedCustomerType(customer.default_customer_type);
     };
-
-    // null = no restriction. Selling something unlinked to a stock-synced
-    // customer would still go through, but would sit blocked on their side
-    // until someone links it — so narrow the catalog to what already works.
-    const [linkedProductIds, setLinkedProductIds] = useState(null);
-
-    useEffect(() => {
-        if (!selectedCustomer?.bridge_target) {
-            setLinkedProductIds(null);
-            return;
-        }
-        let cancelled = false;
-        posLinkService.getLinks()
-            .then(links => {
-                if (!cancelled) setLinkedProductIds(new Set(Object.keys(links)));
-            })
-            .catch(error => {
-                console.error('Gagal memuat tautan produk POS:', error);
-                // Fail open: an unfiltered catalog beats blocking every sale.
-                if (!cancelled) setLinkedProductIds(null);
-            });
-        return () => { cancelled = true; };
-    }, [selectedCustomer]);
 
     // Save cart and customer type to localStorage when they change
     useEffect(() => {
@@ -194,12 +172,29 @@ export default function PosPage() {
         }));
     }, [editingPreOrder, selectedCustomerType]);
 
+    // Live stock preview: subtract what's already in the cart (converted to
+    // base units, same as everywhere else this file does unit math) so the
+    // catalog reflects what selecting an item would leave behind, instantly,
+    // without waiting on a server round-trip. Purely a display adjustment --
+    // nothing is written until checkout.
+    const cartBaseQtyByProductId = useMemo(() => {
+        const totals = {};
+        cart.forEach(item => {
+            const cleanQty = item.qty.toString().replace(/,/g, '.');
+            const numericQty = item.qty === '' ? 0 : parseFloat(cleanQty) || 0;
+            const baseUnitLower = (item.base_unit || '').toLowerCase().trim();
+            const bulkUnitLower = (item.bulk_unit_name || '').toLowerCase().trim();
+            const isSameUnit = baseUnitLower && bulkUnitLower && baseUnitLower === bulkUnitLower;
+            const conversion = isSameUnit ? 1 : (item.bulk_unit_conversion || 1);
+            const baseQty = item.selected_unit === 'bulk' ? numericQty * conversion : numericQty;
+            totals[item.product_id] = (totals[item.product_id] || 0) + baseQty;
+        });
+        return totals;
+    }, [cart]);
+
     // Filter products using word-by-word keyword matching (order-insensitive)
     const filteredProducts = useMemo(() => {
-        let catalogProducts = products.filter(product => product.active !== false);
-        if (linkedProductIds) {
-            catalogProducts = catalogProducts.filter(p => linkedProductIds.has(p.id));
-        }
+        const catalogProducts = products.filter(product => product.active !== false);
         if (!searchQuery) return catalogProducts; // Return all if no query
         const queryWords = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
         if (queryWords.length === 0) return catalogProducts;
@@ -209,7 +204,7 @@ export default function PosPage() {
             const skuLower = (p.sku || '').toLowerCase();
             return queryWords.every(word => nameLower.includes(word) || skuLower.includes(word));
         });
-    }, [products, searchQuery, linkedProductIds]);
+    }, [products, searchQuery]);
 
     // Add to cart
     const addToCart = (product) => {
@@ -487,6 +482,13 @@ export default function PosPage() {
                 target_date: paymentStatus === 'unpaid' ? targetDate : null
             });
 
+            // Captured before state resets below: a paid sale to a stock-synced
+            // customer gets a stock preview instead of a print receipt, since
+            // there is nothing to hand a B2B buyer a paper receipt for. An
+            // unpaid pre-order doesn't move any stock yet (that happens when it
+            // is paid later), so it keeps the normal receipt flow.
+            const wasBridgeSale = paymentStatus === 'paid' && Boolean(selectedCustomer?.bridge_target);
+
             setCart([]);
             setSelectedCustomerId('');
             if (paymentStatus === 'unpaid') {
@@ -494,7 +496,11 @@ export default function PosPage() {
                 setTargetDate(getLocalDateString());
             }
             setPaymentStatus('paid');
-            setShowReceiptModal(true);
+            if (wasBridgeSale) {
+                setShowStockSyncModal(true);
+            } else {
+                setShowReceiptModal(true);
+            }
         } catch (err) {
             if (err.name === "InsufficientStockError") {
                 setStockErrorDetails(err.details);
@@ -567,33 +573,33 @@ export default function PosPage() {
                     {loading ? (
                         <div className="text-gray-400 text-center mt-10">Memuat katalog...</div>
                     ) : filteredProducts.length === 0 ? (
-                        <div className="text-gray-500 text-center mt-10">
-                            {searchQuery
-                                ? `Tidak ada produk yang cocok dengan "${searchQuery}"`
-                                : linkedProductIds
-                                    ? `Belum ada produk yang tertaut ke stok ${selectedCustomer?.name || 'pelanggan ini'}.`
-                                    : 'Belum ada produk.'}
-                        </div>
+                        <div className="text-gray-500 text-center mt-10">Tidak ada produk yang cocok dengan "{searchQuery}"</div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {filteredProducts.map(p => (
-                                <button
-                                    key={p.id}
-                                    onClick={() => addToCart(p)}
-                                    className="text-left p-4 rounded border border-gray-200 hover:border-primary hover:bg-gray-50 transition-all group"
-                                >
-                                    <div className="font-bold text-gray-900 group-hover:text-primary">{p.name}</div>
-                                    <div className="text-xs text-gray-500 mb-2">SKU: {p.sku}</div>
-                                    <div className="flex justify-between items-end">
-                                        <div className="text-sm font-bold text-gray-700">
-                                            Stok: {p.stock} {p.base_unit}
+                            {filteredProducts.map(p => {
+                                const reservedQty = cartBaseQtyByProductId[p.id] || 0;
+                                const displayedStock = reservedQty
+                                    ? Math.round((p.stock - reservedQty) * 100) / 100
+                                    : p.stock;
+                                return (
+                                    <button
+                                        key={p.id}
+                                        onClick={() => addToCart(p)}
+                                        className="text-left p-4 rounded border border-gray-200 hover:border-primary hover:bg-gray-50 transition-all group"
+                                    >
+                                        <div className="font-bold text-gray-900 group-hover:text-primary">{p.name}</div>
+                                        <div className="text-xs text-gray-500 mb-2">SKU: {p.sku}</div>
+                                        <div className="flex justify-between items-end">
+                                            <div className={`text-sm font-bold ${reservedQty ? 'text-primary' : 'text-gray-700'}`}>
+                                                Stok: {displayedStock} {p.base_unit}
+                                            </div>
+                                            <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                                                + Tambah
+                                            </div>
                                         </div>
-                                        <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
-                                            + Tambah
-                                        </div>
-                                    </div>
-                                </button>
-                            ))}
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -641,8 +647,8 @@ export default function PosPage() {
                             </select>
                             {selectedCustomer?.bridge_target && (
                                 <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-1">
-                                    Penjualan lunas ke {selectedCustomer.name} akan dikirim ke sistem stok mereka.
-                                    Katalog di kiri hanya menampilkan produk yang sudah tertaut.
+                                    Penjualan lunas ke {selectedCustomer.name} akan dikirim ke sistem stok mereka
+                                    untuk dikonfirmasi.
                                 </p>
                             )}
                         </div>
@@ -832,6 +838,13 @@ export default function PosPage() {
             <ReceiptModal
                 isOpen={showReceiptModal}
                 onClose={() => setShowReceiptModal(false)}
+                orderData={completedOrderData}
+            />
+
+            {/* Stock Sync Preview Modal - paid sales to a stock-synced customer */}
+            <StockSyncPreviewModal
+                isOpen={showStockSyncModal}
+                onClose={() => setShowStockSyncModal(false)}
                 orderData={completedOrderData}
             />
 

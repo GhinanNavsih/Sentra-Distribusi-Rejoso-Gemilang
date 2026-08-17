@@ -718,10 +718,11 @@ export const listPosInventory = callable(async (data) => {
     items: snapshot.docs.map(doc => ({
       id: doc.id,
       name: doc.data().name || doc.id,
-      unit: doc.data().unit || ''
+      unit: doc.data().unit || '',
+      stock: Number.isFinite(Number(doc.data().stock)) ? Number(doc.data().stock) : 0
     }))
   };
-}, ['superadmin'], { secrets: [posServiceAccountKey] });
+}, null, { secrets: [posServiceAccountKey] });
 
 // Links an SDRG product to an inventory item in the linked POS.
 //
