@@ -5,11 +5,13 @@ import PosPage from './pages/PosPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import StockMovementLogPage from './pages/StockMovementLogPage';
 import CatalogPage from './pages/CatalogPage';
+import CustomersPage from './pages/CustomersPage';
 import LoginPage from './pages/LoginPage';
 import logo from './assets/logo_full.png';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import EnvToggle from './components/EnvToggle';
+import { useUserRole } from './hooks/useUserRole';
 import { isStaging } from './utils/envMode';
 
 function NavLink({ to, children }) {
@@ -23,6 +25,7 @@ function NavLink({ to, children }) {
 
 function Layout() {
   const { logout, currentUser } = useAuth();
+  const { isSuperAdmin } = useUserRole();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -64,6 +67,7 @@ function Layout() {
                     <NavLink to="/pos">Kasir</NavLink>
                     <NavLink to="/transactions">Riwayat</NavLink>
                     <NavLink to="/stock-movements">Log Stok</NavLink>
+                    {isSuperAdmin && <NavLink to="/customers">Pelanggan</NavLink>}
                   </>
                 )}
               </nav>
@@ -105,6 +109,7 @@ function Layout() {
           <Route path="/pos" element={<ProtectedRoute><PosPage /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><TransactionHistoryPage /></ProtectedRoute>} />
           <Route path="/stock-movements" element={<ProtectedRoute><StockMovementLogPage /></ProtectedRoute>} />
+          <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

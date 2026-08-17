@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
-import { initializeApp } from 'firebase-admin/app';
+import { cert, getApp, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { logger, setGlobalOptions } from 'firebase-functions/v2';
+import { defineSecret } from 'firebase-functions/params';
 import {
   InventoryValidationError,
   editedLineSnapshot,
@@ -19,7 +20,31 @@ const db = getFirestore();
 
 setGlobalOptions({ region: 'asia-southeast2', maxInstances: 20 });
 
+// Read-only cross-project access to the linked POS's inventory, for the
+// product-link picker. The credential lives only in Secret Manager -- it is
+// bound to the two callables below and never reaches a browser, unlike a
+// client-side login would.
+const posServiceAccountKey = defineSecret('POS_SERVICE_ACCOUNT_KEY');
+const POS_CANTEEN_ID = 'canteen375';
+
+const posInventoryCollection = (environment) => {
+  let app;
+  try {
+    app = getApp('pos');
+  } catch {
+    app = initializeApp({ credential: cert(JSON.parse(posServiceAccountKey.value())) }, 'pos');
+  }
+  const canteensCollection = environment === 'staging' ? 'zTesting_Canteens' : 'Canteens';
+  return getFirestore(app).collection(canteensCollection).doc(POS_CANTEEN_ID).collection('Inventory');
+};
+
 const MAX_LINES = 80;
+
+// Roles allowed to run an operation that does not name its own allow-list.
+// Any other role -- including one added later, such as the read-only 'bridge'
+// identity the POS app authenticates with -- is denied by default rather than
+// silently permitted.
+const DEFAULT_ROLES = ['superadmin', 'shopper'];
 
 const collectionName = (baseName, environment) => {
   if (environment !== 'production' && environment !== 'staging') {
@@ -36,8 +61,21 @@ const collectionsFor = (environment) => ({
   purchases: collectionName('purchases', environment),
   counters: collectionName('counters', environment),
   losses: collectionName('stock_losses', environment),
-  products: collectionName('products', environment)
+  products: collectionName('products', environment),
+  customers: collectionName('customers', environment),
+  posLinks: collectionName('pos_product_links', environment)
 });
+
+// A customer may be linked to an external system that restocks from our sales.
+// The key is stored on the customer and denormalized onto every order it buys,
+// so eligibility can never be changed retroactively by editing the customer.
+const BRIDGE_TARGETS = Object.freeze({
+  canteen375: 'deliveries_canteen375'
+});
+
+const bridgeCollection = (bridgeTarget, environment) => (
+  collectionName(BRIDGE_TARGETS[bridgeTarget], environment)
+);
 
 const assertOperationId = (value) => {
   const operationId = String(value || '').trim();
@@ -53,6 +91,14 @@ const assertProductId = (value) => {
     throw new InventoryValidationError('SKU produk tidak valid.', { product_id: value });
   }
   return productId;
+};
+
+const assertCustomerId = (value) => {
+  const customerId = String(value || '').trim();
+  if (!customerId || customerId.length > 180 || customerId.includes('/')) {
+    throw new InventoryValidationError('ID pelanggan tidak valid.', { customer_id: value });
+  }
+  return customerId;
 };
 
 const assertItems = (items) => {
@@ -96,7 +142,7 @@ const getOperator = async (request, allowedRoles = null) => {
 
   const userDoc = await db.collection('users').doc(request.auth.uid).get();
   const role = userDoc.exists ? (userDoc.data().role || 'shopper') : 'shopper';
-  if (allowedRoles && !allowedRoles.includes(role)) {
+  if (!(allowedRoles ?? DEFAULT_ROLES).includes(role)) {
     throw new HttpsError('permission-denied', 'Anda tidak memiliki izin untuk tindakan ini.');
   }
 
@@ -107,11 +153,7 @@ const getOperator = async (request, allowedRoles = null) => {
   };
 };
 
-// Cloud Run must accept the browser's unauthenticated OPTIONS preflight before
-// Firebase callable authentication can be checked inside the handler. The
-// current firebase-functions onCall manifest does not emit the Cloud Run IAM
-// invoker binding, so that binding is provisioned separately during deployment.
-const callable = (handler, allowedRoles = null) => onCall({ cors: true }, async (request) => {
+const callable = (handler, allowedRoles = null, options = {}) => onCall({ cors: true, ...options }, async (request) => {
   const operator = await getOperator(request, allowedRoles);
   try {
     return await handler(request.data || {}, operator);
@@ -170,6 +212,43 @@ const writeOperation = (transaction, operationRef, operationId, kind, operator, 
 
 const existingOperationResult = (snapshot) => snapshot.exists ? snapshot.data().result : null;
 
+// base_qty is the only quantity the linked system may act on. Presentation
+// fields (bulk units, prices) are deliberately left out so there is exactly one
+// number to trust on the other side.
+const outboxLine = (line) => ({
+  product_id: line.product_id,
+  product_name: line.product_name || line.product_id,
+  base_qty: line.base_qty,
+  base_unit: line.base_unit || ''
+});
+
+// Mirrors an order into the buyer's outbox, inside the same transaction as the
+// order itself so the two can never disagree. A replayed operation_id
+// short-circuits before reaching here, having already committed both.
+const writeDeliveryOutbox = (transaction, environment, {
+  bridgeTarget,
+  orderId,
+  customerId,
+  lines,
+  revision,
+  status,
+  orderCreatedAt
+}) => {
+  if (!bridgeTarget || !Object.hasOwn(BRIDGE_TARGETS, bridgeTarget)) return;
+
+  const ref = db.collection(bridgeCollection(bridgeTarget, environment)).doc(orderId);
+  transaction.set(ref, {
+    order_id: orderId,
+    bridge_target: bridgeTarget,
+    customer_id: customerId || null,
+    revision,
+    status,
+    lines: lines.map(outboxLine),
+    order_created_at: orderCreatedAt,
+    updated_at: FieldValue.serverTimestamp()
+  }, { merge: true });
+};
+
 const PRODUCT_FIELDS = [
   'name',
   'base_unit',
@@ -225,6 +304,75 @@ const productFields = (rawProduct = {}, { partial = false } = {}) => {
   }
 
   return result;
+};
+
+const CUSTOMER_TYPES = ['regular', 'premium', 'star'];
+
+const customerFields = (rawCustomer = {}, { partial = false } = {}) => {
+  const result = {};
+
+  if (rawCustomer.name !== undefined) {
+    const name = String(rawCustomer.name ?? '').trim();
+    if (!name || name.length > 120) {
+      throw new InventoryValidationError('Nama pelanggan wajib diisi (maksimal 120 karakter).', { field: 'name' });
+    }
+    result.name = name;
+  } else if (!partial) {
+    throw new InventoryValidationError('Nama pelanggan wajib diisi.', { field: 'name' });
+  }
+
+  if (rawCustomer.default_customer_type !== undefined) {
+    const tier = String(rawCustomer.default_customer_type ?? '').trim();
+    if (!CUSTOMER_TYPES.includes(tier)) {
+      throw new InventoryValidationError('Tingkat harga pelanggan tidak valid.', {
+        field: 'default_customer_type',
+        value: rawCustomer.default_customer_type
+      });
+    }
+    result.default_customer_type = tier;
+  } else if (!partial) {
+    result.default_customer_type = 'regular';
+  }
+
+  if (rawCustomer.bridge_target !== undefined) {
+    const target = rawCustomer.bridge_target === null
+      ? ''
+      : String(rawCustomer.bridge_target).trim();
+    if (target && !Object.hasOwn(BRIDGE_TARGETS, target)) {
+      throw new InventoryValidationError('Tujuan sinkronisasi stok tidak dikenal.', {
+        field: 'bridge_target',
+        value: rawCustomer.bridge_target
+      });
+    }
+    result.bridge_target = target || null;
+  } else if (!partial) {
+    result.bridge_target = null;
+  }
+
+  return result;
+};
+
+// Resolved outside the surrounding transaction on purpose: Firestore requires
+// every read before the first write, and the snapshot taken here is exactly
+// what gets denormalized onto the order. A later edit to the customer must not
+// change how an order already written behaves.
+const resolveCustomer = async (names, rawCustomerId) => {
+  const raw = String(rawCustomerId ?? '').trim();
+  if (!raw) return null;
+
+  const customerId = assertCustomerId(raw);
+  const snapshot = await db.collection(names.customers).doc(customerId).get();
+  if (!snapshot.exists || snapshot.data().active === false) {
+    throw new HttpsError('not-found', 'Pelanggan tidak ditemukan atau sudah diarsipkan.');
+  }
+
+  const data = snapshot.data();
+  return {
+    id: customerId,
+    name: String(data.name || '').trim(),
+    default_customer_type: data.default_customer_type || 'regular',
+    bridge_target: data.bridge_target || null
+  };
 };
 
 const productMapFromSnapshots = (snapshots, { allowArchived = false } = {}) => new Map(snapshots.map(snapshot => {
@@ -454,6 +602,204 @@ export const archiveProduct = callable(async (data, operator) => {
   });
 });
 
+export const createCustomer = callable(async (data, operator) => {
+  const names = collectionsFor(data.environment);
+  const operationId = assertOperationId(data.operation_id);
+  const fields = customerFields(data.customer || {});
+
+  return db.runTransaction(async transaction => {
+    const operationRef = db.collection(names.operations).doc(`customer_create_${operationId}`);
+    const operationSnapshot = await transaction.get(operationRef);
+    const existing = existingOperationResult(operationSnapshot);
+    if (existing) return existing;
+
+    const customersCollection = db.collection(names.customers);
+    let customerId = null;
+    let customerRef = null;
+
+    for (let attempt = 0; attempt < 10000; attempt += 1) {
+      const candidate = createProductId(fields.name);
+      const candidateRef = customersCollection.doc(candidate);
+      const candidateSnapshot = await transaction.get(candidateRef);
+      if (!candidateSnapshot.exists) {
+        customerId = candidate;
+        customerRef = candidateRef;
+        break;
+      }
+    }
+
+    if (!customerId) {
+      throw new HttpsError('resource-exhausted', 'Tidak dapat menghasilkan ID pelanggan unik. Silakan coba lagi.');
+    }
+
+    transaction.create(customerRef, {
+      ...fields,
+      id: customerId,
+      active: true,
+      created_by: operator.email,
+      created_by_uid: operator.uid,
+      created_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp()
+    });
+
+    const result = { customer_id: customerId };
+    writeOperation(transaction, operationRef, operationId, 'create_customer', operator, result);
+    return result;
+  });
+}, ['superadmin']);
+
+export const updateCustomer = callable(async (data, operator) => {
+  const names = collectionsFor(data.environment);
+  const operationId = assertOperationId(data.operation_id);
+  const customerId = assertCustomerId(data.customer_id);
+  const fields = customerFields(data.customer || {}, { partial: true });
+
+  return db.runTransaction(async transaction => {
+    const operationRef = db.collection(names.operations).doc(`customer_update_${operationId}`);
+    const operationSnapshot = await transaction.get(operationRef);
+    const existing = existingOperationResult(operationSnapshot);
+    if (existing) return existing;
+
+    const customerRef = db.collection(names.customers).doc(customerId);
+    const customerSnapshot = await transaction.get(customerRef);
+    if (!customerSnapshot.exists) throw new HttpsError('not-found', 'Pelanggan tidak ditemukan.');
+
+    transaction.update(customerRef, {
+      ...fields,
+      id: customerId,
+      updated_at: FieldValue.serverTimestamp(),
+      updated_by: operator.email,
+      updated_by_uid: operator.uid
+    });
+
+    const result = { customer_id: customerId };
+    writeOperation(transaction, operationRef, operationId, 'update_customer', operator, result);
+    return result;
+  });
+}, ['superadmin']);
+
+export const archiveCustomer = callable(async (data, operator) => {
+  const names = collectionsFor(data.environment);
+  const operationId = assertOperationId(data.operation_id);
+  const customerId = assertCustomerId(data.customer_id);
+
+  return db.runTransaction(async transaction => {
+    const operationRef = db.collection(names.operations).doc(`customer_archive_${operationId}`);
+    const operationSnapshot = await transaction.get(operationRef);
+    const existing = existingOperationResult(operationSnapshot);
+    if (existing) return existing;
+
+    const customerRef = db.collection(names.customers).doc(customerId);
+    const customerSnapshot = await transaction.get(customerRef);
+    if (!customerSnapshot.exists) throw new HttpsError('not-found', 'Pelanggan tidak ditemukan.');
+
+    transaction.update(customerRef, {
+      active: false,
+      archived_at: FieldValue.serverTimestamp(),
+      archived_by: operator.email,
+      archived_by_uid: operator.uid,
+      updated_at: FieldValue.serverTimestamp()
+    });
+
+    const result = { customer_id: customerId, archived: true };
+    writeOperation(transaction, operationRef, operationId, 'archive_customer', operator, result);
+    return result;
+  });
+}, ['superadmin']);
+
+// Live read of the linked POS's inventory, for the link picker. Superadmin
+// only: this is the one path that reaches across into the POS project, using
+// a service-account credential that lives in Secret Manager and is never
+// shipped to a browser.
+export const listPosInventory = callable(async (data) => {
+  collectionsFor(data.environment); // validates the environment argument
+  const snapshot = await posInventoryCollection(data.environment).get();
+  return {
+    items: snapshot.docs.map(doc => ({
+      id: doc.id,
+      name: doc.data().name || doc.id,
+      unit: doc.data().unit || ''
+    }))
+  };
+}, ['superadmin'], { secrets: [posServiceAccountKey] });
+
+// Links an SDRG product to an inventory item in the linked POS.
+//
+// Both sides are validated against stored data rather than trusted from the
+// client: the product must exist here, and the target must exist in POS's
+// live inventory. Units are copied from those records, so a link can never
+// claim a unit neither system actually uses.
+export const savePosProductLink = callable(async (data, operator) => {
+  const names = collectionsFor(data.environment);
+  const operationId = assertOperationId(data.operation_id);
+  const productId = assertProductId(data.product_id);
+  const inventoryItemId = String(data.inventory_item_id || '').trim();
+  if (!inventoryItemId || inventoryItemId.length > 180 || inventoryItemId.includes('/')) {
+    throw new InventoryValidationError('ID bahan POS tidak valid.', {
+      inventory_item_id: data.inventory_item_id
+    });
+  }
+
+  // Resolved before the transaction starts: a Firestore transaction cannot
+  // span two different projects, so the cross-project read has to happen
+  // first, the same way resolveCustomer reads ahead of createSale's transaction.
+  const posItemSnapshot = await posInventoryCollection(data.environment).doc(inventoryItemId).get();
+  if (!posItemSnapshot.exists) {
+    throw new HttpsError('failed-precondition', 'Bahan POS tidak ditemukan.');
+  }
+  const posItem = posItemSnapshot.data();
+
+  return db.runTransaction(async transaction => {
+    const operationRef = db.collection(names.operations).doc(`pos_link_${operationId}`);
+    const productRef = db.collection(names.products).doc(productId);
+    const [operationSnapshot, productSnapshot] = await Promise.all([
+      transaction.get(operationRef),
+      transaction.get(productRef)
+    ]);
+    const existing = existingOperationResult(operationSnapshot);
+    if (existing) return existing;
+
+    if (!productSnapshot.exists) throw new HttpsError('not-found', 'Produk tidak ditemukan.');
+
+    const product = productSnapshot.data();
+
+    transaction.set(db.collection(names.posLinks).doc(productId), {
+      sdrg_product_id: productId,
+      sdrg_product_name: product.name || productId,
+      sdrg_base_unit: product.base_unit || '',
+      inventory_item_id: inventoryItemId,
+      inventory_item_name: posItem.name || inventoryItemId,
+      pos_unit: posItem.unit || '',
+      updated_at: FieldValue.serverTimestamp(),
+      updated_by: operator.email,
+      updated_by_uid: operator.uid
+    });
+
+    const result = { product_id: productId, inventory_item_id: inventoryItemId };
+    writeOperation(transaction, operationRef, operationId, 'save_pos_product_link', operator, result);
+    return result;
+  });
+}, ['superadmin'], { secrets: [posServiceAccountKey] });
+
+export const deletePosProductLink = callable(async (data, operator) => {
+  const names = collectionsFor(data.environment);
+  const operationId = assertOperationId(data.operation_id);
+  const productId = assertProductId(data.product_id);
+
+  return db.runTransaction(async transaction => {
+    const operationRef = db.collection(names.operations).doc(`pos_unlink_${operationId}`);
+    const operationSnapshot = await transaction.get(operationRef);
+    const existing = existingOperationResult(operationSnapshot);
+    if (existing) return existing;
+
+    transaction.delete(db.collection(names.posLinks).doc(productId));
+
+    const result = { product_id: productId, removed: true };
+    writeOperation(transaction, operationRef, operationId, 'delete_pos_product_link', operator, result);
+    return result;
+  });
+}, ['superadmin']);
+
 export const receivePurchase = callable(async (data, operator) => {
   const names = collectionsFor(data.environment);
   const operationId = assertOperationId(data.operation_id);
@@ -558,12 +904,16 @@ export const createSale = callable(async (data, operator) => {
   rejectDuplicateItems(rawItems);
   const productIds = rawItems.map(item => assertProductId(item.product_id));
   const paymentStatus = orderData.payment_status === 'unpaid' ? 'unpaid' : 'paid';
+  const customer = await resolveCustomer(names, orderData.customer_id);
+  // A registered customer supplies its own name; free text stays the fallback
+  // for walk-in sales, which is how every existing order was written.
+  const customerName = customer ? customer.name : String(orderData.customer_name || '').trim();
 
   if (paymentStatus === 'unpaid') {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(orderData.target_date || '') || orderData.target_date < localDateString()) {
       throw new HttpsError('invalid-argument', 'Tanggal target pre-order harus hari ini atau setelahnya.');
     }
-    if (!String(orderData.customer_name || '').trim()) {
+    if (!customerName) {
       throw new HttpsError('invalid-argument', 'Nama pelanggan / catatan wajib diisi untuk pre-order.');
     }
   }
@@ -667,7 +1017,9 @@ export const createSale = callable(async (data, operator) => {
       id: orderId,
       items: lines,
       grand_total: lines.reduce((sum, line) => sum + line.total, 0),
-      customer_name: String(orderData.customer_name || '').trim(),
+      customer_name: customerName,
+      customer_id: customer?.id || null,
+      bridge_target: customer?.bridge_target || null,
       customer_type: orderData.customer_type || 'regular',
       target_date: paymentStatus === 'unpaid' ? orderData.target_date : null,
       payment_status: paymentStatus,
@@ -678,6 +1030,18 @@ export const createSale = callable(async (data, operator) => {
       created_by_uid: operator.uid,
       created_at: FieldValue.serverTimestamp()
     });
+
+    if (paymentStatus === 'paid') {
+      writeDeliveryOutbox(transaction, data.environment, {
+        bridgeTarget: customer?.bridge_target,
+        orderId,
+        customerId: customer?.id,
+        lines,
+        revision: 1,
+        status: 'completed',
+        orderCreatedAt: FieldValue.serverTimestamp()
+      });
+    }
 
     const result = { order_id: orderId };
     writeOperation(transaction, operationRef, operationId, 'create_sale', operator, result);
@@ -757,6 +1121,19 @@ export const payPreorder = callable(async (data, operator) => {
       paid_by_uid: operator.uid,
       revision: Number(order.revision || 1) + 1
     });
+
+    // The goods change hands at payment, not when the pre-order was placed, so
+    // this is the first point at which a delivery exists to report.
+    writeDeliveryOutbox(transaction, data.environment, {
+      bridgeTarget: order.bridge_target,
+      orderId,
+      customerId: order.customer_id,
+      lines: aggregatedLines,
+      revision: Number(order.revision || 1) + 1,
+      status: 'completed',
+      orderCreatedAt: order.created_at || FieldValue.serverTimestamp()
+    });
+
     const result = { order_id: orderId };
     writeOperation(transaction, operationRef, operationId, 'pay_preorder', operator, result);
     return result;
@@ -1014,6 +1391,18 @@ export const editTransaction = callable(async (data, operator) => {
         }
       ]
     });
+    if (transactionType === 'sale' && shouldAdjustInventory) {
+      writeDeliveryOutbox(transaction, data.environment, {
+        bridgeTarget: record.bridge_target,
+        orderId: transactionId,
+        customerId: record.customer_id,
+        lines: aggregateHistoricalLines(newItems, storedBaseQuantity),
+        revision,
+        status: record.status === 'cancelled' ? 'cancelled' : 'completed',
+        orderCreatedAt: record.created_at || FieldValue.serverTimestamp()
+      });
+    }
+
     const result = { transaction_id: transactionId, revision };
     writeOperation(transaction, operationRef, operationId, `edit_${transactionType}`, operator, result);
     return result;
@@ -1104,6 +1493,20 @@ export const cancelTransaction = callable(async (data, operator) => {
       cancelled_by_uid: operator.uid,
       revision
     });
+    // Only sales that actually moved stock ever produced an outbox doc, so an
+    // unpaid pre-order being cancelled must not create a spurious one here.
+    if (transactionType === 'sale' && inventoryWasChanged) {
+      writeDeliveryOutbox(transaction, data.environment, {
+        bridgeTarget: record.bridge_target,
+        orderId: transactionId,
+        customerId: record.customer_id,
+        lines: aggregatedLines,
+        revision,
+        status: 'cancelled',
+        orderCreatedAt: record.created_at || FieldValue.serverTimestamp()
+      });
+    }
+
     const result = { transaction_id: transactionId, revision };
     writeOperation(transaction, operationRef, operationId, `cancel_${transactionType}`, operator, result);
     return result;
@@ -1364,6 +1767,51 @@ export const repackStock = callable(async (data, operator) => {
     return result;
   });
 });
+
+// Repair hatch: re-emits an order into its buyer's outbox from the order doc
+// itself. Needed for orders placed before the bridge existed, and to recover if
+// an outbox doc is ever lost or diverges.
+export const rebuildDeliveryOutbox = callable(async (data, operator) => {
+  const names = collectionsFor(data.environment);
+  const operationId = assertOperationId(data.operation_id);
+  const orderId = String(data.order_id || '').trim();
+  if (!orderId) throw new HttpsError('invalid-argument', 'ID pesanan diperlukan.');
+
+  return db.runTransaction(async transaction => {
+    const operationRef = db.collection(names.operations).doc(`outbox_rebuild_${operationId}`);
+    const orderRef = db.collection(names.orders).doc(orderId);
+    const [operationSnapshot, orderSnapshot] = await Promise.all([
+      transaction.get(operationRef),
+      transaction.get(orderRef)
+    ]);
+    const existing = existingOperationResult(operationSnapshot);
+    if (existing) return existing;
+    if (!orderSnapshot.exists) throw new HttpsError('not-found', 'Pesanan tidak ditemukan.');
+
+    const order = orderSnapshot.data();
+    if (!order.bridge_target) {
+      throw new HttpsError('failed-precondition', 'Pesanan ini tidak terhubung ke sistem stok mana pun.');
+    }
+    if (order.payment_status === 'unpaid' || order.status === 'unpaid') {
+      throw new HttpsError('failed-precondition', 'Pre-order yang belum lunas belum menjadi pengiriman.');
+    }
+
+    const revision = Number(order.revision || 1);
+    writeDeliveryOutbox(transaction, data.environment, {
+      bridgeTarget: order.bridge_target,
+      orderId,
+      customerId: order.customer_id,
+      lines: aggregateHistoricalLines(order.items || [], storedBaseQuantity),
+      revision,
+      status: order.status === 'cancelled' ? 'cancelled' : 'completed',
+      orderCreatedAt: order.created_at || FieldValue.serverTimestamp()
+    });
+
+    const result = { order_id: orderId, revision };
+    writeOperation(transaction, operationRef, operationId, 'rebuild_delivery_outbox', operator, result);
+    return result;
+  });
+}, ['superadmin']);
 
 export const inventoryHealth = callable(async (data) => {
   const names = collectionsFor(data.environment);

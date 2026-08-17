@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { productService } from '../services/productService';
 import { inventoryService } from '../services/inventoryService';
 import { orderService } from '../services/orderService';
+import { customerService } from '../services/customerService';
+import { posLinkService } from '../services/posLinkService';
 import ReceiptModal from '../components/ReceiptModal';
 import InsufficientStockModal from '../components/InsufficientStockModal';
 import { clearPosEditDraft, readPosEditDraft } from '../utils/posEditDraft';
@@ -46,6 +48,11 @@ export default function PosPage() {
         if (draft) return draft.customer_type || 'regular';
         return localStorage.getItem('pos_customer_type') || 'regular';
     }); // Single selection - what gets saved
+    const [customers, setCustomers] = useState([]);
+    // Deliberately not persisted across sales or sessions: a registered buyer
+    // left selected by accident would attribute a walk-in sale to them, and for
+    // a bridged customer that would push phantom stock into their system.
+    const [selectedCustomerId, setSelectedCustomerId] = useState('');
     const [showStockErrorModal, setShowStockErrorModal] = useState(false);
     const [stockErrorDetails, setStockErrorDetails] = useState([]);
     const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' or 'cart'
@@ -53,6 +60,47 @@ export default function PosPage() {
     const [paymentStatus, setPaymentStatus] = useState(() => readPosEditDraft() ? 'unpaid' : 'paid');
     const [targetDate, setTargetDate] = useState(() => readPosEditDraft()?.target_date || getLocalDateString());
     const [preOrderCustomerName, setPreOrderCustomerName] = useState(() => readPosEditDraft()?.customer_name || '');
+
+    // Registered buyers are optional; a failure here must not block selling.
+    useEffect(() => {
+        customerService.getAllCustomers()
+            .then(setCustomers)
+            .catch(error => console.error('Gagal memuat daftar pelanggan:', error));
+    }, []);
+
+    const selectedCustomer = useMemo(
+        () => customers.find(customer => customer.id === selectedCustomerId) || null,
+        [customers, selectedCustomerId]
+    );
+
+    const handleSelectCustomer = (customerId) => {
+        setSelectedCustomerId(customerId);
+        const customer = customers.find(entry => entry.id === customerId);
+        if (customer?.default_customer_type) setSelectedCustomerType(customer.default_customer_type);
+    };
+
+    // null = no restriction. Selling something unlinked to a stock-synced
+    // customer would still go through, but would sit blocked on their side
+    // until someone links it — so narrow the catalog to what already works.
+    const [linkedProductIds, setLinkedProductIds] = useState(null);
+
+    useEffect(() => {
+        if (!selectedCustomer?.bridge_target) {
+            setLinkedProductIds(null);
+            return;
+        }
+        let cancelled = false;
+        posLinkService.getLinks()
+            .then(links => {
+                if (!cancelled) setLinkedProductIds(new Set(Object.keys(links)));
+            })
+            .catch(error => {
+                console.error('Gagal memuat tautan produk POS:', error);
+                // Fail open: an unfiltered catalog beats blocking every sale.
+                if (!cancelled) setLinkedProductIds(null);
+            });
+        return () => { cancelled = true; };
+    }, [selectedCustomer]);
 
     // Save cart and customer type to localStorage when they change
     useEffect(() => {
@@ -148,7 +196,10 @@ export default function PosPage() {
 
     // Filter products using word-by-word keyword matching (order-insensitive)
     const filteredProducts = useMemo(() => {
-        const catalogProducts = products.filter(product => product.active !== false);
+        let catalogProducts = products.filter(product => product.active !== false);
+        if (linkedProductIds) {
+            catalogProducts = catalogProducts.filter(p => linkedProductIds.has(p.id));
+        }
         if (!searchQuery) return catalogProducts; // Return all if no query
         const queryWords = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
         if (queryWords.length === 0) return catalogProducts;
@@ -158,7 +209,7 @@ export default function PosPage() {
             const skuLower = (p.sku || '').toLowerCase();
             return queryWords.every(word => nameLower.includes(word) || skuLower.includes(word));
         });
-    }, [products, searchQuery]);
+    }, [products, searchQuery, linkedProductIds]);
 
     // Add to cart
     const addToCart = (product) => {
@@ -360,7 +411,8 @@ export default function PosPage() {
                 }),
                 grand_total: cartTotal,
                 customer_name: paymentStatus === 'unpaid' ? preOrderCustomerName.trim() : "",
-                customer_type: selectedCustomerType
+                customer_type: selectedCustomerType,
+                customer_id: selectedCustomerId || null
             };
 
             if (paymentStatus === 'unpaid') {
@@ -427,13 +479,16 @@ export default function PosPage() {
                 })),
                 grandTotal: cartTotal,
                 selectedCustomerType: selectedCustomerType,
-                customer_name: orderPayload.customer_name,
+                // A registered customer's name is already known server-side;
+                // only a walk-in sale still needs it typed in at the receipt.
+                customer_name: selectedCustomer?.name || orderPayload.customer_name,
                 payment_status: paymentStatus,
                 status: paymentStatus === 'unpaid' ? 'unpaid' : 'completed',
                 target_date: paymentStatus === 'unpaid' ? targetDate : null
             });
 
             setCart([]);
+            setSelectedCustomerId('');
             if (paymentStatus === 'unpaid') {
                 setPreOrderCustomerName('');
                 setTargetDate(getLocalDateString());
@@ -512,7 +567,13 @@ export default function PosPage() {
                     {loading ? (
                         <div className="text-gray-400 text-center mt-10">Memuat katalog...</div>
                     ) : filteredProducts.length === 0 ? (
-                        <div className="text-gray-500 text-center mt-10">Tidak ada produk yang cocok dengan "{searchQuery}"</div>
+                        <div className="text-gray-500 text-center mt-10">
+                            {searchQuery
+                                ? `Tidak ada produk yang cocok dengan "${searchQuery}"`
+                                : linkedProductIds
+                                    ? `Belum ada produk yang tertaut ke stok ${selectedCustomer?.name || 'pelanggan ini'}.`
+                                    : 'Belum ada produk.'}
+                        </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {filteredProducts.map(p => (
@@ -558,6 +619,32 @@ export default function PosPage() {
                                     Batal Edit
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Registered buyer - optional, drives price tier and stock sync */}
+                    {customers.length > 0 && (
+                        <div className="space-y-2">
+                            <p className="text-xs text-gray-500 font-medium">Pelanggan Terdaftar:</p>
+                            <select
+                                value={selectedCustomerId}
+                                onChange={(e) => handleSelectCustomer(e.target.value)}
+                                disabled={Boolean(editingPreOrder)}
+                                className="w-full rounded-md border-2 border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400"
+                            >
+                                <option value="">Umum (tanpa pelanggan terdaftar)</option>
+                                {customers.map(customer => (
+                                    <option key={customer.id} value={customer.id}>
+                                        {customer.name}{customer.bridge_target ? ' · stok tersambung' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            {selectedCustomer?.bridge_target && (
+                                <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-1">
+                                    Penjualan lunas ke {selectedCustomer.name} akan dikirim ke sistem stok mereka.
+                                    Katalog di kiri hanya menampilkan produk yang sudah tertaut.
+                                </p>
+                            )}
                         </div>
                     )}
 

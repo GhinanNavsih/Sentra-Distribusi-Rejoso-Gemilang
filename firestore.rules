@@ -5,6 +5,14 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // The POS app at Canteen375 reads its delivery outbox with a dedicated
+    // warehouse-375 account (bridge@warehouse375.com). That account also holds
+    // users/{uid}.role == 'bridge', which is in no callable allow-list, so it
+    // can read this one collection and nothing else.
+    function isPosBridge() {
+      return isAuthenticated() && request.auth.uid == '7H4EplY9JIedIdNXI1Of4Y8OmmA3';
+    }
+
     function isReceiptMetadataUpdate() {
       return isAuthenticated()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
@@ -37,6 +45,39 @@ service cloud.firestore {
 
     match /inventory_test/{productId} {
       allow read: if true;
+      allow write: if false;
+    }
+
+    match /customers/{customerId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /customers_test/{customerId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Product names for the link picker are read live from POS by a Cloud
+    // Function using a service-account credential (see functions/index.js),
+    // not mirrored into a collection here.
+    match /pos_product_links/{productId} {
+      allow read: if isAuthenticated() || isPosBridge();
+      allow write: if false;
+    }
+
+    match /pos_product_links_test/{productId} {
+      allow read: if isAuthenticated() || isPosBridge();
+      allow write: if false;
+    }
+
+    match /deliveries_canteen375/{orderId} {
+      allow read: if isPosBridge();
+      allow write: if false;
+    }
+
+    match /deliveries_canteen375_test/{orderId} {
+      allow read: if isPosBridge();
       allow write: if false;
     }
 

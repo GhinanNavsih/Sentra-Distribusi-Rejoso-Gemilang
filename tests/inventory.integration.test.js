@@ -462,4 +462,333 @@ describe('server-authoritative inventory operations', () => {
     await updateDoc(doc(clientDb, 'orders_test', 'ORDER-1'), { customer_name: 'Customer' });
     await expect(updateDoc(doc(clientDb, 'orders_test', 'ORDER-1'), { status: 'cancelled' })).rejects.toThrow();
   });
+
+  describe('linked-buyer delivery outbox', () => {
+    const OUTBOX = 'deliveries_canteen375_test';
+
+    const createBridgedCustomer = async (suffix) => {
+      const created = await operation('createCustomer', {
+        operation_id: `customer_bridge_${suffix}`,
+        customer: { name: 'Canteen375', default_customer_type: 'star', bridge_target: 'canteen375' }
+      });
+      return created.customer_id;
+    };
+
+    const outbox = async (firestore, orderId) => (
+      await getDoc(doc(firestore, OUTBOX, orderId))
+    );
+
+    it('mirrors a paid sale to a bridged customer and leaves walk-in sales alone', async () => {
+      await seed(async firestore => {
+        await seedProduct(firestore, 'A', { name: 'Gula' });
+        await setDoc(doc(firestore, 'inventory_test', 'A'), { product_id: 'A', current_stock_base: 10 });
+      });
+      const customerId = await createBridgedCustomer('mirror01');
+
+      const bridged = await operation('createSale', {
+        operation_id: 'outbox_sale_bridged_0001',
+        order: {
+          payment_status: 'paid',
+          customer_type: 'star',
+          customer_id: customerId,
+          items: [{ product_id: 'A', qty: 3, selected_unit: 'base', unit_price: 150 }]
+        }
+      });
+
+      const walkIn = await operation('createSale', {
+        operation_id: 'outbox_sale_walkin_0001',
+        order: {
+          payment_status: 'paid',
+          customer_type: 'regular',
+          items: [{ product_id: 'A', qty: 1, selected_unit: 'base', unit_price: 150 }]
+        }
+      });
+
+      await seed(async firestore => {
+        const mirrored = (await outbox(firestore, bridged.order_id)).data();
+        expect(mirrored.status).toBe('completed');
+        expect(mirrored.revision).toBe(1);
+        expect(mirrored.customer_id).toBe(customerId);
+        expect(mirrored.lines).toEqual([
+          { product_id: 'A', product_name: 'Gula', base_qty: 3, base_unit: 'pcs' }
+        ]);
+
+        expect((await outbox(firestore, walkIn.order_id)).exists()).toBe(false);
+
+        const order = (await getDoc(doc(firestore, 'orders_test', bridged.order_id))).data();
+        expect(order.customer_id).toBe(customerId);
+        expect(order.bridge_target).toBe('canteen375');
+        expect(order.customer_name).toBe('Canteen375');
+      });
+    });
+
+    it('does not double-write the outbox when an operation is replayed', async () => {
+      await seed(async firestore => {
+        await seedProduct(firestore, 'A');
+        await setDoc(doc(firestore, 'inventory_test', 'A'), { product_id: 'A', current_stock_base: 10 });
+      });
+      const customerId = await createBridgedCustomer('replay01');
+
+      const payload = {
+        operation_id: 'outbox_sale_replay_0001',
+        order: {
+          payment_status: 'paid',
+          customer_type: 'star',
+          customer_id: customerId,
+          items: [{ product_id: 'A', qty: 2, selected_unit: 'base', unit_price: 150 }]
+        }
+      };
+      const first = await operation('createSale', payload);
+      const replay = await operation('createSale', payload);
+      expect(replay.order_id).toBe(first.order_id);
+
+      await seed(async firestore => {
+        expect((await outbox(firestore, first.order_id)).data().revision).toBe(1);
+        expect((await getDoc(doc(firestore, 'inventory_test', 'A'))).data().current_stock_base).toBe(8);
+      });
+    });
+
+    it('reports a pre-order only once it is paid, at the bumped revision', async () => {
+      await seed(async firestore => {
+        await seedProduct(firestore, 'A');
+        await setDoc(doc(firestore, 'inventory_test', 'A'), { product_id: 'A', current_stock_base: 10 });
+      });
+      const customerId = await createBridgedCustomer('preorder01');
+
+      const preorder = await operation('createSale', {
+        operation_id: 'outbox_preorder_create_0001',
+        order: {
+          payment_status: 'unpaid',
+          customer_type: 'star',
+          customer_id: customerId,
+          target_date: '9999-12-31',
+          items: [{ product_id: 'A', qty: 4, selected_unit: 'base', unit_price: 150 }]
+        }
+      });
+
+      await seed(async firestore => {
+        expect((await outbox(firestore, preorder.order_id)).exists()).toBe(false);
+      });
+
+      await operation('payPreorder', {
+        operation_id: 'outbox_preorder_pay_0001',
+        order_id: preorder.order_id
+      });
+
+      await seed(async firestore => {
+        const mirrored = (await outbox(firestore, preorder.order_id)).data();
+        expect(mirrored.status).toBe('completed');
+        expect(mirrored.revision).toBe(2);
+        expect(mirrored.lines).toEqual([
+          { product_id: 'A', product_name: 'A', base_qty: 4, base_unit: 'pcs' }
+        ]);
+      });
+    });
+
+    it('carries edits and cancellations through at the post-bump revision', async () => {
+      await seed(async firestore => {
+        await seedProduct(firestore, 'A');
+        await seedProduct(firestore, 'B');
+        await setDoc(doc(firestore, 'inventory_test', 'A'), { product_id: 'A', current_stock_base: 10 });
+        await setDoc(doc(firestore, 'inventory_test', 'B'), { product_id: 'B', current_stock_base: 10 });
+      });
+      const customerId = await createBridgedCustomer('editcancel01');
+
+      const sale = await operation('createSale', {
+        operation_id: 'outbox_edit_create_0001',
+        order: {
+          payment_status: 'paid',
+          customer_type: 'star',
+          customer_id: customerId,
+          items: [{ product_id: 'A', qty: 3, selected_unit: 'base', unit_price: 150 }]
+        }
+      });
+
+      await operation('editTransaction', {
+        operation_id: 'outbox_edit_apply_0001',
+        transaction_id: sale.order_id,
+        transaction_type: 'sale',
+        items: [{ product_id: 'A', qty: 5, selected_unit: 'base', unit_price: 150 }]
+      });
+
+      await seed(async firestore => {
+        const mirrored = (await outbox(firestore, sale.order_id)).data();
+        expect(mirrored.revision).toBe(2);
+        expect(mirrored.status).toBe('completed');
+        expect(mirrored.lines).toEqual([
+          { product_id: 'A', product_name: 'A', base_qty: 5, base_unit: 'pcs' }
+        ]);
+      });
+
+      await operation('cancelTransaction', {
+        operation_id: 'outbox_cancel_apply_0001',
+        transaction_id: sale.order_id,
+        transaction_type: 'sale'
+      });
+
+      await seed(async firestore => {
+        const mirrored = (await outbox(firestore, sale.order_id)).data();
+        expect(mirrored.revision).toBe(3);
+        expect(mirrored.status).toBe('cancelled');
+      });
+    });
+
+    it('writes no outbox doc for a manual stock adjustment', async () => {
+      await seed(async firestore => {
+        await seedProduct(firestore, 'A');
+        await setDoc(doc(firestore, 'inventory_test', 'A'), { product_id: 'A', current_stock_base: 10 });
+      });
+
+      const adjusted = await operation('adjustStock', {
+        operation_id: 'outbox_adjust_manual_0001',
+        product_id: 'A',
+        expected_current_stock: 10,
+        new_stock: 7,
+        adjustment_kind: 'manual_sale'
+      });
+
+      await seed(async firestore => {
+        expect((await outbox(firestore, adjusted.transaction_id)).exists()).toBe(false);
+      });
+    });
+
+    it('rejects an unknown bridge target and an archived customer', async () => {
+      await expect(operation('createCustomer', {
+        operation_id: 'customer_bad_target_0001',
+        customer: { name: 'Nowhere', bridge_target: 'not_a_target' }
+      })).rejects.toThrow(/tujuan sinkronisasi/i);
+
+      const customerId = await createBridgedCustomer('archived01');
+      await operation('archiveCustomer', {
+        operation_id: 'customer_archive_0001',
+        customer_id: customerId
+      });
+
+      await seed(async firestore => {
+        await seedProduct(firestore, 'A');
+        await setDoc(doc(firestore, 'inventory_test', 'A'), { product_id: 'A', current_stock_base: 10 });
+      });
+
+      await expect(operation('createSale', {
+        operation_id: 'outbox_sale_archived_0001',
+        order: {
+          payment_status: 'paid',
+          customer_type: 'star',
+          customer_id: customerId,
+          items: [{ product_id: 'A', qty: 1, selected_unit: 'base', unit_price: 150 }]
+        }
+      })).rejects.toThrow(/diarsipkan/i);
+    });
+
+    it('restricts customer management to superadmins', async () => {
+      await seed(async firestore => {
+        await setDoc(doc(firestore, 'users', auth.currentUser.uid), { role: 'shopper' });
+      });
+
+      await expect(operation('createCustomer', {
+        operation_id: 'customer_shopper_denied_0001',
+        customer: { name: 'Canteen375', bridge_target: 'canteen375' }
+      })).rejects.toThrow(/izin/i);
+    });
+  });
+
+  // savePosProductLink and listPosInventory read the linked POS's Firestore
+  // live, via a service-account credential bound as a Secret Manager secret
+  // (functions/index.js:posInventoryCollection). The emulator has no such
+  // secret and no second project to read, so only the parts of these
+  // callables that resolve before that cross-project read are exercised here.
+  // The read itself is verified against the deployed function separately.
+  describe('POS product links', () => {
+    it('removes a link', async () => {
+      await seed(async firestore => {
+        await seedProduct(firestore, 'GP_1234', { name: 'Gula Pasir' });
+        await setDoc(doc(firestore, 'pos_product_links_test', 'GP_1234'), {
+          sdrg_product_id: 'GP_1234',
+          inventory_item_id: 'Gula_1700000000'
+        });
+      });
+
+      await operation('deletePosProductLink', {
+        operation_id: 'pos_link_delete_0001',
+        product_id: 'GP_1234'
+      });
+
+      await seed(async firestore => {
+        expect((await getDoc(doc(firestore, 'pos_product_links_test', 'GP_1234'))).exists()).toBe(false);
+      });
+    });
+
+    it('rejects an invalid inventory_item_id before touching POS', async () => {
+      await seed(async firestore => {
+        await seedProduct(firestore, 'GP_1234', { name: 'Gula Pasir' });
+      });
+
+      await expect(operation('savePosProductLink', {
+        operation_id: 'pos_link_invalid_target_0001',
+        product_id: 'GP_1234',
+        inventory_item_id: 'has/a/slash'
+      })).rejects.toThrow(/tidak valid/i);
+    });
+
+    it('restricts link management to superadmins', async () => {
+      await seed(async firestore => {
+        await seedProduct(firestore, 'GP_1234', { name: 'Gula Pasir' });
+        await setDoc(doc(firestore, 'users', auth.currentUser.uid), { role: 'shopper' });
+      });
+
+      // Role is checked before the handler runs, so this rejects without
+      // ever reaching the cross-project read.
+      await expect(operation('savePosProductLink', {
+        operation_id: 'pos_link_shopper_denied_0001',
+        product_id: 'GP_1234',
+        inventory_item_id: 'Gula_1700000000'
+      })).rejects.toThrow(/izin/i);
+    });
+
+    it('denies clients writing links directly', async () => {
+      await expect(setDoc(doc(clientDb, 'pos_product_links_test', 'X'), { inventory_item_id: 'Y' }))
+        .rejects.toThrow();
+    });
+  });
+
+  it('denies operations to roles outside the default allow-list', async () => {
+    await seed(async firestore => {
+      await seedProduct(firestore, 'A');
+      await setDoc(doc(firestore, 'users', auth.currentUser.uid), { role: 'bridge' });
+    });
+
+    await expect(operation('receivePurchase', {
+      operation_id: 'bridge_purchase_denied_0001',
+      items: [{ product_id: 'A', qty: 5, unit_kind: 'base', cost_per_unit: 100 }]
+    })).rejects.toThrow(/izin/i);
+
+    await expect(operation('createSale', {
+      operation_id: 'bridge_sale_denied_0001',
+      order: {
+        payment_status: 'paid',
+        customer_type: 'regular',
+        items: [{ product_id: 'A', qty: 1, selected_unit: 'base', unit_price: 150 }]
+      }
+    })).rejects.toThrow(/izin/i);
+
+    await seed(async firestore => {
+      expect((await getDoc(doc(firestore, 'inventory_test', 'A'))).exists()).toBe(false);
+    });
+  });
+
+  it('still allows the shopper role to run everyday operations', async () => {
+    await seed(async firestore => {
+      await seedProduct(firestore, 'A');
+      await setDoc(doc(firestore, 'users', auth.currentUser.uid), { role: 'shopper' });
+    });
+
+    await operation('receivePurchase', {
+      operation_id: 'shopper_purchase_allowed_0001',
+      items: [{ product_id: 'A', qty: 5, unit_kind: 'base', cost_per_unit: 100 }]
+    });
+
+    await seed(async firestore => {
+      expect((await getDoc(doc(firestore, 'inventory_test', 'A'))).data().current_stock_base).toBe(5);
+    });
+  });
 });
