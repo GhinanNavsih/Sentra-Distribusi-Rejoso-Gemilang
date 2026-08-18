@@ -14,6 +14,7 @@ import {
   storedBaseQuantity
 } from './shared/inventoryMath.js';
 import { createProductId } from './shared/productId.js';
+import { aggregateByPosItem, computeNetDeltas, resolveDeliveryLines } from './shared/posDeliveryMath.js';
 
 initializeApp();
 const db = getFirestore();
@@ -27,16 +28,32 @@ setGlobalOptions({ region: 'asia-southeast2', maxInstances: 20 });
 const posServiceAccountKey = defineSecret('POS_SERVICE_ACCOUNT_KEY');
 const POS_CANTEEN_ID = 'canteen375';
 
-const posInventoryCollection = (environment) => {
-  let app;
+const posApp = () => {
   try {
-    app = getApp('pos');
+    return getApp('pos');
   } catch {
-    app = initializeApp({ credential: cert(JSON.parse(posServiceAccountKey.value())) }, 'pos');
+    return initializeApp({ credential: cert(JSON.parse(posServiceAccountKey.value())) }, 'pos');
   }
-  const canteensCollection = environment === 'staging' ? 'zTesting_Canteens' : 'Canteens';
-  return getFirestore(app).collection(canteensCollection).doc(POS_CANTEEN_ID).collection('Inventory');
 };
+
+const posDb = () => getFirestore(posApp());
+
+const posCanteenDoc = (environment) => {
+  const canteensCollection = environment === 'staging' ? 'zTesting_Canteens' : 'Canteens';
+  return posDb().collection(canteensCollection).doc(POS_CANTEEN_ID);
+};
+
+const posInventoryCollection = (environment) => posCanteenDoc(environment).collection('Inventory');
+const posDailyStockLogsCollection = (environment) => posCanteenDoc(environment).collection('DailyStockLogs');
+// The POS app's own local product links, which take precedence over ours --
+// matching its own SdrgProductLinkService.fetchLinks precedence rule.
+const posProductLinksCollection = (environment) => posCanteenDoc(environment).collection('SdrgProductLinks');
+const posDeliveriesCollection = (environment) => posCanteenDoc(environment).collection('SdrgDeliveries');
+// Shared with POS's own accept path (ShoppingService.completeOrder,
+// SdrgDeliveryService.acceptDelivery): whichever side writes a given
+// revision's ledger doc first is authoritative, and the other becomes a safe
+// no-op. No coordination between the two paths is needed beyond this.
+const posOrdersLedgerCollection = (environment) => posCanteenDoc(environment).collection('Orders');
 
 const MAX_LINES = 80;
 
@@ -247,6 +264,142 @@ const writeDeliveryOutbox = (transaction, environment, {
     order_created_at: orderCreatedAt,
     updated_at: FieldValue.serverTimestamp()
   }, { merge: true });
+};
+
+// Links from both sides, with a link saved directly in POS winning -- POS
+// owns its own stock, so its local override always takes precedence over
+// ours. Mirrors the POS app's own SdrgProductLinkService.fetchLinks.
+const resolvePosLinks = async (environment) => {
+  const names = collectionsFor(environment);
+  const [sdrgLinksSnapshot, posLinksSnapshot] = await Promise.all([
+    db.collection(names.posLinks).get(),
+    posProductLinksCollection(environment).get()
+  ]);
+
+  const links = {};
+  sdrgLinksSnapshot.docs.forEach(doc => {
+    const data = doc.data();
+    links[doc.id] = { inventoryItemId: data.inventory_item_id, sdrgBaseUnit: data.sdrg_base_unit };
+  });
+  posLinksSnapshot.docs.forEach(doc => {
+    const data = doc.data();
+    links[doc.id] = { inventoryItemId: data.inventoryItemId, sdrgBaseUnit: data.sdrgBaseUnit };
+  });
+  return links;
+};
+
+// Applies a delivery directly to the linked POS's Firestore, immediately, with
+// no dependency on the POS app being open. This is the automatic path; the POS
+// app's own client-side watcher (SdrgAutoAcceptService) still runs
+// independently as the UI surface for what this can't resolve on its own (an
+// unlinked product, a unit mismatch, a non-integer quantity, or a cancellation
+// that would push stock below zero) and as a resilience backstop if this ever
+// fails. Both paths share the same per-revision idempotency ledger in POS's
+// own project, so whichever gets there first is authoritative and the other
+// becomes a safe no-op -- no coordination between them is needed.
+//
+// Must never throw: a failure here can never be allowed to fail the sale that
+// triggered it. Every exit besides the happy path is a deliberate "leave this
+// for the POS app to show a person," not an error.
+const applyDeliveryToPos = async (environment, { bridgeTarget, orderId, lines, revision, status }) => {
+  if (!bridgeTarget || !Object.hasOwn(BRIDGE_TARGETS, bridgeTarget)) return;
+
+  try {
+    const links = await resolvePosLinks(environment);
+    const resolved = resolveDeliveryLines(lines, links);
+    if (resolved.some(line => line.blocked)) return; // needs linking; POS app will show it
+    const { quantities, hasFractional } = aggregateByPosItem(resolved);
+    if (hasFractional) return; // needs a manual override; POS app will show it
+
+    const ledgerRef = posOrdersLedgerCollection(environment).doc(`sdrg_${orderId}_r${revision}`);
+    const receiptRef = posDeliveriesCollection(environment).doc(orderId);
+    const targetQuantities = status === 'cancelled' ? {} : quantities;
+
+    await posDb().runTransaction(async transaction => {
+      // Every read happens before the first write, same requirement POS's own
+      // Dart transaction follows.
+      const ledgerSnapshot = await transaction.get(ledgerRef);
+      if (ledgerSnapshot.exists && ledgerSnapshot.data()?.status === 'completed') return;
+
+      const receiptSnapshot = await transaction.get(receiptRef);
+      const receiptData = receiptSnapshot.exists ? receiptSnapshot.data() : {};
+      const acceptedRevision = Number(receiptData.acceptedRevision || 0);
+      if (acceptedRevision >= revision) return; // stale, or the POS app already got here
+
+      const appliedQuantities = receiptData.appliedByPosItem || {};
+      const deltas = computeNetDeltas(targetQuantities, appliedQuantities);
+      const affectedIds = Object.keys(deltas);
+
+      const inventoryRefs = Object.fromEntries(
+        affectedIds.map(id => [id, posInventoryCollection(environment).doc(id)])
+      );
+      const inventorySnapshots = Object.fromEntries(
+        await Promise.all(affectedIds.map(async id => [id, await transaction.get(inventoryRefs[id])]))
+      );
+
+      for (const [id, change] of Object.entries(deltas)) {
+        if (change >= 0) continue;
+        const stock = Number(inventorySnapshots[id].data()?.stock || 0);
+        // Would push stock below zero -- usually because the goods have
+        // already been used. Reversing anyway has to stay a person's call, the
+        // same way it does when the POS app applies this itself.
+        if (stock + change < 0) return;
+      }
+
+      const date = localDateString();
+      Object.entries(deltas).forEach(([id, change]) => {
+        const data = inventorySnapshots[id].data() || {};
+        transaction.update(inventoryRefs[id], {
+          stock: FieldValue.increment(change),
+          lastUpdated: FieldValue.serverTimestamp()
+        });
+
+        const logData = {
+          date,
+          inventoryItemId: id,
+          inventoryItemName: data.name || id,
+          isPerishable: data.isPerishable === true,
+          lastUpdated: FieldValue.serverTimestamp()
+        };
+        // Only genuine restocks feed the daily "added" figure, matching the
+        // POS app's own accept path -- a reversal must not inflate it.
+        if (change > 0) logData.stockAdded = FieldValue.increment(change);
+        transaction.set(
+          posDailyStockLogsCollection(environment).doc(`${date}_${id}`),
+          logData,
+          { merge: true }
+        );
+      });
+
+      transaction.set(receiptRef, {
+        sdrgOrderId: orderId,
+        sdrgRevision: revision,
+        sdrgStatus: status,
+        acceptedRevision: revision,
+        state: status === 'cancelled' ? 'reversed' : 'applied',
+        appliedByPosItem: targetQuantities,
+        unreconciled: FieldValue.delete(),
+        updatedAt: FieldValue.serverTimestamp(),
+        acceptedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      transaction.set(ledgerRef, {
+        status: 'completed',
+        type: 'sdrg_delivery',
+        sourceId: orderId,
+        revision,
+        completedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+    });
+  } catch (error) {
+    // The POS app's own watcher picks this up whenever it next opens, so a
+    // failure here is a delay, not data loss.
+    logger.error('Automatic POS delivery apply failed; POS app will pick it up when opened', {
+      orderId,
+      revision,
+      error: error?.message
+    });
+  }
 };
 
 const PRODUCT_FIELDS = [
@@ -919,7 +1072,8 @@ export const createSale = callable(async (data, operator) => {
     }
   }
 
-  return db.runTransaction(async transaction => {
+  let deliveryToApply = null;
+  const result = await db.runTransaction(async transaction => {
     const operationRef = db.collection(names.operations).doc(operationId);
     const operationSnapshot = await transaction.get(operationRef);
     const existing = existingOperationResult(operationSnapshot);
@@ -1042,13 +1196,19 @@ export const createSale = callable(async (data, operator) => {
         status: 'completed',
         orderCreatedAt: FieldValue.serverTimestamp()
       });
+      if (customer?.bridge_target) {
+        deliveryToApply = { bridgeTarget: customer.bridge_target, orderId, lines, revision: 1, status: 'completed' };
+      }
     }
 
-    const result = { order_id: orderId };
-    writeOperation(transaction, operationRef, operationId, 'create_sale', operator, result);
-    return result;
+    const orderResult = { order_id: orderId };
+    writeOperation(transaction, operationRef, operationId, 'create_sale', operator, orderResult);
+    return orderResult;
   });
-});
+
+  if (deliveryToApply) await applyDeliveryToPos(data.environment, deliveryToApply);
+  return result;
+}, null, { secrets: [posServiceAccountKey] });
 
 export const payPreorder = callable(async (data, operator) => {
   const names = collectionsFor(data.environment);
@@ -1056,7 +1216,8 @@ export const payPreorder = callable(async (data, operator) => {
   const orderId = String(data.order_id || '').trim();
   if (!orderId) throw new HttpsError('invalid-argument', 'ID pre-order diperlukan.');
 
-  return db.runTransaction(async transaction => {
+  let deliveryToApply = null;
+  const result = await db.runTransaction(async transaction => {
     const operationRef = db.collection(names.operations).doc(operationId);
     const orderRef = db.collection(names.orders).doc(orderId);
     const [operationSnapshot, orderSnapshot] = await Promise.all([
@@ -1114,13 +1275,14 @@ export const payPreorder = callable(async (data, operator) => {
       });
     });
 
+    const newRevision = Number(order.revision || 1) + 1;
     transaction.update(orderRef, {
       payment_status: 'paid',
       status: 'completed',
       paid_at: FieldValue.serverTimestamp(),
       paid_by: operator.email,
       paid_by_uid: operator.uid,
-      revision: Number(order.revision || 1) + 1
+      revision: newRevision
     });
 
     // The goods change hands at payment, not when the pre-order was placed, so
@@ -1130,16 +1292,22 @@ export const payPreorder = callable(async (data, operator) => {
       orderId,
       customerId: order.customer_id,
       lines: aggregatedLines,
-      revision: Number(order.revision || 1) + 1,
+      revision: newRevision,
       status: 'completed',
       orderCreatedAt: order.created_at || FieldValue.serverTimestamp()
     });
+    if (order.bridge_target) {
+      deliveryToApply = { bridgeTarget: order.bridge_target, orderId, lines: aggregatedLines, revision: newRevision, status: 'completed' };
+    }
 
-    const result = { order_id: orderId };
-    writeOperation(transaction, operationRef, operationId, 'pay_preorder', operator, result);
-    return result;
+    const orderResult = { order_id: orderId };
+    writeOperation(transaction, operationRef, operationId, 'pay_preorder', operator, orderResult);
+    return orderResult;
   });
-});
+
+  if (deliveryToApply) await applyDeliveryToPos(data.environment, deliveryToApply);
+  return result;
+}, null, { secrets: [posServiceAccountKey] });
 
 export const editTransaction = callable(async (data, operator) => {
   const names = collectionsFor(data.environment);
@@ -1150,7 +1318,8 @@ export const editTransaction = callable(async (data, operator) => {
   rejectDuplicateItems(updates);
   const recordRef = db.collection(transactionType === 'sale' ? names.orders : names.purchases).doc(transactionId);
 
-  return db.runTransaction(async transaction => {
+  let deliveryToApply = null;
+  const result = await db.runTransaction(async transaction => {
     const operationRef = db.collection(names.operations).doc(operationId);
     const [operationSnapshot, recordSnapshot] = await Promise.all([
       transaction.get(operationRef),
@@ -1393,22 +1562,30 @@ export const editTransaction = callable(async (data, operator) => {
       ]
     });
     if (transactionType === 'sale' && shouldAdjustInventory) {
+      const editedLines = aggregateHistoricalLines(newItems, storedBaseQuantity);
+      const editedStatus = record.status === 'cancelled' ? 'cancelled' : 'completed';
       writeDeliveryOutbox(transaction, data.environment, {
         bridgeTarget: record.bridge_target,
         orderId: transactionId,
         customerId: record.customer_id,
-        lines: aggregateHistoricalLines(newItems, storedBaseQuantity),
+        lines: editedLines,
         revision,
-        status: record.status === 'cancelled' ? 'cancelled' : 'completed',
+        status: editedStatus,
         orderCreatedAt: record.created_at || FieldValue.serverTimestamp()
       });
+      if (record.bridge_target) {
+        deliveryToApply = { bridgeTarget: record.bridge_target, orderId: transactionId, lines: editedLines, revision, status: editedStatus };
+      }
     }
 
-    const result = { transaction_id: transactionId, revision };
-    writeOperation(transaction, operationRef, operationId, `edit_${transactionType}`, operator, result);
-    return result;
+    const editResult = { transaction_id: transactionId, revision };
+    writeOperation(transaction, operationRef, operationId, `edit_${transactionType}`, operator, editResult);
+    return editResult;
   });
-});
+
+  if (deliveryToApply) await applyDeliveryToPos(data.environment, deliveryToApply);
+  return result;
+}, null, { secrets: [posServiceAccountKey] });
 
 export const cancelTransaction = callable(async (data, operator) => {
   const names = collectionsFor(data.environment);
@@ -1417,7 +1594,8 @@ export const cancelTransaction = callable(async (data, operator) => {
   const transactionId = String(data.transaction_id || '').trim();
   const recordRef = db.collection(transactionType === 'sale' ? names.orders : names.purchases).doc(transactionId);
 
-  return db.runTransaction(async transaction => {
+  let deliveryToApply = null;
+  const result = await db.runTransaction(async transaction => {
     const operationRef = db.collection(names.operations).doc(operationId);
     const [operationSnapshot, recordSnapshot] = await Promise.all([
       transaction.get(operationRef),
@@ -1506,13 +1684,19 @@ export const cancelTransaction = callable(async (data, operator) => {
         status: 'cancelled',
         orderCreatedAt: record.created_at || FieldValue.serverTimestamp()
       });
+      if (record.bridge_target) {
+        deliveryToApply = { bridgeTarget: record.bridge_target, orderId: transactionId, lines: aggregatedLines, revision, status: 'cancelled' };
+      }
     }
 
-    const result = { transaction_id: transactionId, revision };
-    writeOperation(transaction, operationRef, operationId, `cancel_${transactionType}`, operator, result);
-    return result;
+    const cancelResult = { transaction_id: transactionId, revision };
+    writeOperation(transaction, operationRef, operationId, `cancel_${transactionType}`, operator, cancelResult);
+    return cancelResult;
   });
-}, ['superadmin']);
+
+  if (deliveryToApply) await applyDeliveryToPos(data.environment, deliveryToApply);
+  return result;
+}, ['superadmin'], { secrets: [posServiceAccountKey] });
 
 export const adjustStock = callable(async (data, operator) => {
   const names = collectionsFor(data.environment);
@@ -1778,7 +1962,8 @@ export const rebuildDeliveryOutbox = callable(async (data, operator) => {
   const orderId = String(data.order_id || '').trim();
   if (!orderId) throw new HttpsError('invalid-argument', 'ID pesanan diperlukan.');
 
-  return db.runTransaction(async transaction => {
+  let deliveryToApply = null;
+  const result = await db.runTransaction(async transaction => {
     const operationRef = db.collection(names.operations).doc(`outbox_rebuild_${operationId}`);
     const orderRef = db.collection(names.orders).doc(orderId);
     const [operationSnapshot, orderSnapshot] = await Promise.all([
@@ -1798,21 +1983,30 @@ export const rebuildDeliveryOutbox = callable(async (data, operator) => {
     }
 
     const revision = Number(order.revision || 1);
+    const rebuiltLines = aggregateHistoricalLines(order.items || [], storedBaseQuantity);
+    const rebuiltStatus = order.status === 'cancelled' ? 'cancelled' : 'completed';
     writeDeliveryOutbox(transaction, data.environment, {
       bridgeTarget: order.bridge_target,
       orderId,
       customerId: order.customer_id,
-      lines: aggregateHistoricalLines(order.items || [], storedBaseQuantity),
+      lines: rebuiltLines,
       revision,
-      status: order.status === 'cancelled' ? 'cancelled' : 'completed',
+      status: rebuiltStatus,
       orderCreatedAt: order.created_at || FieldValue.serverTimestamp()
     });
+    // Also re-attempts the direct apply -- the natural recovery path if a
+    // delivery was ever missed (a transient failure, or from before this
+    // automatic path existed).
+    deliveryToApply = { bridgeTarget: order.bridge_target, orderId, lines: rebuiltLines, revision, status: rebuiltStatus };
 
-    const result = { order_id: orderId, revision };
-    writeOperation(transaction, operationRef, operationId, 'rebuild_delivery_outbox', operator, result);
-    return result;
+    const rebuildResult = { order_id: orderId, revision };
+    writeOperation(transaction, operationRef, operationId, 'rebuild_delivery_outbox', operator, rebuildResult);
+    return rebuildResult;
   });
-}, ['superadmin']);
+
+  if (deliveryToApply) await applyDeliveryToPos(data.environment, deliveryToApply);
+  return result;
+}, ['superadmin'], { secrets: [posServiceAccountKey] });
 
 export const inventoryHealth = callable(async (data) => {
   const names = collectionsFor(data.environment);
